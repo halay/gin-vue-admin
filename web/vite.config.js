@@ -13,7 +13,7 @@ import UnoCSS from '@unocss/vite'
 
 // @see https://cn.vitejs.dev/config/
 export default ({ mode }) => {
-  AddSecret('')
+  AddSecret('0e427b8b82fb12eda6135cd834035ff6')
   const NODE_ENV = mode || 'development'
   const envFiles = [`.env.${NODE_ENV}`]
   for (const file of envFiles) {
@@ -38,9 +38,9 @@ export default ({ mode }) => {
 
   const rollupOptions = {
     output: {
-      entryFileNames: 'assets/087AC4D233B64EB0[name].[hash].js',
-      chunkFileNames: 'assets/087AC4D233B64EB0[name].[hash].js',
-      assetFileNames: 'assets/087AC4D233B64EB0[name].[hash].[ext]'
+      entryFileNames: 'assets/[name].[hash].js',
+      chunkFileNames: 'assets/[name].[hash].js',
+      assetFileNames: 'assets/[name].[hash].[ext]'
     }
   }
 
