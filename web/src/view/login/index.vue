@@ -1,7 +1,7 @@
 <template>
   <div id="userLayout" class="w-full h-full relative">
     <div
-      class="rounded-lg flex items-center justify-evenly w-full h-full md:w-screen md:h-screen md:bg-[#194bfb] bg-white"
+      class="rounded-lg flex items-center justify-evenly w-full h-full md:w-screen md:h-screen md:bg-[#1d1d23] bg-white"
     >
       <div class="md:w-3/5 w-10/12 h-full flex items-center justify-evenly">
         <div
@@ -20,7 +20,7 @@
                 {{ $GIN_VUE_ADMIN.appName }}
               </p>
               <p class="text-center text-sm font-normal text-gray-500 mt-2.5">
-                A management platform using Golang and Vue
+               Shared Behavioral Value Community
               </p>
             </div>
             <el-form
@@ -79,7 +79,7 @@
                   >登 录</el-button
                 >
               </el-form-item>
-              <el-form-item class="mb-6">
+              <!-- <el-form-item class="mb-6">
                 <el-button
                   class="shadow shadow-active h-11 w-full"
                   type="primary"
@@ -87,15 +87,15 @@
                   @click="checkInit"
                   >前往初始化</el-button
                 >
-              </el-form-item>
+              </el-form-item> -->
             </el-form>
           </div>
         </div>
       </div>
-      <div class="hidden md:block w-1/2 h-full float-right bg-[#194bfb]">
+      <div class="hidden md:block w-1/2 h-full float-right bg-[#1d1d23]">
         <img
           class="h-full"
-          src="@/assets/login_right_banner.jpg"
+          src="@/assets/login_right_banner.png"
           alt="banner"
         />
       </div>
@@ -103,7 +103,7 @@
 
     <BottomInfo class="left-0 right-0 absolute bottom-3 mx-auto w-full z-20">
       <div class="links items-center justify-center gap-2 hidden md:flex">
-        <a href="https://www.gin-vue-admin.com/" target="_blank">
+        <!-- <a href="https://www.gin-vue-admin.com/" target="_blank">
           <img src="@/assets/docs.png" class="w-8 h-8" alt="文档" />
         </a>
         <a href="https://support.qq.com/product/371961" target="_blank">
@@ -117,7 +117,7 @@
         </a>
         <a href="https://space.bilibili.com/322210472" target="_blank">
           <img src="@/assets/video.png" class="w-8 h-8" alt="视频站" />
-        </a>
+        </a> -->
       </div>
     </BottomInfo>
   </div>

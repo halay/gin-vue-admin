@@ -18,7 +18,7 @@
   const tableData = [
     {
       ranking: 1,
-      title: '更简洁的使用界面，更快速的操作体验',
+      title: '更简洁的使用，更快速的操作',
       click_num: 523,
       hot: 263
     },
@@ -42,7 +42,7 @@
     },
     {
       ranking: 5,
-      title: '更合理的代码结构，更清晰的代码逻辑',
+      title: '更合理的结构，更清晰的逻辑',
       click_num: 173,
       hot: 110
     }

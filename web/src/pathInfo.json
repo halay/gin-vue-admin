@@ -77,5 +77,7 @@
   "/src/view/systemTools/version/version.vue": "SysVersion",
   "/src/plugin/announcement/form/info.vue": "InfoForm",
   "/src/plugin/announcement/view/info.vue": "Info",
+  "/src/plugin/app/form/appUsers.vue": "AppUsersForm",
+  "/src/plugin/app/view/appUsers.vue": "AppUsers",
   "/src/plugin/email/view/index.vue": "Email"
 }

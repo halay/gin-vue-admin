@@ -27,27 +27,27 @@
     {
       type: 'primary',
       typeTitle: '公告',
-      title: '授权费将在从六月一日起结束第一价格梯度，进入第二价格梯度。'
+      title: '将在从六月一日起结束第一价格梯度，进入第二价格梯度。'
     },
     {
       type: 'success',
       typeTitle: '通知',
-      title: '授权后将进入专属飞书群，获取官方辅助。'
+      title: '将进入专属飞书群，获取辅助。'
     },
     {
       type: 'warning',
       typeTitle: '警告',
-      title: '授权可获得插件市场极大优惠价格。'
+      title: '警告信息。'
     },
     {
       type: 'danger',
-      typeTitle: '违规',
-      title: '未授权商用将有可能被资源采集工具爬取并追责。'
+      typeTitle: '你好',
+      title: '欢迎来到DeedMX。'
     },
     {
       type: 'info',
       typeTitle: '信息',
-      title: '再次感谢您对开源事业的支持'
+      title: '再次感谢您'
     },
     {
       type: 'primary',
@@ -72,7 +72,7 @@
     {
       type: 'info',
       typeTitle: '信息',
-      title: '让公司更有活力。'
+      title: '让生活更有活力。'
     }
   ]
 </script>

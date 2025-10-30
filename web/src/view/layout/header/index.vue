@@ -84,9 +84,9 @@
                 <span> 切换为：{{ item.authorityName }} </span>
               </el-dropdown-item>
             </template>
-            <el-dropdown-item icon="avatar" @click="toPerson">
+            <!-- <el-dropdown-item icon="avatar" @click="toPerson">
               个人信息
-            </el-dropdown-item>
+            </el-dropdown-item> -->
             <el-dropdown-item icon="reading-lamp" @click="userStore.LoginOut">
               登 出
             </el-dropdown-item>

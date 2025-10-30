@@ -64,46 +64,31 @@
   const shortcuts = [
     {
       icon: Menu,
-      title: '菜单管理',
-      path: 'menu'
-    },
-    {
-      icon: Link,
-      title: 'API管理',
-      path: 'api'
-    },
-    {
-      icon: Service,
-      title: '角色管理',
-      path: 'authority'
+      title: '用户管理',
+      path: ''
     },
     {
       icon: User,
-      title: '用户管理',
-      path: 'user'
+      title: '商品管理',
+      path: ''
     },
     {
-      icon: Files,
-      title: '自动化包',
-      path: 'autoPkg'
+      icon: User,
+      title: '订单管理',
+      path: ''
     },
-    {
-      icon: Memo,
-      title: '自动代码',
-      path: 'autoCode'
-    }
   ]
 
   const recentVisits = [
     {
       icon: Reading,
-      title: '授权购买',
-      path: 'https://gin-vue-admin.com/empower/index.html'
+      title: '加入我们',
+      path: ''
     },
     {
       icon: Document,
-      title: '插件市场',
-      path: 'https://plugin.gin-vue-admin.com/#/layout/home'
+      title: '市场行情',
+      path: ''
     }
   ]
 </script>

@@ -20,25 +20,21 @@
 <script setup>
   const wikis = [
     {
-      title: 'Vue3',
-      url: 'https://v3.cn.vuejs.org/guide/introduction.html'
+      title: 'DeedMX官网',
+      url: 'https://www.deedmx.com/'
     },
     {
-      title: 'GIN 文档',
-      url: 'https://gin-gonic.com/'
+      title: 'DeedMX简介',
+      url: 'https://www.deedmx.com/'
     },
     {
-      title: 'GVA 文档',
-      url: 'https://www.gin-vue-admin.com/'
+      title: 'DeedMX市场',
+      url: 'https://www.deedmx.com/'
     },
     {
-      title: '插件市场',
-      url: 'https://plugin.gin-vue-admin.com/'
+      title: 'DeedMX前景',
+      url: 'https://www.deedmx.com/'
     },
-    {
-      title: 'github 仓库',
-      url: 'https://github.com/flipped-aurora/gin-vue-admin'
-    }
   ]
 </script>
 
