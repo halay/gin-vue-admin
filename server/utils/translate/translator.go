@@ -113,6 +113,9 @@ func (t *Translator) TranslateMessage(messageID string) string {
 		return messageID
 	}
 
+	if messageID == "" {
+		return ""
+	}
 	translatedMsg, err := localizer.LocalizeMessage(&i18n.Message{ID: messageID})
 	if err != nil || translatedMsg == "" { // if translation fail use default language transalator
 		if err != nil {

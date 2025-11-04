@@ -5,7 +5,7 @@
 
 <template>
   <div class="flex items-center mx-4 gap-4">
-    <el-tooltip
+    <!-- <el-tooltip
       class=""
       effect="dark"
       :content="t('layout.tools.videoTutorial')"
@@ -29,7 +29,7 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-    </el-tooltip>
+    </el-tooltip> -->
 
     <el-tooltip
       class=""
