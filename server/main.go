@@ -1,11 +1,12 @@
 package main
 
 import (
+	_ "go.uber.org/automaxprocs"
+	"go.uber.org/zap"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/core"
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/initialize"
-	_ "go.uber.org/automaxprocs"
-	"go.uber.org/zap"
 )
 
 //go:generate go env -w GO111MODULE=on
@@ -20,7 +21,7 @@ import (
 // @Tag.Name        SysUser
 // @Tag.Description 用户
 
-// @title                       Gin-Vue-Admin Swagger API接口文档
+// @title                       DeedMX Swagger API接口文档
 // @version                     v2.8.6
 // @description                 使用gin+vue进行极速开发的全栈开发基础平台
 // @securityDefinitions.apikey  ApiKeyAuth

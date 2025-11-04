@@ -258,7 +258,7 @@ func (a *appUsers) Register(c *gin.Context) {
 // @accept   application/json
 // @Produce  application/json
 // @Param    data body request.LoginRequest true "登录信息"
-// @Success  200  {object} response.Response{data=response.LoginResponse,msg=string} "登录成功"
+// @Success  200  {object} response.AppLoginResponse{data=response.AppLoginResponse,msg=string} "登录成功"
 // @Router   /appUsers/login [post]
 func (a *appUsers) Login(c *gin.Context) {
 	var req request.LoginRequest
@@ -311,6 +311,13 @@ func (a *appUsers) ResetPassword(c *gin.Context) {
 	response.OkWithMessage("重置成功", c)
 }
 
+// ResetPassword 退出登录
+// @Tags     AppUser
+// @Summary  退出登录
+// @Security ApiKeyAuth
+// @Produce  application/json
+// @Success  200  {object} response.Response{msg=string} "退出成功"
+// @Router   /appUsers/logout [post]
 func (a *appUsers) Logout(c *gin.Context) {
 	token := appUtils.GetToken(c)
 	jwt := system.JwtBlacklist{Jwt: token}
@@ -330,7 +337,7 @@ func (a *appUsers) Logout(c *gin.Context) {
 // @Summary  获取当前登录用户信息
 // @Security ApiKeyAuth
 // @Produce  application/json
-// @Success  200 {object} response.Response{data=appuserRes.UserResponse,msg=string} "获取成功"
+// @Success  200 {object} response.Response{data=response.UserResponse,msg=string} "获取成功"
 // @Router   /appUsers/getUserInfo [get]
 func (a *appUsers) GetUserInfo(c *gin.Context) {
 	var user model.AppUsers
