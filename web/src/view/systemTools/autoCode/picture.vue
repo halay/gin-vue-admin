@@ -1,19 +1,7 @@
 <template>
   <div>
-    <warning-bar
-        href="https://www.gin-vue-admin.com/empower/"
-        title="此功能只针对授权用户开放，点我【购买授权】"
-    />
+
     <div class="gva-search-box">
-      <div class="text-xl mb-2 text-gray-600">
-        AI前端工程师<a
-          class="text-blue-600 text-sm ml-4"
-          href="https://plugin.gin-vue-admin.com/#/layout/userInfo/center"
-          target="_blank"
-      >获取AiPath</a
-      >
-      </div>
-      
       <!-- 选项模式 -->
       <div class="mb-4">
         <div class="mb-3">
@@ -123,14 +111,6 @@
         <div class="flex absolute right-2 bottom-2">
           <el-tooltip effect="light">
             <template #content>
-              <div>
-                此功能仅针对授权用户开放，前往<a
-                  class="text-blue-600"
-                  href="https://www.gin-vue-admin.com/empower/"
-                  target="_blank"
-              >购买授权</a
-              >
-              </div>
             </template>
             <el-button
                 type="primary"

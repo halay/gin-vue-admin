@@ -74,7 +74,6 @@
   import { ref } from 'vue'
   import { emitter } from '@/utils/bus.js'
   import CommandMenu from '@/components/commandMenu/index.vue'
-  import { toDoc } from '@/utils/doc'
 
   const appStore = useAppStore()
   const showSettingDrawer = ref(false)
