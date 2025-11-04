@@ -1,8 +1,6 @@
 import { createI18n } from 'vue-i18n'
 import enLocale from './locales/en.json'
 import zhLocale from './locales/zh.json'
-import arLocale from './locales/ar.json'
-import ruLocale from './locales/ru.json'
 import Cookies from 'js-cookie'
 
 const messages = {
@@ -12,12 +10,6 @@ const messages = {
   zh: {
     ...zhLocale
   },
-  ar: {
-    ...arLocale
-  },
-  ru: {
-    ...ruLocale
-  }
 }
 
 export default createI18n({

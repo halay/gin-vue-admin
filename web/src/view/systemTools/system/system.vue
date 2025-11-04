@@ -1141,8 +1141,6 @@
             <el-select v-model="config.language['language']">
               <el-option value="en" label="English" />
               <el-option value="zh" label="中文" />
-              <el-option value="ar" label="العربية" />
-              <el-option value="ru" label="Русский" />
             </el-select>
             <!-- <el-input v-model="config.language.language" /> -->
           </el-form-item>
@@ -1150,8 +1148,6 @@
             <el-select v-model="config.language['default-language']">
               <el-option value="en" label="English" />
               <el-option value="zh" label="中文" />
-              <el-option value="ar" label="العربية" />
-              <el-option value="ru" label="Русский" />
             </el-select>
             <!-- <el-input v-model="config.language.language" /> -->
           </el-form-item>

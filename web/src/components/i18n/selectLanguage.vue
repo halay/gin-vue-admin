@@ -13,20 +13,6 @@
         <el-dropdown-item :disabled="$i18n.locale === 'zh'" command="zh"
           ><img alt="中文" class="w-8 mr-1" src="@/assets/flags/zh.svg" />中文
         </el-dropdown-item>
-        <el-dropdown-item :disabled="$i18n.locale === 'ar'" command="ar"
-        ><img
-            alt="العربية"
-            class="w-8 mr-1"
-            src="@/assets/flags/ar.svg"
-        />العربية
-        </el-dropdown-item>
-        <el-dropdown-item :disabled="$i18n.locale === 'ru'" command="ru"
-        ><img
-            alt="Русский"
-            class="w-8 mr-1"
-            src="@/assets/flags/ru.svg"
-        />Русский
-        </el-dropdown-item>
       </el-dropdown-menu>
     </template>
   </el-dropdown>

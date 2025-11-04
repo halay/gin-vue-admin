@@ -5,32 +5,6 @@
 
 <template>
   <div class="flex items-center mx-4 gap-4">
-    <!-- <el-tooltip
-      class=""
-      effect="dark"
-      :content="t('layout.tools.videoTutorial')"
-      placement="bottom"
-    >
-      <el-dropdown @command="toDoc">
-        <el-icon
-          class="w-8 h-8 p-2 shadow rounded-full border border-gray-200 dark:border-gray-600 cursor-pointer border-solid"
-        >
-          <Film />
-        </el-icon>
-
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item
-              v-for="item in videoList"
-              :key="item.link"
-              :command="item.link"
-              >{{ item.title }}</el-dropdown-item
-            >
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-    </el-tooltip> -->
-
     <el-tooltip
       class=""
       effect="dark"
