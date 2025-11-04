@@ -35,23 +35,7 @@ func RunServer() {
 
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 
-	fmt.Printf(`
-	%s gin-vue-admin
-	%s:%s
-	%s
-	%s://github.com/flipped-aurora/gin-vue-admin
-	%s:https://plugin.gin-vue-admin.com
-	%s:https://support.qq.com/products/371961
-	%s:http://127.0.0.1%s/swagger/index.html
-	默认MCP SSE地址:http://127.0.0.1%s%s
-	默认MCP Message地址:http://127.0.0.1%s%s
-	%s:http://127.0.0.1:8080
-	%s
-	%s
-	%s
-	%s
-	** 感谢您对Gin-Vue-Admin的支持与关注 合法授权使用更有利于项目的长久发展**
-`, global.Translate("core.server.welcomeTo"),
+	,
 		global.Translate("core.server.currentVersion"),
 		global.Version,
 		global.Translate("core.server.joinGroup"),

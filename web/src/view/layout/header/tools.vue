@@ -173,64 +173,7 @@
     window.location.reload()
   }
 
-  const videoList = [
-    {
-      title: t('view.layout.header.tools.video01'),
-      link: 'https://www.bilibili.com/video/BV1jx4y1s7xx'
-    },
-    {
-      title: t('view.layout.header.tools.video02'),
-      link: 'https://www.bilibili.com/video/BV1sr421K7sv'
-    },
-    {
-      title: t('view.layout.header.tools.video03'),
-      link: 'https://www.bilibili.com/video/BV1iH4y1c7Na'
-    },
-    {
-      title: t('view.layout.header.tools.video04'),
-      link: 'https://www.bilibili.com/video/BV1UZ421T7fV'
-    },
-    {
-      title: t('view.layout.header.tools.video05'),
-      link: 'https://www.bilibili.com/video/BV1NE4m1977s'
-    },
-    {
-      title: t('view.layout.header.tools.video06'),
-      link: 'https://www.bilibili.com/video/BV17i421a7DE'
-    },
-    {
-      title: t('view.layout.header.tools.video07'),
-      link: 'https://www.bilibili.com/video/BV1Yw4m1k7fg'
-    },
-    {
-      title: t('view.layout.header.tools.video08'),
-      link: 'https://www.bilibili.com/video/BV12y411i7oE'
-    },
-    {
-      title: t('view.layout.header.tools.video09'),
-      link: 'https://www.bilibili.com/video/BV1ZM4m1y7i3'
-    },
-    {
-      title: t('view.layout.header.tools.video10'),
-      link: 'https://www.bilibili.com/video/BV1WS42197DZ'
-    },
-    {
-      title: t('view.layout.header.tools.video11'),
-      link: 'https://www.bilibili.com/video/BV1NE4m1979c'
-    },
-    {
-      title: t('view.layout.header.tools.video12'),
-      link: 'https://www.bilibili.com/video/BV1Sw4m1k746'
-    },
-    {
-      title: t('view.layout.header.tools.video13'),
-      link: 'https://www.bilibili.com/video/BV1Ki421a7X2'
-    },
-    {
-      title: t('view.layout.header.tools.video14'),
-      link: 'https://www.bilibili.com/video/BV1Lx4y1s77D'
-    }
-  ]
+  
 </script>
 
 <style scoped lang="scss"></style>
