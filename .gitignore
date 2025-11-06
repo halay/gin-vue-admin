@@ -28,7 +28,7 @@ rm_file/
 /server/latest_log
 /server/__debug_bin*
 /server/*.local.yaml
-/server/uploads/
+# /server/uploads/
 /server/bin/
 
 *.iml
