@@ -13,4 +13,5 @@ func Router(engine *gin.Engine) {
 	private := engine.Group(global.GVA_CONFIG.System.RouterPrefix).Group("")
 	private.Use(middleware.JWTAuth()).Use(middleware.CasbinHandler())
 	router.Router.AppUsers.Init(public, private)
+	router.Router.Merchants.Init(public, private)
 }

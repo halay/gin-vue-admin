@@ -165,7 +165,7 @@
     {{ detailForm.phone }}
 </el-descriptions-item>
                  <el-descriptions-item label="用户状态">
-    {{ detailForm.status }}
+    {{ filterDict(detailForm.status,statusOptions) }}
 </el-descriptions-item>
                  <el-descriptions-item label="最后登录时间">
     {{ detailForm.lastLoginTime }}
