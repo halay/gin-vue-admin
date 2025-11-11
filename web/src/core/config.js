@@ -8,7 +8,7 @@ const greenText = (text) => `\x1b[32m${text}\x1b[0m`
 export const config = {
   appName: 'DeedMX',
   showViteLogo: true,
-  KeepAliveTabs: true,
+  keepAliveTabs: false,
   logs: []
 }
 
