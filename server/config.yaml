@@ -140,10 +140,10 @@ mysql:
     prefix: ""
     port: "3306"
     config: charset=utf8mb4&parseTime=True&loc=Local
-    db-name: deepmx
+    db-name: deedmx
     username: rwaai
     password: AiRwa1009.
-    path: 113.45.180.168
+    path: 110.41.59.11
     engine: ""
     log-mode: error
     max-idle-conns: 10
@@ -188,7 +188,7 @@ qiniu:
     use-cdn-domains: false
 redis:
     name: ""
-    addr: 113.45.180.168:6379
+    addr: 110.41.59.11:6379
     password: AiRwaRds1009.
     db: 0
     useCluster: false
@@ -198,7 +198,7 @@ redis:
         - 172.21.0.2:7002
 redis-list:
     - name: cache
-      addr: 113.45.180.168:6379
+      addr: 110.41.59.11:6379
       password: AiRwaRds1009.
       db: 0
       useCluster: false
