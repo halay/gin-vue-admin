@@ -17,8 +17,8 @@ type UserResponse struct {
 	ID            uint       `json:"id"`
 	Email         string     `json:"email"`
 	Nickname      string     `json:"nickname"`
-	Avatar        string     `json:"avatar,omitempty"`
-	Phone         string     `json:"phone,omitempty"`
+	Avatar        string     `json:"avatar"`
+	Phone         string     `json:"phone"`
 	Status        string     `json:"status"`
 	EmailVerified bool       `json:"emailVerified"`
 	LastLoginTime *time.Time `json:"lastLoginTime,omitempty"`
