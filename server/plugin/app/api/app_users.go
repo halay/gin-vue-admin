@@ -248,8 +248,19 @@ func (a *appUsers) Register(c *gin.Context) {
 		response.FailWithMessage("注册失败: "+err.Error(), c)
 		return
 	}
-
-	response.OkWithData(user, c)
+	token, claims, err := appUtils.LoginToken(user)
+	if err != nil {
+		global.GVA_LOG.Error("获取token失败!", zap.Error(err))
+		response.FailWithMessage("获取token失败", c)
+		return
+	}
+	appUtils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
+	response.OkWithDetailed(appResponse.AppLoginResponse{
+		User:      user,
+		Token:     token,
+		ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+	}, "注册成功", c)
+	//response.OkWithData(user, c)
 }
 
 // Login 用户登录
