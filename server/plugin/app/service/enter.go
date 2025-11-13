@@ -13,4 +13,8 @@ type service struct {
 	ProductSku           SKU
 	ProductSpec          PS
 	ProductSpecOption    PSO
+	Order                ORD
+	OrderItem            ORDI
+	UserPointsAccount    UPA
+	UserPointsLog        UPL
 }

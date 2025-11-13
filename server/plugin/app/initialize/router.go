@@ -23,4 +23,8 @@ func Router(engine *gin.Engine) {
 	router.Router.ProductSku.Init(public, private)
 	router.Router.ProductSpec.Init(public, private)
 	router.Router.ProductSpecOption.Init(public, private)
+	router.Router.Order.Init(public, private)
+	router.Router.OrderItem.Init(public, private)
+	router.Router.UserPointsAccount.Init(public, private)
+	router.Router.UserPointsLog.Init(public, private)
 }

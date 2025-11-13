@@ -7,7 +7,8 @@ aliyun-oss:
     base-path: yourBasePath
 autocode:
     web: web/src
-    root: D:\go_work\src\Ai\rwa\deekmx\gin-vue-admin
+    root: /Users/halay/code/gin-vue-admin
+    root_bak: D:\go_work\src\Ai\rwa\deekmx\gin-vue-admin
     server: server
     module: github.com/flipped-aurora/gin-vue-admin/server
     ai-path: "https://ai.gin-vue-admin.com/{FUNC}/DeedMX/c206c1ee-d2f3-41a9-8b02-2bb69f429953"

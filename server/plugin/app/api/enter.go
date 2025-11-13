@@ -14,6 +14,10 @@ var (
 	serviceProductSku           = service.Service.ProductSku
 	serviceProductSpec          = service.Service.ProductSpec
 	serviceProductSpecOption    = service.Service.ProductSpecOption
+	serviceOrder                = service.Service.Order
+	serviceOrderItem            = service.Service.OrderItem
+	serviceUserPointsAccount    = service.Service.UserPointsAccount
+	serviceUserPointsLog        = service.Service.UserPointsLog
 )
 
 type api struct {
@@ -28,4 +32,8 @@ type api struct {
 	ProductSku           SKU
 	ProductSpec          PS
 	ProductSpecOption    PSO
+	Order                ORD
+	OrderItem            ORDI
+	UserPointsAccount    UPA
+	UserPointsLog        UPL
 }

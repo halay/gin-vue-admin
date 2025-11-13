@@ -15,6 +15,10 @@ var (
 	apiProductSku           = api.Api.ProductSku
 	apiProductSpec          = api.Api.ProductSpec
 	apiProductSpecOption    = api.Api.ProductSpecOption
+	apiOrder                = api.Api.Order
+	apiOrderItem            = api.Api.OrderItem
+	apiUserPointsAccount    = api.Api.UserPointsAccount
+	apiUserPointsLog        = api.Api.UserPointsLog
 )
 
 type router struct {
@@ -29,4 +33,8 @@ type router struct {
 	ProductSku           SKU
 	ProductSpec          PS
 	ProductSpecOption    PSO
+	Order                ORD
+	OrderItem            ORDI
+	UserPointsAccount    UPA
+	UserPointsLog        UPL
 }
