@@ -7,10 +7,12 @@ var (
 	apiAppUsers  = api.Api.AppUsers
 	apiMerchants = api.Api.Merchants
 	apiYApi      = api.Api.YApi
+	apiBanner    = api.Api.Banner
 )
 
 type router struct {
 	AppUsers  appUsers
 	Merchants mc
 	YApi      yApi
+	Banner    banner
 }

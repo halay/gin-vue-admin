@@ -78,8 +78,10 @@
   "/src/plugin/announcement/form/info.vue": "InfoForm",
   "/src/plugin/announcement/view/info.vue": "Info",
   "/src/plugin/app/form/appUsers.vue": "AppUsersForm",
+  "/src/plugin/app/form/banner.vue": "BannerForm",
   "/src/plugin/app/form/merchants.vue": "MerchantsForm",
   "/src/plugin/app/view/appUsers.vue": "AppUsers",
+  "/src/plugin/app/view/banner.vue": "Banner",
   "/src/plugin/app/view/merchants.vue": "Merchants",
   "/src/plugin/email/view/index.vue": "Email"
 }

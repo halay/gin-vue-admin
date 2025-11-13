@@ -6,10 +6,12 @@ var (
 	Api              = new(api)
 	serviceAppUsers  = service.Service.AppUsers
 	serviceMerchants = service.Service.Merchants
+	serviceBanner    = service.Service.Banner
 )
 
 type api struct {
 	AppUsers  appUsers
 	Merchants mc
 	YApi      yApi
+	Banner    banner
 }
