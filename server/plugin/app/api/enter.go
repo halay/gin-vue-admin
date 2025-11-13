@@ -9,6 +9,11 @@ var (
 	serviceBanner               = service.Service.Banner
 	serviceMerchantAnnouncement = service.Service.MerchantAnnouncement
 	serviceMerchantAdmin        = service.Service.MerchantAdmin
+	serviceProductCategory      = service.Service.ProductCategory
+	serviceProduct              = service.Service.Product
+	serviceProductSku           = service.Service.ProductSku
+	serviceProductSpec          = service.Service.ProductSpec
+	serviceProductSpecOption    = service.Service.ProductSpecOption
 )
 
 type api struct {
@@ -18,4 +23,9 @@ type api struct {
 	Banner               banner
 	MerchantAnnouncement MA
 	MerchantAdmin        MADM
+	ProductCategory      PC
+	Product              P
+	ProductSku           SKU
+	ProductSpec          PS
+	ProductSpecOption    PSO
 }

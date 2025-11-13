@@ -8,4 +8,9 @@ type service struct {
 	Banner               banner
 	MerchantAnnouncement MA
 	MerchantAdmin        MADM
+	ProductCategory      PC
+	Product              P
+	ProductSku           SKU
+	ProductSpec          PS
+	ProductSpecOption    PSO
 }

@@ -10,6 +10,11 @@ var (
 	apiBanner               = api.Api.Banner
 	apiMerchantAnnouncement = api.Api.MerchantAnnouncement
 	apiMerchantAdmin        = api.Api.MerchantAdmin
+	apiProductCategory      = api.Api.ProductCategory
+	apiProduct              = api.Api.Product
+	apiProductSku           = api.Api.ProductSku
+	apiProductSpec          = api.Api.ProductSpec
+	apiProductSpecOption    = api.Api.ProductSpecOption
 )
 
 type router struct {
@@ -19,4 +24,9 @@ type router struct {
 	Banner               banner
 	MerchantAnnouncement MA
 	MerchantAdmin        MADM
+	ProductCategory      PC
+	Product              P
+	ProductSku           SKU
+	ProductSpec          PS
+	ProductSpecOption    PSO
 }

@@ -18,4 +18,9 @@ func Router(engine *gin.Engine) {
 	router.Router.Banner.Init(public, private)
 	router.Router.MerchantAnnouncement.Init(public, private)
 	router.Router.MerchantAdmin.Init(public, private)
+	router.Router.ProductCategory.Init(public, private)
+	router.Router.Product.Init(public, private)
+	router.Router.ProductSku.Init(public, private)
+	router.Router.ProductSpec.Init(public, private)
+	router.Router.ProductSpecOption.Init(public, private)
 }
