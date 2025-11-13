@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -43,7 +44,20 @@ func (y *yApi) GetYApiKLine(c *gin.Context) {
 		response.FailWithMessage("请求K线失败"+err.Error(), c)
 		return
 	}
-	response.OkWithData(b, c)
+	var resStruct response.Response
+	err = json.Unmarshal(b, &resStruct)
+	if err != nil {
+		global.GVA_LOG.Error("请求K线失败!", zap.Error(err))
+		response.FailWithMessage("请求K线失败"+err.Error(), c)
+		return
+	}
+
+	if resStruct.Code != 0 {
+		global.GVA_LOG.Error("请求K线失败!"+resStruct.Msg, zap.Error(err))
+		response.FailWithMessage("请求K线失败"+resStruct.Msg, c)
+		return
+	}
+	response.OkWithData(resStruct.Data, c)
 }
 
 func (y *yApi) GetYApiDeep(c *gin.Context) {
@@ -77,7 +91,20 @@ func (y *yApi) GetYApiDeep(c *gin.Context) {
 		response.FailWithMessage("请求深度失败"+err.Error(), c)
 		return
 	}
-	response.OkWithData(b, c)
+	var resStruct response.Response
+	err = json.Unmarshal(b, &resStruct)
+	if err != nil {
+		global.GVA_LOG.Error("请求深度失败!", zap.Error(err))
+		response.FailWithMessage("请求深度失败"+err.Error(), c)
+		return
+	}
+
+	if resStruct.Code != 0 {
+		global.GVA_LOG.Error("请求深度失败!"+resStruct.Msg, zap.Error(err))
+		response.FailWithMessage("请求深度失败"+resStruct.Msg, c)
+		return
+	}
+	response.OkWithData(resStruct.Data, c)
 }
 func (y *yApi) GetYApiAllMarketInfo(c *gin.Context) {
 	var url = plugin.Config.YApiUrl + "/openapi/v1/market/getAllMarketInfo"
@@ -97,7 +124,20 @@ func (y *yApi) GetYApiAllMarketInfo(c *gin.Context) {
 		response.FailWithMessage("请求所有交易对行情失败"+err.Error(), c)
 		return
 	}
-	response.OkWithData(b, c)
+	var resStruct response.Response
+	err = json.Unmarshal(b, &resStruct)
+	if err != nil {
+		global.GVA_LOG.Error("请求所有交易对行情失败!", zap.Error(err))
+		response.FailWithMessage("请求所有交易对行情失败"+err.Error(), c)
+		return
+	}
+
+	if resStruct.Code != 0 {
+		global.GVA_LOG.Error("请求所有交易对行情失败!"+resStruct.Msg, zap.Error(err))
+		response.FailWithMessage("请求所有交易对行情失败"+resStruct.Msg, c)
+		return
+	}
+	response.OkWithData(resStruct.Data, c)
 }
 func (y *yApi) GetYApiMarketInfo(c *gin.Context) {
 	var req request.YApiMarketInfoRequest
@@ -123,5 +163,18 @@ func (y *yApi) GetYApiMarketInfo(c *gin.Context) {
 		response.FailWithMessage("请求指定交易对行情失败"+err.Error(), c)
 		return
 	}
-	response.OkWithData(b, c)
+	var resStruct response.Response
+	err = json.Unmarshal(b, &resStruct)
+	if err != nil {
+		global.GVA_LOG.Error("请求指定交易对行情失败!", zap.Error(err))
+		response.FailWithMessage("请求指定交易对行情失败"+err.Error(), c)
+		return
+	}
+
+	if resStruct.Code != 0 {
+		global.GVA_LOG.Error("请求指定交易对行情失败!"+resStruct.Msg, zap.Error(err))
+		response.FailWithMessage("请求指定交易对行情失败"+resStruct.Msg, c)
+		return
+	}
+	response.OkWithData(resStruct.Data, c)
 }
