@@ -251,3 +251,5 @@ zap:
     retention-day: -1
 app-user:
     authority-id: 123
+    y-api-url: https://minax-api.devlab.vip
+    y-api-time-out: 3

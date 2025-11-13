@@ -1,0 +1,20 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+var YApi = new(yApi)
+
+type yApi struct{}
+
+// Init 初始化 商家信息 路由信息
+func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
+	{
+		group := public.Group("yApi")
+		group.GET("getKLine", apiYApi.GetYApiKLine)                 // K线
+		group.GET("getDeep", apiYApi.GetYApiDeep)                   // 深度
+		group.GET("getAllMarketInfo", apiYApi.GetYApiAllMarketInfo) // 所有交易对行情
+		group.GET("getMarketInfo", apiYApi.GetYApiMarketInfo)       // 指定交易对行情
+	}
+}
