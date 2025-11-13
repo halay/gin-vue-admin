@@ -8,11 +8,11 @@ import (
 
 func main() {
 	g := gen.NewGenerator(gen.Config{OutPath: filepath.Join("..", "..", "..", "app", "blender", "model", "dao"), Mode: gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface})
-	g.ApplyBasic(new(model.AppUsers), new(model.Merchants), //go:generate go mod tidy
+	g.ApplyBasic(new(model.AppUsers), new(model.Merchants), new(model.Banner), new(model.MerchantAnnouncement), //go:generate go mod tidy
 		//go:generate go mod download
 		//go:generate go run gen.go
 
-		new(model.Banner),
+		new(model.MerchantAdmin),
 	)
 	g.Execute()
 }

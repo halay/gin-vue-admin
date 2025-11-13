@@ -16,4 +16,6 @@ func Router(engine *gin.Engine) {
 	router.Router.Merchants.Init(public, private)
 	router.Router.YApi.Init(public, private)
 	router.Router.Banner.Init(public, private)
+	router.Router.MerchantAnnouncement.Init(public, private)
+	router.Router.MerchantAdmin.Init(public, private)
 }
