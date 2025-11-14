@@ -10,6 +10,6 @@ type ProductSpecOptionSearch struct{
        SpecID  *int `json:"specId" form:"specId"` 
        Value  *string `json:"value" form:"value"` 
        SortValue  *int `json:"sortValue" form:"sortValue"` 
-       MerchantID  *int `json:"merchantId" form:"merchantId"` 
+       MerchantID  *int64 `json:"merchantId" form:"merchantId"` 
     request.PageInfo
 }

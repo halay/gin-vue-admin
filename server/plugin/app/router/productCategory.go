@@ -23,8 +23,9 @@ func (r *PC) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("findProductCategory", apiProductCategory.FindProductCategory)        // 根据ID获取商户商品分类
 		group.GET("getProductCategoryList", apiProductCategory.GetProductCategoryList)  // 获取商户商品分类列表
 	}
-	{
-	    group := public.Group("PC")
-	    group.GET("getProductCategoryPublic", apiProductCategory.GetProductCategoryPublic)  // 商户商品分类开放接口
-	}
+    {
+        group := public.Group("PC")
+        group.GET("getProductCategoryPublic", apiProductCategory.GetProductCategoryPublic)  // 商户商品分类开放接口
+        group.GET("getCategoryTreePublic", apiProductCategory.GetCategoryTreePublic)
+    }
 }

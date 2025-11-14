@@ -102,4 +102,49 @@ func (s *PC)GetProductCategoryPublic(ctx context.Context) {
 
 }
 
+func (s *PC) GetCategoryTree(ctx context.Context, merchantID int) (res []map[string]any, err error) {
+    var cats []model.ProductCategory
+    err = global.GVA_DB.WithContext(ctx).Where("merchant_id = ?", merchantID).Order("sort asc, id asc").Find(&cats).Error
+    if err != nil {
+        return
+    }
+    res = make([]map[string]any, 0, len(cats))
+    catIDs := make([]int64, 0, len(cats))
+    for _, c := range cats {
+        catIDs = append(catIDs, int64(c.ID))
+    }
+    var products []model.Product
+    if len(catIDs) > 0 {
+        err = global.GVA_DB.WithContext(ctx).Where("merchant_id = ? AND category_id IN ?", merchantID, catIDs).Order("id asc").Find(&products).Error
+        if err != nil {
+            return
+        }
+    }
+    byCat := make(map[int64][]map[string]any)
+    for _, p := range products {
+        var cid int64
+        if p.CategoryID != nil {
+            cid = *p.CategoryID
+        }
+        byCat[cid] = append(byCat[cid], map[string]any{
+            "id":    p.ID,
+            "name":  p.Name,
+            "cover": p.CoverImage,
+            "status": p.Status,
+        })
+    }
+    for _, c := range cats {
+        item := map[string]any{
+            "id":    c.ID,
+            "name":  c.Name,
+            "status": c.Status,
+            "sort":  c.Sort,
+            "products": byCat[int64(c.ID)],
+            "productCount": len(byCat[int64(c.ID)]),
+        }
+        res = append(res, item)
+    }
+    return
+}
+
 func ptrInt64(v int64) *int64 { return &v }

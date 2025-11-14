@@ -16,5 +16,6 @@ type service struct {
 	Order                ORD
 	OrderItem            ORDI
 	UserPointsAccount    UPA
-	UserPointsLog        UPL
+    UserPointsLog        UPL
+    Search               SRCH
 }

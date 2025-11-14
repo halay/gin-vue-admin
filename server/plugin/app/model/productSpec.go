@@ -7,10 +7,10 @@ import (
 // ProductSpec 商品规格键 结构体
 type ProductSpec struct {
     global.GVA_MODEL
-  ProductID  *int64 `json:"productId" form:"productId" gorm:"comment:商品ID;column:product_id;" binding:"required"`  //商品
-  Name  *string `json:"name" form:"name" gorm:"comment:规格名;column:name;size:64;" binding:"required"`  //规格名
-  Sort  *int64 `json:"sort" form:"sort" gorm:"comment:排序;column:sort;"`  //排序
-  MerchantID  *int64 `json:"merchantId" form:"merchantId" gorm:"comment:关联商户;column:merchant_id;"`  //关联商户
+  ProductID  *int64 `json:"productId" form:"productId" gorm:"comment:商品ID;column:product_id;" binding:"required"`
+  Name  *string `json:"name" form:"name" gorm:"comment:规格名;column:name;size:64;" binding:"required"`
+  Sort  *int64 `json:"sort" form:"sort" gorm:"comment:排序;column:sort;"`
+  MerchantID  *int64 `json:"merchantId" form:"merchantId" gorm:"comment:关联商户;column:merchant_id;index:idx_merchant_id"`
 }
 
 

@@ -14,8 +14,16 @@ type SKU struct {}
 // CreateProductSku 创建商品SKU（规格组合）记录
 // Author [yourname](https://github.com/yourname)
 func (s *SKU) CreateProductSku(ctx context.Context, SKU *model.ProductSku, merchantID int) (err error) {
+    var cnt int64
+    global.GVA_DB.WithContext(ctx).Table("app_products").Where("id = ? AND merchant_id = ? AND deleted_at IS NULL", SKU.ProductID, merchantID).Count(&cnt)
+    if cnt == 0 {
+        return global.GVA_DB.Error
+    }
     SKU.MerchantID = ptrInt64(int64(merchantID))
     err = global.GVA_DB.WithContext(ctx).Create(SKU).Error
+    if err == nil {
+        _ = ProductSkuOptionSvc.UpsertSkuOptions(ctx, SKU.ID, merchantID, SKU.Attrs)
+    }
     return err
 }
 
@@ -36,7 +44,17 @@ func (s *SKU) DeleteProductSkuByIds(ctx context.Context, IDs []string, merchantI
 // UpdateProductSku 更新商品SKU（规格组合）记录（限定商户范围）
 // Author [yourname](https://github.com/yourname)
 func (s *SKU) UpdateProductSku(ctx context.Context, SKU model.ProductSku, merchantID int) (err error) {
+    if SKU.ProductID != nil {
+        var cnt int64
+        global.GVA_DB.WithContext(ctx).Table("app_products").Where("id = ? AND merchant_id = ? AND deleted_at IS NULL", *SKU.ProductID, merchantID).Count(&cnt)
+        if cnt == 0 {
+            return global.GVA_DB.Error
+        }
+    }
     err = global.GVA_DB.WithContext(ctx).Model(&model.ProductSku{}).Where("id = ? AND merchant_id = ?", SKU.ID, merchantID).Updates(&SKU).Error
+    if err == nil {
+        _ = ProductSkuOptionSvc.UpsertSkuOptions(ctx, SKU.ID, merchantID, SKU.Attrs)
+    }
     return err
 }
 

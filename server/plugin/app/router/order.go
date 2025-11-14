@@ -27,6 +27,11 @@ func (r *ORD) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
         group := public.Group("ORD")
         group.GET("getOrderDataSource", apiOrder.GetOrderDataSource)  // 获取订单数据源
         group.GET("getOrderPublic", apiOrder.GetOrderPublic)  // 订单开放接口
+    }
+    {
+        group := private.Group("ORD")
+        group.GET("getMyOrderList", apiOrder.GetMyOrderList)  // 我的订单列表
+        group.GET("getMyOrderDetail", apiOrder.GetMyOrderDetail)  // 我的订单详情
         group.POST("createOrderByPoints", apiOrder.CreateOrderByPoints) // C端创建积分订单
         group.POST("payOrderByPoints", apiOrder.PayOrderByPoints) // C端积分支付
     }

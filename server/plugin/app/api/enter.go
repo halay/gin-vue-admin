@@ -3,7 +3,7 @@ package api
 import "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/service"
 
 var (
-	Api                         = new(api)
+    Api                         = new(api)
 	serviceAppUsers             = service.Service.AppUsers
 	serviceMerchants            = service.Service.Merchants
 	serviceBanner               = service.Service.Banner
@@ -17,7 +17,8 @@ var (
 	serviceOrder                = service.Service.Order
 	serviceOrderItem            = service.Service.OrderItem
 	serviceUserPointsAccount    = service.Service.UserPointsAccount
-	serviceUserPointsLog        = service.Service.UserPointsLog
+    serviceUserPointsLog        = service.Service.UserPointsLog
+    serviceSearch               = service.Service.Search
 )
 
 type api struct {
@@ -35,5 +36,6 @@ type api struct {
 	Order                ORD
 	OrderItem            ORDI
 	UserPointsAccount    UPA
-	UserPointsLog        UPL
+    UserPointsLog        UPL
+    Search               SEARCH
 }

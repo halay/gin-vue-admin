@@ -10,7 +10,7 @@ type ProductCategorySearch struct{
        Status  *string `json:"status" form:"status"` 
        SortValue  *int `json:"sortValue" form:"sortValue"` 
        Description  string `json:"description" form:"description"` 
-       MerchantID  *int `json:"merchantId" form:"merchantId"` 
+       MerchantID  *int64 `json:"merchantId" form:"merchantId"` 
     request.PageInfo
     Sort  string `json:"sort" form:"sort"`
     Order string `json:"order" form:"order"`

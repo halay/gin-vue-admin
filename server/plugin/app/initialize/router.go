@@ -26,5 +26,6 @@ func Router(engine *gin.Engine) {
 	router.Router.Order.Init(public, private)
 	router.Router.OrderItem.Init(public, private)
 	router.Router.UserPointsAccount.Init(public, private)
-	router.Router.UserPointsLog.Init(public, private)
+    router.Router.UserPointsLog.Init(public, private)
+    router.Router.Search.Init(public, private)
 }

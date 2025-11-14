@@ -14,7 +14,7 @@ type ProductSkuSearch struct{
        Image  string `json:"image" form:"image"` 
        Stock  *int `json:"stock" form:"stock"` 
        Status  *string `json:"status" form:"status"` 
-       MerchantID  *int `json:"merchantId" form:"merchantId"` 
+       MerchantID  *int64 `json:"merchantId" form:"merchantId"` 
     request.PageInfo
     Sort  string `json:"sort" form:"sort"`
     Order string `json:"order" form:"order"`

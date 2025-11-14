@@ -23,9 +23,13 @@ func (r *UPL) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("findUserPointsLog", apiUserPointsLog.FindUserPointsLog)        // 根据ID获取用户积分流水
 		group.GET("getUserPointsLogList", apiUserPointsLog.GetUserPointsLogList)  // 获取用户积分流水列表
 	}
-	{
-	    group := public.Group("UPL")
-	    group.GET("getUserPointsLogDataSource", apiUserPointsLog.GetUserPointsLogDataSource)  // 获取用户积分流水数据源
-	    group.GET("getUserPointsLogPublic", apiUserPointsLog.GetUserPointsLogPublic)  // 用户积分流水开放接口
-	}
+    {
+        group := public.Group("UPL")
+        group.GET("getUserPointsLogDataSource", apiUserPointsLog.GetUserPointsLogDataSource)  // 获取用户积分流水数据源
+        group.GET("getUserPointsLogPublic", apiUserPointsLog.GetUserPointsLogPublic)  // 用户积分流水开放接口
+    }
+    {
+        group := private.Group("UPL")
+        group.GET("getMyPointsLogs", apiUserPointsLog.GetMyPointsLogs) // 我的积分流水
+    }
 }

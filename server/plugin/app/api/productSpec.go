@@ -239,10 +239,26 @@ func (a *PS) GetProductSpecDataSource(c *gin.Context) {
 // @Success 200 {object} response.Response{data=object,msg=string} "获取成功"
 // @Router /PS/getProductSpecPublic [get]
 func (a *PS) GetProductSpecPublic(c *gin.Context) {
-    // 创建业务用Context
     ctx := c.Request.Context()
-
-    // 此接口不需要鉴权 示例为返回了一个固定的消息接口，一般本接口用于C端服务，需要自己实现业务逻辑
-    serviceProductSpec.GetProductSpecPublic(ctx)
-    response.OkWithDetailed(gin.H{"info": "不需要鉴权的商品规格键接口信息"}, "获取成功", c)
+    var pageInfo request.ProductSpecSearch
+    if err := c.ShouldBindQuery(&pageInfo); err != nil {
+        response.FailWithMessage(err.Error(), c)
+        return
+    }
+    if pageInfo.MerchantID == nil {
+        response.FailWithMessage("merchantId为必填", c)
+        return
+    }
+    list, total, err := serviceProductSpec.GetProductSpecInfoList(ctx, pageInfo, int(*pageInfo.MerchantID))
+    if err != nil {
+        global.GVA_LOG.Error("获取失败!", zap.Error(err))
+        response.FailWithMessage("获取失败:"+err.Error(), c)
+        return
+    }
+    response.OkWithDetailed(response.PageResult{
+        List:     list,
+        Total:    total,
+        Page:     pageInfo.Page,
+        PageSize: pageInfo.PageSize,
+    }, "获取成功", c)
 }

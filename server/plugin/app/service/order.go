@@ -141,6 +141,32 @@ func (s *ORD)GetOrderPublic(ctx context.Context) {
 
 }
 
+// GetOrderInfoListByUser 用户维度查询订单列表（跨商户）
+func (s *ORD) GetOrderInfoListByUser(ctx context.Context, userID int64, info request.OrderSearch) (list []model.Order, total int64, err error) {
+    limit := info.PageSize
+    offset := info.PageSize * (info.Page - 1)
+    db := global.GVA_DB.WithContext(ctx).Model(&model.Order{}).Where("user_id = ?", userID)
+    if len(info.CreatedAtRange) == 2 {
+        db = db.Where("created_at BETWEEN ? AND ?", info.CreatedAtRange[0], info.CreatedAtRange[1])
+    }
+    if info.OrderNo != nil && *info.OrderNo != "" { db = db.Where("order_no LIKE ?", "%"+*info.OrderNo+"%") }
+    if info.PayStatus != nil && *info.PayStatus != "" { db = db.Where("pay_status = ?", *info.PayStatus) }
+    if info.Status != nil && *info.Status != "" { db = db.Where("status = ?", *info.Status) }
+    err = db.Count(&total).Error
+    if err != nil { return }
+    if limit != 0 { db = db.Limit(limit).Offset(offset) }
+    err = db.Order("created_at desc").Find(&list).Error
+    return
+}
+
+// GetOrderDetailByUser 用户维度查询订单详情与明细
+func (s *ORD) GetOrderDetailByUser(ctx context.Context, userID int64, orderNo string) (ord model.Order, items []model.OrderItem, err error) {
+    if err = global.GVA_DB.WithContext(ctx).Where("order_no = ? AND user_id = ?", orderNo, userID).First(&ord).Error; err != nil { return }
+    id64 := int64(ord.ID)
+    err = global.GVA_DB.WithContext(ctx).Where("order_id = ?", id64).Find(&items).Error
+    return
+}
+
 // CreateOrderByPoints 生成订单并创建明细（仅积分支付），返回订单与明细
 func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.ProductSku, qty int64, consigneeName, consigneePhone, address string) (ord model.Order, item model.OrderItem, err error) {
     orderNo := fmt.Sprintf("P%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)

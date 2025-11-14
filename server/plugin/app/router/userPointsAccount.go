@@ -23,9 +23,13 @@ func (r *UPA) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("findUserPointsAccount", apiUserPointsAccount.FindUserPointsAccount)        // 根据ID获取用户积分账户
 		group.GET("getUserPointsAccountList", apiUserPointsAccount.GetUserPointsAccountList)  // 获取用户积分账户列表
 	}
-	{
-	    group := public.Group("UPA")
-	    group.GET("getUserPointsAccountDataSource", apiUserPointsAccount.GetUserPointsAccountDataSource)  // 获取用户积分账户数据源
-	    group.GET("getUserPointsAccountPublic", apiUserPointsAccount.GetUserPointsAccountPublic)  // 用户积分账户开放接口
-	}
+    {
+        group := public.Group("UPA")
+        group.GET("getUserPointsAccountDataSource", apiUserPointsAccount.GetUserPointsAccountDataSource)  // 获取用户积分账户数据源
+        group.GET("getUserPointsAccountPublic", apiUserPointsAccount.GetUserPointsAccountPublic)  // 用户积分账户开放接口
+    }
+    {
+        group := private.Group("UPA")
+        group.GET("getMyPointsBalance", apiUserPointsAccount.GetMyPointsBalance) // 我的积分余额
+    }
 }

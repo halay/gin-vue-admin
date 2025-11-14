@@ -242,6 +242,54 @@ func (a *ORD) GetOrderPublic(c *gin.Context) {
     response.OkWithDetailed(gin.H{"info": "不需要鉴权的订单接口信息"}, "获取成功", c)
 }
 
+// GetMyOrderList 获取当前登录用户的订单列表
+// @Tags Order
+// @Summary 获取当前登录用户订单列表
+// @Security ApiKeyAuth
+// @Accept application/json
+// @Produce application/json
+// @Param data query request.OrderSearch true "分页查询参数"
+// @Success 200 {object} response.Response{data=response.PageResult,msg=string} "获取成功"
+// @Router /ORD/getMyOrderList [get]
+func (a *ORD) GetMyOrderList(c *gin.Context) {
+    ctx := c.Request.Context()
+    var pageInfo request.OrderSearch
+    if err := c.ShouldBindQuery(&pageInfo); err != nil { response.FailWithMessage(err.Error(), c); return }
+    userID := appUtils.GetUserID(c)
+    if userID == 0 { response.FailWithMessage("未登录", c); return }
+    list, total, err := serviceOrder.GetOrderInfoListByUser(ctx, int64(userID), pageInfo)
+    if err != nil {
+        global.GVA_LOG.Error("获取失败!", zap.Error(err))
+        response.FailWithMessage("获取失败:"+err.Error(), c)
+        return
+    }
+    response.OkWithDetailed(response.PageResult{List:list, Total:total, Page:pageInfo.Page, PageSize:pageInfo.PageSize}, "获取成功", c)
+}
+
+// GetMyOrderDetail 获取当前登录用户的订单详情
+// @Tags Order
+// @Summary 获取当前登录用户的订单详情
+// @Security ApiKeyAuth
+// @Accept application/json
+// @Produce application/json
+// @Param orderNo query string true "订单号"
+// @Success 200 {object} response.Response{data=object,msg=string} "获取成功"
+// @Router /ORD/getMyOrderDetail [get]
+func (a *ORD) GetMyOrderDetail(c *gin.Context) {
+    ctx := c.Request.Context()
+    orderNo := c.Query("orderNo")
+    userID := appUtils.GetUserID(c)
+    if userID == 0 { response.FailWithMessage("未登录", c); return }
+    if orderNo == "" { response.FailWithMessage("订单号不能为空", c); return }
+    ord, items, err := serviceOrder.GetOrderDetailByUser(ctx, int64(userID), orderNo)
+    if err != nil {
+        global.GVA_LOG.Error("获取失败!", zap.Error(err))
+        response.FailWithMessage("获取失败:"+err.Error(), c)
+        return
+    }
+    response.OkWithDetailed(gin.H{"order": ord, "items": items}, "获取成功", c)
+}
+
 // CreateOrderByPoints C端：创建积分订单（未支付）
 // @Tags Order
 // @Summary C端创建积分订单
