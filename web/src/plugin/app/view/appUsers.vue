@@ -109,6 +109,18 @@
 </el-table-column>
             <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
 
+            <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
+            <el-table-column align="left" label="所有上级" prop="ancestors" min-width="240">
+              <template #default="scope">
+                <span>{{ Array.isArray(scope.row.ancestors) ? scope.row.ancestors.join(', ') : scope.row.ancestors }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column align="left" label="所有下级" prop="descendants" min-width="240">
+              <template #default="scope">
+                <span>{{ Array.isArray(scope.row.descendants) ? scope.row.descendants.join(', ') : scope.row.descendants }}</span>
+              </template>
+            </el-table-column>
+
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button v-auth="btnAuth.info" type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
@@ -176,8 +188,17 @@
                  <el-descriptions-item label="邮箱是否已验证">
     {{ detailForm.emailVerified }}
 </el-descriptions-item>
-                 <el-descriptions-item label="用户角色ID">
+                <el-descriptions-item label="用户角色ID">
     {{ detailForm.authorityId }}
+</el-descriptions-item>
+                <el-descriptions-item label="邀请码">
+    {{ detailForm.inviteCode }}
+</el-descriptions-item>
+                <el-descriptions-item label="所有上级">
+    {{ Array.isArray(detailForm.ancestors) ? detailForm.ancestors.join(', ') : detailForm.ancestors }}
+</el-descriptions-item>
+                <el-descriptions-item label="所有下级">
+    {{ Array.isArray(detailForm.descendants) ? detailForm.descendants.join(', ') : detailForm.descendants }}
 </el-descriptions-item>
             </el-descriptions>
         </el-drawer>

@@ -14,15 +14,18 @@ type LoginResponse struct {
 
 // UserResponse 用户信息响应
 type UserResponse struct {
-	ID            uint       `json:"id"`
-	Email         string     `json:"email"`
-	Nickname      string     `json:"nickname"`
-	Avatar        string     `json:"avatar"`
-	Phone         string     `json:"phone"`
-	Status        string     `json:"status"`
-	EmailVerified bool       `json:"emailVerified"`
-	LastLoginTime *time.Time `json:"lastLoginTime,omitempty"`
-	LastLoginIP   string     `json:"lastLoginIP,omitempty"`
+    ID            uint       `json:"id"`
+    Email         string     `json:"email"`
+    Nickname      string     `json:"nickname"`
+    Avatar        string     `json:"avatar"`
+    Phone         string     `json:"phone"`
+    Status        string     `json:"status"`
+    EmailVerified bool       `json:"emailVerified"`
+    LastLoginTime *time.Time `json:"lastLoginTime,omitempty"`
+    LastLoginIP   string     `json:"lastLoginIP,omitempty"`
+    InviteCode    string     `json:"inviteCode"`
+    InviterID     uint       `json:"inviterId"`
+    InviteLevel   int        `json:"inviteLevel"`
 }
 
 // UserListResponse 用户列表响应

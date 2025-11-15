@@ -163,18 +163,41 @@ func (a *appUsers) GetAppUsersList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	list, total, err := serviceAppUsers.GetAppUsersInfoList(ctx, pageInfo)
-	if err != nil {
-		global.GVA_LOG.Error("获取失败!", zap.Error(err))
-		response.FailWithMessage("获取失败:"+err.Error(), c)
-		return
-	}
-	response.OkWithDetailed(response.PageResult{
-		List:     list,
-		Total:    total,
-		Page:     pageInfo.Page,
-		PageSize: pageInfo.PageSize,
-	}, "获取成功", c)
+    list, total, err := serviceAppUsers.GetAppUsersInfoList(ctx, pageInfo)
+    if err != nil {
+        global.GVA_LOG.Error("获取失败!", zap.Error(err))
+        response.FailWithMessage("获取失败:"+err.Error(), c)
+        return
+    }
+    // enrich rows with invite info
+    enriched := make([]gin.H, 0, len(list))
+    for i := range list {
+        u := list[i]
+        ancestors, _ := serviceAppUsers.FormatAncestors(ctx, u.InvitePath)
+        descendants, _ := serviceAppUsers.FormatDescendants(ctx, u.ID)
+        enriched = append(enriched, gin.H{
+            "ID":             u.ID,
+            "CreatedAt":      u.CreatedAt,
+            "email":          derefStr(u.Email),
+            "nickname":       derefStr(u.Nickname),
+            "avatar":         derefStr(u.Avatar),
+            "phone":          derefStr(u.Phone),
+            "status":         derefStr(u.Status),
+            "lastLoginTime":  u.LastLoginTime,
+            "lastLoginIp":    derefStr(u.LastLoginIP),
+            "emailVerified":  derefBool(u.EmailVerified),
+            "authorityId":    derefInt64u(u.AuthorityId),
+            "inviteCode":     derefStr(u.InviteCode),
+            "ancestors":      ancestors,
+            "descendants":    descendants,
+        })
+    }
+    response.OkWithDetailed(response.PageResult{
+        List:     enriched,
+        Total:    total,
+        Page:     pageInfo.Page,
+        PageSize: pageInfo.PageSize,
+    }, "获取成功", c)
 }
 
 // GetAppUsersPublic 不需要鉴权的appUsers表接口
@@ -365,17 +388,20 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 	}
 
 	// 组装返回体，避免泄露敏感字段（如密码）
-	resp := appResponse.UserResponse{
-		ID:            user.ID,
-		Email:         derefStr(user.Email),
-		Nickname:      derefStr(user.Nickname),
-		Avatar:        derefStr(user.Avatar),
-		Phone:         derefStr(user.Phone),
-		Status:        derefStr(user.Status),
-		EmailVerified: derefBool(user.EmailVerified),
-		LastLoginTime: user.LastLoginTime,
-		LastLoginIP:   derefStr(user.LastLoginIP),
-	}
+resp := appResponse.UserResponse{
+    ID:            user.ID,
+    Email:         derefStr(user.Email),
+    Nickname:      derefStr(user.Nickname),
+    Avatar:        derefStr(user.Avatar),
+    Phone:         derefStr(user.Phone),
+    Status:        derefStr(user.Status),
+    EmailVerified: derefBool(user.EmailVerified),
+    LastLoginTime: user.LastLoginTime,
+    LastLoginIP:   derefStr(user.LastLoginIP),
+    InviteCode:    derefStr(user.InviteCode),
+    InviterID:     uint(derefInt64u(user.InviterID)),
+    InviteLevel:   derefInt(user.InviteLevel),
+}
 
 	response.OkWithData(resp, c)
 }
@@ -388,10 +414,20 @@ func derefStr(p *string) string {
 }
 
 func derefInt64(p *int64) int64 {
-	if p == nil {
-		return 0
-	}
-	return *p
+    if p == nil {
+        return 0
+    }
+    return *p
+}
+
+func derefInt(p *int) int {
+    if p == nil { return 0 }
+    return *p
+}
+
+func derefInt64u(p *uint) int64 {
+    if p == nil { return 0 }
+    return int64(*p)
 }
 
 func derefBool(p *bool) bool {
