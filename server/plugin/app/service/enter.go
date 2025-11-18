@@ -18,4 +18,5 @@ type service struct {
 	UserPointsAccount    UPA
     UserPointsLog        UPL
     Search               SRCH
+    Consultation         CN
 }

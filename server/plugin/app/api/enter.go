@@ -19,6 +19,7 @@ var (
 	serviceUserPointsAccount    = service.Service.UserPointsAccount
     serviceUserPointsLog        = service.Service.UserPointsLog
     serviceSearch               = service.Service.Search
+    serviceConsultation         = service.Service.Consultation
 )
 
 type api struct {
@@ -38,4 +39,5 @@ type api struct {
 	UserPointsAccount    UPA
     UserPointsLog        UPL
     Search               SEARCH
+    Consultation         CN
 }

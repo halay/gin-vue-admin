@@ -13,7 +13,7 @@ func Gorm(ctx context.Context) {
     err := global.GVA_DB.WithContext(ctx).AutoMigrate(
         model.AppUsers{}, model.Merchants{}, model.Banner{}, model.MerchantAnnouncement{}, model.MerchantAdmin{},
         model.ProductCategory{}, model.Product{}, model.ProductSku{}, model.ProductSpec{}, model.ProductSpecOption{},
-        model.ProductSkuOption{},
+        model.ProductSkuOption{}, model.AppConsultation{},
         model.Order{}, model.OrderItem{}, model.UserPointsAccount{}, model.UserPointsLog{},
     )
 	if err != nil {

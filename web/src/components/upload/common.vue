@@ -45,8 +45,8 @@
 
   const checkFile = (file) => {
     fullscreenLoading.value = true
-    const isLt500K = file.size / 1024 / 1024 < 0.5 // 500K, @todo 应支持在项目中设置
-    const isLt5M = file.size / 1024 / 1024 < 5 // 5MB, @todo 应支持项目中设置
+    const isLt500K = file.size / 1024 / 1024 < 25 // 25MB, @todo 应支持在项目中设置
+    const isLt5M = file.size / 1024 / 1024 < 1024 // 5MB, @todo 应支持项目中设置
     const isVideo = isVideoMime(file.type)
     const isImage = isImageMime(file.type)
     let pass = true
@@ -58,12 +58,12 @@
       pass = false
     }
     if (!isLt5M && isVideo) {
-      ElMessage.error('上传视频大小不能超过 5MB')
+      ElMessage.error('上传视频大小不能超过 1024MB')
       fullscreenLoading.value = false
       pass = false
     }
     if (!isLt500K && isImage) {
-      ElMessage.error('未压缩的上传图片大小不能超过 500KB，请使用压缩上传')
+      ElMessage.error('未压缩的上传图片大小不能超过 25MB，请使用压缩上传')
       fullscreenLoading.value = false
       pass = false
     }

@@ -20,6 +20,7 @@ var (
 	apiUserPointsAccount    = api.Api.UserPointsAccount
     apiUserPointsLog        = api.Api.UserPointsLog
     apiSearch               = api.Api.Search
+    apiConsultation         = api.Api.Consultation
 )
 
 type router struct {
@@ -39,4 +40,5 @@ type router struct {
 	UserPointsAccount    UPA
     UserPointsLog        UPL
     Search               S
+    Consultation         CN
 }
