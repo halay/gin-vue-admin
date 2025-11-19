@@ -265,15 +265,15 @@ func (a *P) GetProductPublic(c *gin.Context) {
 		// 组装SKU、规格键、规格值
 		skuSearch := request.ProductSkuSearch{ProductID: intPtr(int(prod.ID)), PageInfo: commonrequest.PageInfo{Page: 1, PageSize: 9999}}
 		skus, _, _ := serviceProductSku.GetProductSkuInfoList(ctx, skuSearch, int(*pageInfo.MerchantID))
-		specSearch := request.ProductSpecSearch{ProductID: intPtr(int(prod.ID)), PageInfo: commonrequest.PageInfo{Page: 1, PageSize: 9999}}
-		specs, _, _ := serviceProductSpec.GetProductSpecInfoList(ctx, specSearch, int(*pageInfo.MerchantID))
-		specOptSearch := request.ProductSpecOptionSearch{ProductID: intPtr(int(prod.ID)), PageInfo: commonrequest.PageInfo{Page: 1, PageSize: 9999}}
-		specOptions, _, _ := serviceProductSpecOption.GetProductSpecOptionInfoList(ctx, specOptSearch, int(*pageInfo.MerchantID))
+		//specSearch := request.ProductSpecSearch{ProductID: intPtr(int(prod.ID)), PageInfo: commonrequest.PageInfo{Page: 1, PageSize: 9999}}
+		//specs, _, _ := serviceProductSpec.GetProductSpecInfoList(ctx, specSearch, int(*pageInfo.MerchantID))
+		//specOptSearch := request.ProductSpecOptionSearch{ProductID: intPtr(int(prod.ID)), PageInfo: commonrequest.PageInfo{Page: 1, PageSize: 9999}}
+		//specOptions, _, _ := serviceProductSpecOption.GetProductSpecOptionInfoList(ctx, specOptSearch, int(*pageInfo.MerchantID))
 		response.OkWithDetailed(gin.H{
-			"product":     prod,
-			"skus":        skus,
-			"specs":       specs,
-			"specOptions": specOptions,
+			"product": prod,
+			"skus":    skus,
+			//"specs":       specs,
+			//"specOptions": specOptions,
 		}, "获取成功", c)
 		return
 	}

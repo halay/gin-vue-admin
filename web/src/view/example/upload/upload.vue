@@ -358,7 +358,7 @@
       cancelButtonText: '取消',
       inputType: 'textarea',
       inputPlaceholder:
-        '我的图片|https://my-oss.com/my.png\nhttps://my-oss.com/my_1.png',
+        '我的图片',
       inputPattern: /\S/,
       inputErrorMessage: '不能为空'
     })
