@@ -1,13 +1,13 @@
 package service
 
 import (
-    "context"
-    "errors"
-    "fmt"
-    "math/rand"
-    "time"
-    "strings"
-    "strconv"
+	"context"
+	"errors"
+	"fmt"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -187,7 +187,7 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 	// 验证验证码
 	var verification model.AppEmailVerification
 	if err = global.GVA_DB.Where("email = ? AND verification_code = ? AND purpose = ? AND used = ? AND expire_time > ?",
-		req.Email, req.VerificationCode, "register", false, time.Now()).First(&verification).Error; err != nil {
+		req.Email, req.VerificationCode, "register", 0, time.Now()).First(&verification).Error; err != nil {
 		return user, errors.New("验证码无效或已过期")
 	}
 
@@ -204,57 +204,61 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 		return user, err
 	}
 
-    // 校验邀请码
-    codeUpper := strings.ToUpper(strings.TrimSpace(req.InviteCode))
-    if len(codeUpper) != 6 {
-        return user, errors.New("邀请码必须为6位")
-    }
-    var inviter model.AppUsers
-    if err = global.GVA_DB.Where("invite_code = ?", codeUpper).First(&inviter).Error; err != nil {
-        return user, errors.New("邀请码不存在")
-    }
+	// 校验邀请码
+	codeUpper := strings.ToUpper(strings.TrimSpace(req.InviteCode))
+	if len(codeUpper) != 6 {
+		return user, errors.New("邀请码必须为6位")
+	}
+	var inviter model.AppUsers
+	if err = global.GVA_DB.Where("invite_code = ?", codeUpper).First(&inviter).Error; err != nil {
+		return user, errors.New("邀请码不存在")
+	}
 
-    // 生成自己的唯一邀请码（大小写不敏感，统一大写保存）
-    myCode, genErr := s.generateUniqueInviteCode(ctx)
-    if genErr != nil { return user, genErr }
+	// 生成自己的唯一邀请码（大小写不敏感，统一大写保存）
+	myCode, genErr := s.generateUniqueInviteCode(ctx)
+	if genErr != nil {
+		return user, genErr
+	}
 
-    // 计算邀请路径与层级
-    var path string
-    if inviter.InvitePath != nil && *inviter.InvitePath != "" {
-        path = *inviter.InvitePath + "/" + fmt.Sprintf("%d", inviter.ID)
-    } else {
-        path = fmt.Sprintf("%d", inviter.ID)
-    }
-    level := 1
-    if inviter.InviteLevel != nil { level = *inviter.InviteLevel + 1 }
+	// 计算邀请路径与层级
+	var path string
+	if inviter.InvitePath != nil && *inviter.InvitePath != "" {
+		path = *inviter.InvitePath + "/" + fmt.Sprintf("%d", inviter.ID)
+	} else {
+		path = fmt.Sprintf("%d", inviter.ID)
+	}
+	level := 1
+	if inviter.InviteLevel != nil {
+		level = *inviter.InviteLevel + 1
+	}
 
-    // 创建用户
-    trueVal := true
-    password := string(hashedPassword)
-    nickname := req.Nickname
-    phone := req.Phone
-    status := "1"
-    roleID := plugin.Config.AuthorityId // 外部用户角色ID
-    user = model.AppUsers{
-        Email:         &req.Email,
-        Uuid:          uuid.New(),
-        Password:      &password,
-        Nickname:      &nickname,
-        Phone:         &phone,
-        EmailVerified: &trueVal,
-        Status:        &status,
-        AuthorityId:   &roleID, // 关联角色ID=123
-        InviteCode:    &myCode,
-        InviterID:     uintPtr(uint(inviter.ID)),
-        InvitePath:    &path,
-        InviteLevel:   &level,
-    }
+	// 创建用户
+	trueVal := true
+	password := string(hashedPassword)
+	nickname := req.Nickname
+	phone := req.Phone
+	status := "1"
+	roleID := plugin.Config.AuthorityId // 外部用户角色ID
+	user = model.AppUsers{
+		Email:         &req.Email,
+		Uuid:          uuid.New(),
+		Password:      &password,
+		Nickname:      &nickname,
+		Phone:         &phone,
+		EmailVerified: &trueVal,
+		Status:        &status,
+		AuthorityId:   &roleID, // 关联角色ID=123
+		InviteCode:    &myCode,
+		InviterID:     uintPtr(uint(inviter.ID)),
+		InvitePath:    &path,
+		InviteLevel:   &level,
+	}
 
 	if err = global.GVA_DB.Create(&user).Error; err != nil {
 		return user, err
 	}
 
-    return user, nil
+	return user, nil
 }
 
 // Login 用户登录
@@ -325,8 +329,8 @@ func (s *appUsers) ResetPassword(ctx context.Context, req request.ResetPasswordR
 
 // 生成随机验证码
 func generateRandomCode(length int) string {
-    const charset = "0123456789"
-    seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	const charset = "0123456789"
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	b := make([]byte, length)
 	for i := range b {
@@ -337,72 +341,92 @@ func generateRandomCode(length int) string {
 
 // 生成唯一邀请码（6位字母数字，统一大写）
 func (s *appUsers) generateUniqueInviteCode(ctx context.Context) (code string, err error) {
-    const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-    for i := 0; i < 50; i++ {
-        b := make([]byte, 6)
-        for j := 0; j < 6; j++ { b[j] = charset[seededRand.Intn(len(charset))] }
-        code = string(b)
-        var cnt int64
-        if e := global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).Where("invite_code = ?", code).Count(&cnt).Error; e != nil {
-            return "", e
-        }
-        if cnt == 0 { return code, nil }
-    }
-    return "", errors.New("邀请码生成失败，请重试")
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < 50; i++ {
+		b := make([]byte, 6)
+		for j := 0; j < 6; j++ {
+			b[j] = charset[seededRand.Intn(len(charset))]
+		}
+		code = string(b)
+		var cnt int64
+		if e := global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).Where("invite_code = ?", code).Count(&cnt).Error; e != nil {
+			return "", e
+		}
+		if cnt == 0 {
+			return code, nil
+		}
+	}
+	return "", errors.New("邀请码生成失败，请重试")
 }
 
 func uintPtr(u uint) *uint { return &u }
 
 // FormatAncestors 根据邀请路径返回祖先的邮箱(ID)列表
 func (s *appUsers) FormatAncestors(ctx context.Context, path *string) ([]string, error) {
-    if path == nil || *path == "" { return []string{}, nil }
-    parts := strings.Split(*path, "/")
-    ids := make([]uint, 0, len(parts))
-    for _, p := range parts {
-        if p == "" { continue }
-        if v, err := strconv.ParseUint(p, 10, 64); err == nil {
-            ids = append(ids, uint(v))
-        }
-    }
-    if len(ids) == 0 { return []string{}, nil }
-    // 查询邮箱
-    type row struct{ ID uint; Email *string }
-    var rs []row
-    if err := global.GVA_DB.WithContext(ctx).Table("app_users").
-        Where("id in ?", ids).
-        Select("id,email").
-        Scan(&rs).Error; err != nil {
-        return nil, err
-    }
-    out := make([]string, 0, len(rs))
-    for _, r := range rs {
-        mail := ""
-        if r.Email != nil { mail = *r.Email }
-        out = append(out, fmt.Sprintf("%s(%d)", mail, r.ID))
-    }
-    return out, nil
+	if path == nil || *path == "" {
+		return []string{}, nil
+	}
+	parts := strings.Split(*path, "/")
+	ids := make([]uint, 0, len(parts))
+	for _, p := range parts {
+		if p == "" {
+			continue
+		}
+		if v, err := strconv.ParseUint(p, 10, 64); err == nil {
+			ids = append(ids, uint(v))
+		}
+	}
+	if len(ids) == 0 {
+		return []string{}, nil
+	}
+	// 查询邮箱
+	type row struct {
+		ID    uint
+		Email *string
+	}
+	var rs []row
+	if err := global.GVA_DB.WithContext(ctx).Table("app_users").
+		Where("id in ?", ids).
+		Select("id,email").
+		Scan(&rs).Error; err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(rs))
+	for _, r := range rs {
+		mail := ""
+		if r.Email != nil {
+			mail = *r.Email
+		}
+		out = append(out, fmt.Sprintf("%s(%d)", mail, r.ID))
+	}
+	return out, nil
 }
 
 // FormatDescendants 查询所有后代（邀请链中包含当前用户ID），返回邮箱(ID)列表
 func (s *appUsers) FormatDescendants(ctx context.Context, uid uint) ([]string, error) {
-    idStr := fmt.Sprintf("%d", uid)
-    type row struct{ ID uint; Email *string }
-    var rs []row
-    q := global.GVA_DB.WithContext(ctx).Table("app_users").
-        Where("invite_path = ?", idStr).
-        Or("invite_path LIKE ?", idStr+"/%").
-        Or("invite_path LIKE ?", "%/"+idStr).
-        Or("invite_path LIKE ?", "%/"+idStr+"/%").
-        Select("id,email")
-    if err := q.Scan(&rs).Error; err != nil {
-        return nil, err
-    }
-    out := make([]string, 0, len(rs))
-    for _, r := range rs {
-        mail := ""
-        if r.Email != nil { mail = *r.Email }
-        out = append(out, fmt.Sprintf("%s(%d)", mail, r.ID))
-    }
-    return out, nil
+	idStr := fmt.Sprintf("%d", uid)
+	type row struct {
+		ID    uint
+		Email *string
+	}
+	var rs []row
+	q := global.GVA_DB.WithContext(ctx).Table("app_users").
+		Where("invite_path = ?", idStr).
+		Or("invite_path LIKE ?", idStr+"/%").
+		Or("invite_path LIKE ?", "%/"+idStr).
+		Or("invite_path LIKE ?", "%/"+idStr+"/%").
+		Select("id,email")
+	if err := q.Scan(&rs).Error; err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(rs))
+	for _, r := range rs {
+		mail := ""
+		if r.Email != nil {
+			mail = *r.Email
+		}
+		out = append(out, fmt.Sprintf("%s(%d)", mail, r.ID))
+	}
+	return out, nil
 }
