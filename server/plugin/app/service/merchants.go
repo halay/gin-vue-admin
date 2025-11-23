@@ -123,11 +123,11 @@ func (s *mc) GetMerchantsPublic(ctx context.Context) {
 }
 
 func (s *mc) GetRecommendedList(ctx context.Context) (list []model.Merchants, err error) {
-	err = global.GVA_DB.Where("is_recommended = ? AND status = ?", 1, "").Order("id desc").Find(&list).Error
+	err = global.GVA_DB.Where("is_recommended = ? AND status = ?", 1, "1").Order("id desc").Find(&list).Error
 	return
 }
 
 func (s *mc) GetByCategory(ctx context.Context, categoryID int64) (list []model.Merchants, err error) {
-	err = global.GVA_DB.Where("category_id = ? AND status = ?", categoryID, "").Order("id desc").Find(&list).Error
+	err = global.GVA_DB.Where("category_id = ? AND status = ?", categoryID, "1").Order("id desc").Find(&list).Error
 	return
 }

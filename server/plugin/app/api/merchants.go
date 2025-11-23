@@ -234,7 +234,7 @@ func (a *mc) GetMerchantsByCategory(c *gin.Context) {
 		return
 	}
 	var list []model.Merchants
-	if err := global.GVA_DB.Where("category_id = ? AND status = ?", cid, "").Order("id desc").Find(&list).Error; err != nil {
+	if err := global.GVA_DB.Where("category_id = ? AND status = ?", cid, "1").Order("id desc").Find(&list).Error; err != nil {
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
