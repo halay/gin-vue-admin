@@ -52,9 +52,10 @@
   <el-input v-model="searchInfo.email" placeholder="搜索条件" />
 </el-form-item>
            
-            <el-form-item label="状态" prop="status">
-    <el-tree-select v-model="formData.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly ></el-tree-select>
+<el-form-item label="状态" prop="status">
+  <el-tree-select v-model="formData.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly ></el-tree-select>
 </el-form-item>
+ 
            
         <template v-if="showAllQuery">
           <!-- 将需要控制显示状态的查询条件添加到此范围内 -->
@@ -248,8 +249,16 @@
      <el-form-item label="交易对:" prop="tradingPair">
     <el-input v-model="formData.tradingPair" :clearable="true" placeholder="请输入交易对" />
 </el-form-item>
-             <el-form-item label="状态:" prop="status">
+            <el-form-item label="状态:" prop="status">
     <el-tree-select v-model="formData.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly></el-tree-select>
+</el-form-item>
+            <el-form-item label="是否推荐:" prop="isRecommended">
+    <el-switch v-model="formData.isRecommended" active-text="是" inactive-text="否" />
+</el-form-item>
+            <el-form-item label="所属分类:" prop="categoryId">
+    <el-select v-model="formData.categoryId" placeholder="请选择分类" filterable clearable style="width:100%">
+      <el-option v-for="(item,key) in merchantCategories" :key="key" :label="item.Name" :value="item.ID" />
+    </el-select>
 </el-form-item>
           </el-form>
     </el-drawer>
@@ -358,6 +367,7 @@ const showAllQuery = ref(false)
 
 // 自动化生成的字典（可能为空）以及字段
 const statusOptions = ref([])
+const merchantCategories = ref([])
 const formData = ref({
             merchantName: '',
             logo: "",
@@ -378,6 +388,8 @@ const formData = ref({
             certificate: [],
             digitalAssetName: '',
             tradingPair: '',
+            isRecommended: false,
+            categoryId: undefined,
         })
 
 
@@ -541,6 +553,7 @@ const updateMerchantsFunc = async(row) => {
     type.value = 'update'
     if (res.code === 0) {
         formData.value = res.data
+        loadMerchantCategories()
         dialogFormVisible.value = true
     }
 }
@@ -568,6 +581,7 @@ const dialogFormVisible = ref(false)
 const openDialog = () => {
     type.value = 'create'
     dialogFormVisible.value = true
+    loadMerchantCategories()
 }
 
 // 关闭弹窗
@@ -585,6 +599,8 @@ const closeDialog = () => {
         businessLicense: "",
         idCardImage: [],
         status: '',
+        isRecommended: false,
+        categoryId: undefined,
         }
 }
 // 弹窗确定
@@ -645,9 +661,17 @@ const closeDetailShow = () => {
   detailForm.value = {}
 }
 
-
+import { getMerchantCategoryList } from '@/plugin/app/api/merchants'
+const loadMerchantCategories = async () => {
+  try {
+    const res = await getMerchantCategoryList()
+    if (res.code === 0) merchantCategories.value = res.data || []
+  } catch {}
+}
+loadMerchantCategories()
 </script>
 
 <style>
 
 </style>
+

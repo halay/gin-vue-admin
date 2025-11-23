@@ -230,8 +230,8 @@ func (a *UPL) GetMyPointsLogs(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    uidInt := int(uid)
-    pageInfo.UserID = &uidInt
+	uidInt := int(uid)
+	pageInfo.UserID = &uidInt
 	list, total, err := serviceUserPointsLog.GetUserPointsLogInfoList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))

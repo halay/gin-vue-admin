@@ -24,12 +24,12 @@ type SendVerificationCodeRequest struct {
 
 // RegisterRequest 注册请求
 type RegisterRequest struct {
-    Email            string `json:"email" binding:"required,email"`
-    Password         string `json:"password" binding:"required,min=6"`
-    VerificationCode string `json:"verificationCode" binding:"required"`
-    Nickname         string `json:"nickname"`
-    Phone            string `json:"phone"`
-    InviteCode       string `json:"inviteCode" binding:"required"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required,min=6"`
+	VerificationCode string `json:"verificationCode" binding:"required"`
+	Nickname         string `json:"nickname"`
+	Phone            string `json:"phone"`
+	InviteCode       string `json:"inviteCode" binding:"required"`
 }
 
 // LoginRequest 登录请求

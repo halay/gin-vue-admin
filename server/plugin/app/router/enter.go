@@ -3,7 +3,7 @@ package router
 import "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/api"
 
 var (
-    Router                  = new(router)
+	Router                  = new(router)
 	apiAppUsers             = api.Api.AppUsers
 	apiMerchants            = api.Api.Merchants
 	apiYApi                 = api.Api.YApi
@@ -18,9 +18,11 @@ var (
 	apiOrder                = api.Api.Order
 	apiOrderItem            = api.Api.OrderItem
 	apiUserPointsAccount    = api.Api.UserPointsAccount
-    apiUserPointsLog        = api.Api.UserPointsLog
-    apiSearch               = api.Api.Search
-    apiConsultation         = api.Api.Consultation
+	apiUserPointsLog        = api.Api.UserPointsLog
+	apiSearch               = api.Api.Search
+	apiConsultation         = api.Api.Consultation
+	apiAppRelease           = api.Api.AppRelease
+	apiMerchantCategory     = api.Api.MerchantCategory
 )
 
 type router struct {
@@ -38,7 +40,9 @@ type router struct {
 	Order                ORD
 	OrderItem            ORDI
 	UserPointsAccount    UPA
-    UserPointsLog        UPL
-    Search               S
-    Consultation         CN
+	UserPointsLog        UPL
+	Search               S
+	Consultation         CN
+	AppRelease           AR
+	MerchantCategory     MCAT
 }

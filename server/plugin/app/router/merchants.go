@@ -29,5 +29,8 @@ func (r *mc) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("getMerchantsPublic", apiMerchants.GetMerchantsPublic) // 商家信息开放接口
 		group.GET("getMerchantsData", apiMerchants.FindMerchants)        // 根据ID获取商家信息
 		group.GET("getMerchantsListData", apiMerchants.GetMerchantsList) // 获取商家信息列表
+		group.GET("getRecommendedMerchants", apiMerchants.GetRecommendedMerchants) // 推荐商家列表
+		group.GET("getMerchantCategoryList", apiMerchants.GetMerchantCategoryList) // 商家分类列表
+		group.GET("getMerchantsByCategory", apiMerchants.GetMerchantsByCategory) // 按分类获取商家
 	}
 }

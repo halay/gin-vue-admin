@@ -78,6 +78,12 @@ func (s *mc) GetMerchantsInfoList(ctx context.Context, info request.MerchantsSea
 	if info.Status != nil && *info.Status != "" {
 		db = db.Where("status = ?", *info.Status)
 	}
+	if info.IsRecommended != nil {
+		db = db.Where("is_recommended = ?", *info.IsRecommended)
+	}
+	if info.CategoryID != nil {
+		db = db.Where("category_id = ?", *info.CategoryID)
+	}
 	if info.Founder != nil && *info.Founder != "" {
 		db = db.Where("founder LIKE ?", "%"+*info.Founder+"%")
 	}
@@ -114,4 +120,14 @@ func (s *mc) GetMerchantsInfoList(ctx context.Context, info request.MerchantsSea
 
 func (s *mc) GetMerchantsPublic(ctx context.Context) {
 
+}
+
+func (s *mc) GetRecommendedList(ctx context.Context) (list []model.Merchants, err error) {
+	err = global.GVA_DB.Where("is_recommended = ? AND status = ?", 1, "").Order("id desc").Find(&list).Error
+	return
+}
+
+func (s *mc) GetByCategory(ctx context.Context, categoryID int64) (list []model.Merchants, err error) {
+	err = global.GVA_DB.Where("category_id = ? AND status = ?", categoryID, "").Order("id desc").Find(&list).Error
+	return
 }

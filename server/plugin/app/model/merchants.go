@@ -29,6 +29,8 @@ type Merchants struct {
 	Certificate         datatypes.JSON `json:"certificate" form:"certificate" gorm:"comment:荣誉证书;column:certificate;" swaggertype:"array,object"`          //荣誉证书
 	DigitalAssetName    *string        `json:"digitalAssetName" form:"digitalAssetName" gorm:"comment:数字资产名称;column:digital_asset_name;"`                  //数字资产名称
 	TradingPair         *string        `json:"tradingPair" form:"tradingPair" gorm:"comment:交易对;column:trading_pair;"`                                     //交易对
+	IsRecommended      *bool          `json:"isRecommended" form:"isRecommended" gorm:"comment:是否推荐;column:is_recommended;"`                                //是否推荐
+	CategoryID         *int64         `json:"categoryId" form:"categoryId" gorm:"comment:所属分类;column:category_id;"`                                         //所属分类
 }
 
 // TableName 商家信息 Merchants自定义表名 app_merchants

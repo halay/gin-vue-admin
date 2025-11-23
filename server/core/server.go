@@ -33,6 +33,5 @@ func RunServer() {
 
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 
-	
 	initServer(address, Router, 10*time.Minute, 10*time.Minute)
 }

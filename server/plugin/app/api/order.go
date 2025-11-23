@@ -1,18 +1,18 @@
 package api
 
 import (
-    "github.com/flipped-aurora/gin-vue-admin/server/global"
-    "github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
-    "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
-    "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
-    appUtils "github.com/flipped-aurora/gin-vue-admin/server/utils"
-    "github.com/gin-gonic/gin"
-    "go.uber.org/zap"
+	"github.com/flipped-aurora/gin-vue-admin/server/global"
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
+	appUtils "github.com/flipped-aurora/gin-vue-admin/server/utils"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 var Order = new(ORD)
 
-type ORD struct {}
+type ORD struct{}
 
 // CreateOrder 创建订单
 // @Tags Order
@@ -24,29 +24,29 @@ type ORD struct {}
 // @Success 200 {object} response.Response{msg=string} "创建成功"
 // @Router /ORD/createOrder [post]
 func (a *ORD) CreateOrder(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    var info model.Order
-    err := c.ShouldBindJSON(&info)
+	var info model.Order
+	err := c.ShouldBindJSON(&info)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    // 后台商户创建/修改订单，限定商户作用域
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法创建订单", c)
-        return
-    }
-    err = serviceOrder.CreateOrder(ctx, &info, *mid)
-	if err != nil {
-        global.GVA_LOG.Error("创建失败!", zap.Error(err))
-		response.FailWithMessage("创建失败:" + err.Error(), c)
+	// 后台商户创建/修改订单，限定商户作用域
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法创建订单", c)
 		return
 	}
-    response.OkWithMessage("创建成功", c)
+	err = serviceOrder.CreateOrder(ctx, &info, *mid)
+	if err != nil {
+		global.GVA_LOG.Error("创建失败!", zap.Error(err))
+		response.FailWithMessage("创建失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("创建成功", c)
 }
 
 // DeleteOrder 删除订单
@@ -59,23 +59,23 @@ func (a *ORD) CreateOrder(c *gin.Context) {
 // @Success 200 {object} response.Response{msg=string} "删除成功"
 // @Router /ORD/deleteOrder [delete]
 func (a *ORD) DeleteOrder(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    ID := c.Query("ID")
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法删除订单", c)
-        return
-    }
-    err := serviceOrder.DeleteOrder(ctx, ID, *mid)
-	if err != nil {
-        global.GVA_LOG.Error("删除失败!", zap.Error(err))
-		response.FailWithMessage("删除失败:" + err.Error(), c)
+	ID := c.Query("ID")
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法删除订单", c)
 		return
 	}
-    response.OkWithMessage("删除成功", c)
+	err := serviceOrder.DeleteOrder(ctx, ID, *mid)
+	if err != nil {
+		global.GVA_LOG.Error("删除失败!", zap.Error(err))
+		response.FailWithMessage("删除失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("删除成功", c)
 }
 
 // DeleteOrderByIds 批量删除订单
@@ -87,23 +87,23 @@ func (a *ORD) DeleteOrder(c *gin.Context) {
 // @Success 200 {object} response.Response{msg=string} "批量删除成功"
 // @Router /ORD/deleteOrderByIds [delete]
 func (a *ORD) DeleteOrderByIds(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    IDs := c.QueryArray("IDs[]")
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法批量删除订单", c)
-        return
-    }
-    err := serviceOrder.DeleteOrderByIds(ctx, IDs, *mid)
-	if err != nil {
-        global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
-		response.FailWithMessage("批量删除失败:" + err.Error(), c)
+	IDs := c.QueryArray("IDs[]")
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法批量删除订单", c)
 		return
 	}
-    response.OkWithMessage("批量删除成功", c)
+	err := serviceOrder.DeleteOrderByIds(ctx, IDs, *mid)
+	if err != nil {
+		global.GVA_LOG.Error("批量删除失败!", zap.Error(err))
+		response.FailWithMessage("批量删除失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("批量删除成功", c)
 }
 
 // UpdateOrder 更新订单
@@ -116,8 +116,8 @@ func (a *ORD) DeleteOrderByIds(c *gin.Context) {
 // @Success 200 {object} response.Response{msg=string} "更新成功"
 // @Router /ORD/updateOrder [put]
 func (a *ORD) UpdateOrder(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
 	var info model.Order
 	err := c.ShouldBindJSON(&info)
@@ -125,19 +125,19 @@ func (a *ORD) UpdateOrder(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法更新订单", c)
-        return
-    }
-    err = serviceOrder.UpdateOrder(ctx, info, *mid)
-    if err != nil {
-        global.GVA_LOG.Error("更新失败!", zap.Error(err))
-		response.FailWithMessage("更新失败:" + err.Error(), c)
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法更新订单", c)
 		return
 	}
-    response.OkWithMessage("更新成功", c)
+	err = serviceOrder.UpdateOrder(ctx, info, *mid)
+	if err != nil {
+		global.GVA_LOG.Error("更新失败!", zap.Error(err))
+		response.FailWithMessage("更新失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("更新成功", c)
 }
 
 // FindOrder 用id查询订单
@@ -150,24 +150,25 @@ func (a *ORD) UpdateOrder(c *gin.Context) {
 // @Success 200 {object} response.Response{data=model.Order,msg=string} "查询成功"
 // @Router /ORD/findOrder [get]
 func (a *ORD) FindOrder(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    ID := c.Query("ID")
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法查询订单", c)
-        return
-    }
-    reORD, err := serviceOrder.GetOrder(ctx, ID, *mid)
-	if err != nil {
-        global.GVA_LOG.Error("查询失败!", zap.Error(err))
-		response.FailWithMessage("查询失败:" + err.Error(), c)
+	ID := c.Query("ID")
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法查询订单", c)
 		return
 	}
-    response.OkWithData(reORD, c)
+	reORD, err := serviceOrder.GetOrder(ctx, ID, *mid)
+	if err != nil {
+		global.GVA_LOG.Error("查询失败!", zap.Error(err))
+		response.FailWithMessage("查询失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithData(reORD, c)
 }
+
 // GetOrderList 分页获取订单列表
 // @Tags Order
 // @Summary 分页获取订单列表
@@ -178,8 +179,8 @@ func (a *ORD) FindOrder(c *gin.Context) {
 // @Success 200 {object} response.Response{data=response.PageResult,msg=string} "获取成功"
 // @Router /ORD/getOrderList [get]
 func (a *ORD) GetOrderList(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
 	var pageInfo request.OrderSearch
 	err := c.ShouldBindQuery(&pageInfo)
@@ -187,25 +188,26 @@ func (a *ORD) GetOrderList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-    userID := appUtils.GetUserID(c)
-    mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-    if errMid != nil || mid == nil {
-        response.FailWithMessage("未绑定商户，无法获取订单列表", c)
-        return
-    }
-    list, total, err := serviceOrder.GetOrderInfoList(ctx, pageInfo, *mid)
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法获取订单列表", c)
+		return
+	}
+	list, total, err := serviceOrder.GetOrderInfoList(ctx, pageInfo, *mid)
 	if err != nil {
-	    global.GVA_LOG.Error("获取失败!", zap.Error(err))
-        response.FailWithMessage("获取失败:" + err.Error(), c)
-        return
-    }
-    response.OkWithDetailed(response.PageResult{
-        List:     list,
-        Total:    total,
-        Page:     pageInfo.Page,
-        PageSize: pageInfo.PageSize,
-    }, "获取成功", c)
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{
+		List:     list,
+		Total:    total,
+		Page:     pageInfo.Page,
+		PageSize: pageInfo.PageSize,
+	}, "获取成功", c)
 }
+
 // GetOrderDataSource 获取Order的数据源
 // @Tags Order
 // @Summary 获取Order的数据源
@@ -214,18 +216,19 @@ func (a *ORD) GetOrderList(c *gin.Context) {
 // @Success 200 {object} response.Response{data=object,msg=string} "查询成功"
 // @Router /ORD/getOrderDataSource [get]
 func (a *ORD) GetOrderDataSource(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    // 此接口为获取数据源定义的数据
-   dataSource, err := serviceOrder.GetOrderDataSource(ctx)
-   if err != nil {
+	// 此接口为获取数据源定义的数据
+	dataSource, err := serviceOrder.GetOrderDataSource(ctx)
+	if err != nil {
 		global.GVA_LOG.Error("查询失败!", zap.Error(err))
-        response.FailWithMessage("查询失败:" + err.Error(), c)
+		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
-   }
-    response.OkWithData(dataSource, c)
+	}
+	response.OkWithData(dataSource, c)
 }
+
 // GetOrderPublic 不需要鉴权的订单接口
 // @Tags Order
 // @Summary 不需要鉴权的订单接口
@@ -234,12 +237,12 @@ func (a *ORD) GetOrderDataSource(c *gin.Context) {
 // @Success 200 {object} response.Response{data=object,msg=string} "获取成功"
 // @Router /ORD/getOrderPublic [get]
 func (a *ORD) GetOrderPublic(c *gin.Context) {
-    // 创建业务用Context
-    ctx := c.Request.Context()
+	// 创建业务用Context
+	ctx := c.Request.Context()
 
-    // 此接口不需要鉴权 示例为返回了一个固定的消息接口，一般本接口用于C端服务，需要自己实现业务逻辑
-    serviceOrder.GetOrderPublic(ctx)
-    response.OkWithDetailed(gin.H{"info": "不需要鉴权的订单接口信息"}, "获取成功", c)
+	// 此接口不需要鉴权 示例为返回了一个固定的消息接口，一般本接口用于C端服务，需要自己实现业务逻辑
+	serviceOrder.GetOrderPublic(ctx)
+	response.OkWithDetailed(gin.H{"info": "不需要鉴权的订单接口信息"}, "获取成功", c)
 }
 
 // GetMyOrderList 获取当前登录用户的订单列表
@@ -252,18 +255,24 @@ func (a *ORD) GetOrderPublic(c *gin.Context) {
 // @Success 200 {object} response.Response{data=response.PageResult,msg=string} "获取成功"
 // @Router /ORD/getMyOrderList [get]
 func (a *ORD) GetMyOrderList(c *gin.Context) {
-    ctx := c.Request.Context()
-    var pageInfo request.OrderSearch
-    if err := c.ShouldBindQuery(&pageInfo); err != nil { response.FailWithMessage(err.Error(), c); return }
-    userID := appUtils.GetUserID(c)
-    if userID == 0 { response.FailWithMessage("未登录", c); return }
-    list, total, err := serviceOrder.GetOrderInfoListByUser(ctx, int64(userID), pageInfo)
-    if err != nil {
-        global.GVA_LOG.Error("获取失败!", zap.Error(err))
-        response.FailWithMessage("获取失败:"+err.Error(), c)
-        return
-    }
-    response.OkWithDetailed(response.PageResult{List:list, Total:total, Page:pageInfo.Page, PageSize:pageInfo.PageSize}, "获取成功", c)
+	ctx := c.Request.Context()
+	var pageInfo request.OrderSearch
+	if err := c.ShouldBindQuery(&pageInfo); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	list, total, err := serviceOrder.GetOrderInfoListByUser(ctx, int64(userID), pageInfo)
+	if err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(response.PageResult{List: list, Total: total, Page: pageInfo.Page, PageSize: pageInfo.PageSize}, "获取成功", c)
 }
 
 // GetMyOrderDetail 获取当前登录用户的订单详情
@@ -276,18 +285,24 @@ func (a *ORD) GetMyOrderList(c *gin.Context) {
 // @Success 200 {object} response.Response{data=object,msg=string} "获取成功"
 // @Router /ORD/getMyOrderDetail [get]
 func (a *ORD) GetMyOrderDetail(c *gin.Context) {
-    ctx := c.Request.Context()
-    orderNo := c.Query("orderNo")
-    userID := appUtils.GetUserID(c)
-    if userID == 0 { response.FailWithMessage("未登录", c); return }
-    if orderNo == "" { response.FailWithMessage("订单号不能为空", c); return }
-    ord, items, err := serviceOrder.GetOrderDetailByUser(ctx, int64(userID), orderNo)
-    if err != nil {
-        global.GVA_LOG.Error("获取失败!", zap.Error(err))
-        response.FailWithMessage("获取失败:"+err.Error(), c)
-        return
-    }
-    response.OkWithDetailed(gin.H{"order": ord, "items": items}, "获取成功", c)
+	ctx := c.Request.Context()
+	orderNo := c.Query("orderNo")
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	if orderNo == "" {
+		response.FailWithMessage("订单号不能为空", c)
+		return
+	}
+	ord, items, err := serviceOrder.GetOrderDetailByUser(ctx, int64(userID), orderNo)
+	if err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithDetailed(gin.H{"order": ord, "items": items}, "获取成功", c)
 }
 
 // CreateOrderByPoints C端：创建积分订单（未支付）
@@ -303,34 +318,39 @@ func (a *ORD) GetMyOrderDetail(c *gin.Context) {
 // @Success 200 {object} response.Response{data=object,msg=string} "创建成功"
 // @Router /ORD/createOrderByPoints [post]
 func (a *ORD) CreateOrderByPoints(c *gin.Context) {
-    ctx := c.Request.Context()
-    userID := appUtils.GetUserID(c)
-    if userID == 0 {
-        response.FailWithMessage("未登录", c)
-        return
-    }
-    var body struct{
-        SkuID    int64  `json:"skuId"`
-        Quantity int64  `json:"quantity"`
-        ConsigneeName string `json:"consigneeName"`
-        ConsigneePhone string `json:"consigneePhone"`
-        Address string `json:"address"`
-    }
-    if err := c.ShouldBindJSON(&body); err != nil { response.FailWithMessage(err.Error(), c); return }
-    if body.Quantity <= 0 { body.Quantity = 1 }
+	ctx := c.Request.Context()
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	var body struct {
+		SkuID          int64  `json:"skuId"`
+		Quantity       int64  `json:"quantity"`
+		ConsigneeName  string `json:"consigneeName"`
+		ConsigneePhone string `json:"consigneePhone"`
+		Address        string `json:"address"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if body.Quantity <= 0 {
+		body.Quantity = 1
+	}
 
-    var sku model.ProductSku
-    if err := global.GVA_DB.WithContext(ctx).Where("id = ?", body.SkuID).First(&sku).Error; err != nil {
-        response.FailWithMessage("SKU不存在", c)
-        return
-    }
-    ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address)
-    if err != nil {
-        global.GVA_LOG.Error("创建订单失败!", zap.Error(err))
-        response.FailWithMessage("创建订单失败:"+err.Error(), c)
-        return
-    }
-    response.OkWithData(gin.H{"order": ord, "item": item}, c)
+	var sku model.ProductSku
+	if err := global.GVA_DB.WithContext(ctx).Where("id = ?", body.SkuID).First(&sku).Error; err != nil {
+		response.FailWithMessage("SKU不存在", c)
+		return
+	}
+	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address)
+	if err != nil {
+		global.GVA_LOG.Error("创建订单失败!", zap.Error(err))
+		response.FailWithMessage("创建订单失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"order": ord, "item": item}, c)
 }
 
 // PayOrderByPoints C端：订单积分支付
@@ -342,16 +362,27 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 // @Success 200 {object} response.Response{msg=string} "支付成功"
 // @Router /ORD/payOrderByPoints [post]
 func (a *ORD) PayOrderByPoints(c *gin.Context) {
-    ctx := c.Request.Context()
-    userID := appUtils.GetUserID(c)
-    if userID == 0 { response.FailWithMessage("未登录", c); return }
-    var body struct{ OrderNo string `json:"orderNo"` }
-    if err := c.ShouldBindJSON(&body); err != nil { response.FailWithMessage(err.Error(), c); return }
-    if body.OrderNo == "" { response.FailWithMessage("订单号不能为空", c); return }
-    if err := serviceOrder.PayOrderByPoints(ctx, int64(userID), body.OrderNo); err != nil {
-        global.GVA_LOG.Error("积分支付失败!", zap.Error(err))
-        response.FailWithMessage("积分支付失败:"+err.Error(), c)
-        return
-    }
-    response.OkWithMessage("支付成功", c)
+	ctx := c.Request.Context()
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	var body struct {
+		OrderNo string `json:"orderNo"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if body.OrderNo == "" {
+		response.FailWithMessage("订单号不能为空", c)
+		return
+	}
+	if err := serviceOrder.PayOrderByPoints(ctx, int64(userID), body.OrderNo); err != nil {
+		global.GVA_LOG.Error("积分支付失败!", zap.Error(err))
+		response.FailWithMessage("积分支付失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithMessage("支付成功", c)
 }

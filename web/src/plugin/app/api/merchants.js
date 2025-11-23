@@ -107,3 +107,15 @@ export const getMerchantsPublic = () => {
     method: 'get',
   })
 }
+
+export const getRecommendedMerchants = () => {
+  return service({ url: '/mc/getRecommendedMerchants', method: 'get' })
+}
+
+export const getMerchantCategoryList = () => {
+  return service({ url: '/mc/getMerchantCategoryList', method: 'get' })
+}
+
+export const getMerchantsByCategory = (params) => {
+  return service({ url: '/mc/getMerchantsByCategory', method: 'get', params })
+}

@@ -16,7 +16,9 @@ type service struct {
 	Order                ORD
 	OrderItem            ORDI
 	UserPointsAccount    UPA
-    UserPointsLog        UPL
-    Search               SRCH
-    Consultation         CN
+	UserPointsLog        UPL
+	Search               SRCH
+	Consultation         CN
+	AppRelease           AR
+	MerchantCategory     MCAT
 }
