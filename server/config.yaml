@@ -253,4 +253,15 @@ zap:
 app-user:
     authority-id: 123
     y-api-url: https://minax-api.devlab.vip
-    y-api-time-out: 3
+    y-api-time-out: 10
+    x-cg-pro-api-key: 'CG-qEPsFVv25eLHRtkKNAiwELyT'
+    x-cg-pro-api-url: https://pro-api.coingecko.com/api/v3
+    x-cg-api-ids: #bitcoin,ethereum,ripple,binancecoin,solana,tron,staked-ether,dogecoin
+        - bitcoin
+        - ethereum
+        - ripple
+        - binancecoin
+        - solana
+        - tron
+        - staked-ether
+        - dogecoin

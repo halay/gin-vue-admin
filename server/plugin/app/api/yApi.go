@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -177,4 +178,79 @@ func (y *yApi) GetYApiMarketInfo(c *gin.Context) {
 		return
 	}
 	response.OkWithData(resStruct.Data, c)
+}
+func (y *yApi) GetXCgKLine(c *gin.Context) {
+	var url = plugin.Config.XCgProApiUrl + "/coins/markets?vs_currency=usd&price_change_percentage=1h,24h,7d"
+	var key = plugin.Config.XCgProApiKey
+	var ids = plugin.Config.XCgApiIds //把ids转换成逗号隔开的字符串放到url后面&连接
+	url = url + "&ids=" + strings.Join(ids, ",")
+	global.GVA_LOG.Info("请求K线url:" + url)
+
+	// 创建一个新的GET请求
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		global.GVA_LOG.Error("创建请求失败", zap.Error(err))
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		return
+	}
+	// 添加Header头
+	req.Header.Add("x-cg-pro-api-key", key)
+	// 创建一个http客户端
+	client := &http.Client{
+		Timeout: time.Duration(plugin.Config.YApiTimeout) * time.Second,
+	}
+	// 发送请求
+	res, err := client.Do(req)
+	if err != nil {
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		global.GVA_LOG.Error("请求失败", zap.Error(err))
+		return
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		global.GVA_LOG.Error("请求K线失败!", zap.Error(err))
+		response.FailWithMessage("请求K线失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(json.RawMessage(body), c)
+}
+func (y *yApi) GetXCgCoinsOHLC(c *gin.Context) {
+	var reqs request.XCgCoinOHLCRequest
+	if err := c.ShouldBind(&reqs); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	var url = plugin.Config.XCgProApiUrl + "/coins/" + reqs.Coins + "/ohlc?vs_currency=usd&days=7"
+	var key = plugin.Config.XCgProApiKey
+	global.GVA_LOG.Info("请求Coins OHLC url:" + url)
+
+	// 创建一个新的GET请求
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		global.GVA_LOG.Error("创建请求失败", zap.Error(err))
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		return
+	}
+	// 添加Header头
+	req.Header.Add("x-cg-pro-api-key", key)
+	// 创建一个http客户端
+	client := &http.Client{
+		Timeout: time.Duration(plugin.Config.YApiTimeout) * time.Second,
+	}
+	// 发送请求
+	res, err := client.Do(req)
+	if err != nil {
+		response.FailWithMessage("获取OHLC失败"+err.Error(), c)
+		global.GVA_LOG.Error("请求OHLC失败", zap.Error(err))
+		return
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		global.GVA_LOG.Error("请求OHLC失败!", zap.Error(err))
+		response.FailWithMessage("请求OHLC失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(json.RawMessage(body), c)
 }

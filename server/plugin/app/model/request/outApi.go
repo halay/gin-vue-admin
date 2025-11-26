@@ -15,3 +15,6 @@ type YApiMarketInfoRequest struct {
 	Market string `json:"market" form:"market" binding:"required"` //USDT
 	Token  string `json:"token" form:"token" binding:"required"`   //BTC
 }
+type XCgCoinOHLCRequest struct {
+	Coins string `json:"coins" form:"coins" binding:"required"` //bitcoin
+}
