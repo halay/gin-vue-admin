@@ -186,7 +186,7 @@
               </div>
             </template>
 
-          <el-form :model="formData" label-position="top" ref="elFormRef" :rules="rule" label-width="80px">
+        <el-form :model="formData" label-position="top" ref="elFormRef" :rules="rule" label-width="80px">
              <el-form-item label="商品名称:" prop="name">
     <el-input v-model="formData.name" :clearable="true" placeholder="请输入商品名称" />
 </el-form-item>
@@ -207,10 +207,17 @@
      file-type="image"
     />
 </el-form-item>
-             <el-form-item label="轮播图:" prop="carouselImages">
+            <el-form-item label="轮播图:" prop="carouselImages">
     <SelectImage
      multiple
      v-model="formData.carouselImages"
+     file-type="image"
+     />
+</el-form-item>
+             <el-form-item label="详情图片模式:" prop="detailImages">
+    <SelectImage
+     multiple
+     v-model="formData.detailImages"
      file-type="image"
      />
 </el-form-item>
@@ -220,7 +227,7 @@
     file-type="video"
     />
 </el-form-item>
-             <el-form-item label="商品详情:" prop="detail">
+             <el-form-item label="详情图文模式:" prop="detail">
     <RichEdit v-model="formData.detail"/>
 </el-form-item>
              <el-form-item label="是否多规格:" prop="hasVariants">
@@ -246,10 +253,13 @@
                  <el-descriptions-item label="轮播图">
     <el-image style="width: 50px; height: 50px; margin-right: 10px" :preview-src-list="returnArrImg(detailForm.carouselImages)" :initial-index="index" v-for="(item,index) in detailForm.carouselImages" :key="index" :src="getUrl(item)" fit="cover" />
 </el-descriptions-item>
+                 <el-descriptions-item label="详情图片模式">
+    <el-image style="width: 50px; height: 50px; margin-right: 10px" :preview-src-list="returnArrImg(detailForm.detailImages)" :initial-index="index" v-for="(item,index) in detailForm.detailImages" :key="index" :src="getUrl(item)" fit="cover" />
+</el-descriptions-item>
                  <el-descriptions-item label="视频">
     {{ detailForm.video }}
 </el-descriptions-item>
-                 <el-descriptions-item label="商品详情">
+                 <el-descriptions-item label="详情图文模式">
     <RichView v-model="detailForm.detail" />
 </el-descriptions-item>
             </el-descriptions>
@@ -301,13 +311,14 @@ const showAllQuery = ref(false)
 // 自动化生成的字典（可能为空）以及字段
 const product_statusOptions = ref([])
 const product_typeOptions = ref([])
-const formData = ref({
+  const formData = ref({
             name: '',
             type: '',
             status: '',
             categoryId: undefined,
             coverImage: "",
             carouselImages: [],
+            detailImages: [],
             video: "",
             detail: '',
             hasVariants: false,
@@ -554,13 +565,14 @@ const openDialog = () => {
 // 关闭弹窗
 const closeDialog = () => {
     dialogFormVisible.value = false
-    formData.value = {
+  formData.value = {
         name: '',
         type: '',
         status: '',
         categoryId: undefined,
         coverImage: "",
         carouselImages: [],
+        detailImages: [],
         video: "",
         detail: '',
         hasVariants: false,
