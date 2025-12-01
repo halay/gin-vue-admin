@@ -190,6 +190,7 @@ func (a *appUsers) GetAppUsersList(c *gin.Context) {
 			"inviteCode":    derefStr(u.InviteCode),
 			"ancestors":     ancestors,
 			"descendants":   descendants,
+			"membershipLevelId": derefInt64(u.MembershipLevelID),
 		})
 	}
 	response.OkWithDetailed(response.PageResult{
@@ -401,6 +402,7 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		InviteCode:    derefStr(user.InviteCode),
 		InviterID:     uint(derefInt64u(user.InviterID)),
 		InviteLevel:   derefInt(user.InviteLevel),
+		MembershipLevelID: derefInt64(user.MembershipLevelID),
 	}
 
 	response.OkWithData(resp, c)

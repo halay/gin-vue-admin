@@ -13,6 +13,7 @@ type AppUsersSearch struct {
 	Status             *string     `json:"status" form:"status"`
 	LastLoginTimeRange []time.Time `json:"lastLoginTimeRange" form:"lastLoginTimeRange[]"`
 	EmailVerified      *bool       `json:"emailVerified" form:"emailVerified"`
+	MembershipLevelID  *int64      `json:"membershipLevelId" form:"membershipLevelId"`
 	request.PageInfo
 }
 

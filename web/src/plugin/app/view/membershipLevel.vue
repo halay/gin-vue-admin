@@ -22,39 +22,32 @@
                 />
        </el-form-item>
       
-            <el-form-item label="用户邮箱" prop="email">
-  <el-input v-model="searchInfo.email" placeholder="搜索条件" />
+            <el-form-item label="等级名称" prop="name">
+  <el-input v-model="searchInfo.name" placeholder="搜索条件" />
 </el-form-item>
            
-            <el-form-item label="用户昵称" prop="nickname">
-  <el-input v-model="searchInfo.nickname" placeholder="搜索条件" />
+            <el-form-item label="等级编码" prop="code">
+  <el-input v-model="searchInfo.code" placeholder="搜索条件" />
 </el-form-item>
            
-            <el-form-item label="用户状态" prop="status">
-    <el-tree-select v-model="formData.status" placeholder="请选择用户状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly ></el-tree-select>
-</el-form-item>
-            <el-form-item label="会员等级" prop="membershipLevelId">
-  <el-select v-model="searchInfo.membershipLevelId" clearable placeholder="请选择" style="width:220px">
-    <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
-  </el-select>
+            <el-form-item label="状态" prop="status">
+    <el-tree-select v-model="searchInfo.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="false" check-strictly ></el-tree-select>
 </el-form-item>
            
-            <el-form-item label="最后登录时间" prop="lastLoginTime">
-  <template #label>
-    <span>
-      最后登录时间
-      <el-tooltip content="搜索范围是开始日期（包含）至结束日期（不包含）">
-        <el-icon><QuestionFilled /></el-icon>
-      </el-tooltip>
-    </span>
-  </template>
-<el-date-picker class="!w-380px" v-model="searchInfo.lastLoginTimeRange" type="datetimerange" range-separator="至"  start-placeholder="开始时间" end-placeholder="结束时间"></el-date-picker></el-form-item>
+            <el-form-item label="排序" prop="sort">
+  <el-input v-model.number="searchInfo.sort" placeholder="搜索条件" />
+</el-form-item>
            
-            <el-form-item label="邮箱是否已验证" prop="emailVerified">
-  <el-select v-model="searchInfo.emailVerified" clearable placeholder="请选择">
-    <el-option key="true" label="是" value="true"></el-option>
-    <el-option key="false" label="否" value="false"></el-option>
-  </el-select>
+            <el-form-item label="要求描述" prop="requirement">
+  <el-input v-model="searchInfo.requirement" placeholder="搜索条件" />
+</el-form-item>
+           
+            <el-form-item label="要求值" prop="requirementValue">
+  <el-input v-model.number="searchInfo.requirementValue" placeholder="搜索条件" />
+</el-form-item>
+           
+            <el-form-item label="权益说明" prop="benefits">
+  <el-input v-model="searchInfo.benefits" placeholder="搜索条件" />
 </el-form-item>
            
         <template v-if="showAllQuery">
@@ -71,11 +64,11 @@
     </div>
     <div class="gva-table-box">
         <div class="gva-btn-list">
-            <el-button v-auth="btnAuth.add" type="primary" icon="plus" @click="openDialog()">新增</el-button>
-            <el-button v-auth="btnAuth.batchDelete" icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
-            <ExportTemplate v-auth="btnAuth.exportTemplate" template-id="app_AppUsers" />
-            <ExportExcel v-auth="btnAuth.exportExcel" template-id="app_AppUsers" filterDeleted/>
-            <ImportExcel v-auth="btnAuth.importExcel" template-id="app_AppUsers" @on-success="getTableData" />
+            <el-button  type="primary" icon="plus" @click="openDialog()">新增</el-button>
+            <el-button  icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
+            <ExportTemplate  template-id="app_MembershipLevel" />
+            <ExportExcel  template-id="app_MembershipLevel" filterDeleted/>
+            <ImportExcel  template-id="app_MembershipLevel" @on-success="getTableData" />
         </div>
         <el-table
         ref="multipleTable"
@@ -84,6 +77,7 @@
         :data="tableData"
         row-key="ID"
         @selection-change="handleSelectionChange"
+        @sort-change="sortChange"
         >
         <el-table-column type="selection" width="55" />
         
@@ -91,51 +85,26 @@
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
         
-            <el-table-column align="left" label="用户邮箱" prop="email" width="120" />
+            <el-table-column sortable align="left" label="等级名称" prop="name" width="120" />
 
-            <el-table-column align="left" label="用户昵称" prop="nickname" width="120" />
+            <el-table-column align="left" label="等级编码" prop="code" width="120" />
 
-            <el-table-column align="left" label="用户头像URL" prop="avatar" width="120" />
-
-            <el-table-column align="left" label="用户手机号" prop="phone" width="120" />
-
-            <el-table-column align="left" label="用户状态" prop="status" width="120">
+            <el-table-column align="left" label="状态" prop="status" width="120">
     <template #default="scope">
     {{ filterDict(scope.row.status,statusOptions) }}
     </template>
 </el-table-column>
-            <el-table-column align="left" label="最后登录时间" prop="lastLoginTime" width="180">
-   <template #default="scope">{{ formatDate(scope.row.lastLoginTime) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="最后登录IP" prop="lastLoginIp" width="120" />
+            <el-table-column align="left" label="排序" prop="sort" width="120" />
 
-            <el-table-column align="left" label="邮箱是否已验证" prop="emailVerified" width="120">
-    <template #default="scope">{{ formatBoolean(scope.row.emailVerified) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
-            <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="120">
-              <template #default="scope">
-                {{ formatLevel(scope.row.membershipLevelId) }}
-              </template>
-            </el-table-column>
+            <el-table-column align="left" label="要求描述" prop="requirement" width="120" />
 
-            <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
-            <el-table-column align="left" label="所有上级" prop="ancestors" min-width="240">
-              <template #default="scope">
-                <span>{{ Array.isArray(scope.row.ancestors) ? scope.row.ancestors.join(', ') : scope.row.ancestors }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column align="left" label="所有下级" prop="descendants" min-width="240">
-              <template #default="scope">
-                <span>{{ Array.isArray(scope.row.descendants) ? scope.row.descendants.join(', ') : scope.row.descendants }}</span>
-              </template>
-            </el-table-column>
+            <el-table-column align="left" label="要求值" prop="requirementValue" width="120" />
 
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
-            <el-button v-auth="btnAuth.info" type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
-            <el-button v-auth="btnAuth.edit" type="primary" link icon="edit" class="table-button" @click="updateAppUsersFunc(scope.row)">编辑</el-button>
-            <el-button  v-auth="btnAuth.delete" type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
+            <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
+            <el-button  type="primary" link icon="edit" class="table-button" @click="updateMembershipLevelFunc(scope.row)">编辑</el-button>
+            <el-button   type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
             </template>
         </el-table-column>
         </el-table>
@@ -163,53 +132,32 @@
             </template>
 
           <el-form :model="formData" label-position="top" ref="elFormRef" :rules="rule" label-width="80px">
-             <el-form-item label="用户昵称:" prop="nickname">
-    <el-input v-model="formData.nickname" :clearable="true" placeholder="请输入用户昵称" />
+             <el-form-item label="等级名称:" prop="name">
+    <el-input v-model="formData.name" :clearable="false" placeholder="请输入等级名称(普通/VIP/SVIP)" />
 </el-form-item>
-             <el-form-item label="用户手机号:" prop="phone">
-    <el-input v-model="formData.phone" :clearable="true" placeholder="请输入用户手机号" />
+             <el-form-item label="等级编码:" prop="code">
+    <el-input v-model="formData.code" :clearable="false" placeholder="请输入等级编码(normal/vip/svip)" />
+</el-form-item>
+             <el-form-item label="状态:" prop="status">
+    <el-tree-select v-model="formData.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="false" check-strictly></el-tree-select>
+</el-form-item>
+             <el-form-item label="排序:" prop="sort">
+    <el-input v-model.number="formData.sort" :clearable="false" placeholder="请输入排序" />
+</el-form-item>
+             <el-form-item label="要求描述:" prop="requirement">
+    <el-input v-model="formData.requirement" :clearable="false" placeholder="请输入要求描述" />
+</el-form-item>
+             <el-form-item label="要求值:" prop="requirementValue">
+    <el-input-number v-model="formData.requirementValue" style="width:100%" :precision="2" :clearable="false" />
+</el-form-item>
+             <el-form-item label="权益说明:" prop="benefits">
+    <RichEdit v-model="formData.benefits"/>
 </el-form-item>
           </el-form>
     </el-drawer>
 
     <el-drawer destroy-on-close size="800" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
             <el-descriptions :column="1" border>
-                 <el-descriptions-item label="用户邮箱">
-    {{ detailForm.email }}
-</el-descriptions-item>
-                 <el-descriptions-item label="用户昵称">
-    {{ detailForm.nickname }}
-</el-descriptions-item>
-                 <el-descriptions-item label="用户头像URL">
-    {{ detailForm.avatar }}
-</el-descriptions-item>
-                 <el-descriptions-item label="用户手机号">
-    {{ detailForm.phone }}
-</el-descriptions-item>
-                 <el-descriptions-item label="用户状态">
-    {{ filterDict(detailForm.status,statusOptions) }}
-</el-descriptions-item>
-                 <el-descriptions-item label="最后登录时间">
-    {{ detailForm.lastLoginTime }}
-</el-descriptions-item>
-                 <el-descriptions-item label="最后登录IP">
-    {{ detailForm.lastLoginIp }}
-</el-descriptions-item>
-                 <el-descriptions-item label="邮箱是否已验证">
-    {{ detailForm.emailVerified }}
-</el-descriptions-item>
-                <el-descriptions-item label="用户角色ID">
-    {{ detailForm.authorityId }}
-</el-descriptions-item>
-                <el-descriptions-item label="邀请码">
-    {{ detailForm.inviteCode }}
-</el-descriptions-item>
-                <el-descriptions-item label="所有上级">
-    {{ Array.isArray(detailForm.ancestors) ? detailForm.ancestors.join(', ') : detailForm.ancestors }}
-</el-descriptions-item>
-                <el-descriptions-item label="所有下级">
-    {{ Array.isArray(detailForm.descendants) ? detailForm.descendants.join(', ') : detailForm.descendants }}
-</el-descriptions-item>
             </el-descriptions>
         </el-drawer>
 
@@ -218,21 +166,21 @@
 
 <script setup>
 import {
-  createAppUsers,
-  deleteAppUsers,
-  deleteAppUsersByIds,
-  updateAppUsers,
-  findAppUsers,
-  getAppUsersList
-} from '@/plugin/app/api/appUsers'
+  createMembershipLevel,
+  deleteMembershipLevel,
+  deleteMembershipLevelByIds,
+  updateMembershipLevel,
+  findMembershipLevel,
+  getMembershipLevelList
+} from '@/plugin/app/api/membershipLevel'
+// 富文本组件
+import RichEdit from '@/components/richtext/rich-edit.vue'
+import RichView from '@/components/richtext/rich-view.vue'
 
 // 全量引入格式化工具 请按需保留
 import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
-import { getMembershipLevelPublic } from '@/plugin/app/api/membershiplevel'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
-// 引入按钮权限标识
-import { useBtnAuth } from '@/utils/btnAuth'
 
 // 导出组件
 import ExportExcel from '@/components/exportExcel/exportExcel.vue'
@@ -243,10 +191,8 @@ import ExportTemplate from '@/components/exportExcel/exportTemplate.vue'
 
 
 defineOptions({
-    name: 'AppUsers'
+    name: 'MembershipLevel'
 })
-// 按钮权限实例化
-    const btnAuth = useBtnAuth()
 
 // 提交按钮loading
 const btnLoading = ref(false)
@@ -256,30 +202,46 @@ const showAllQuery = ref(false)
 
 // 自动化生成的字典（可能为空）以及字段
 const statusOptions = ref([])
-const membershipLevels = ref([])
 const formData = ref({
-            nickname: '',
-            phone: '',
-            membershipLevelId: undefined,
+            name: '',
+            code: '',
+            status: '',
+            sort: 0,
+            requirement: '',
+            requirementValue: 0,
+            benefits: '',
         })
 
 
 
 // 验证规则
 const rule = reactive({
+               name : [{
+                   required: true,
+                   message: '',
+                   trigger: ['input','blur'],
+               },
+               {
+                   whitespace: true,
+                   message: '不能只输入空格',
+                   trigger: ['input', 'blur'],
+              }
+              ],
+               code : [{
+                   required: true,
+                   message: '',
+                   trigger: ['input','blur'],
+               },
+               {
+                   whitespace: true,
+                   message: '不能只输入空格',
+                   trigger: ['input', 'blur'],
+              }
+              ],
 })
 
 const elFormRef = ref()
 const elSearchFormRef = ref()
-const formatLevel = (id) => {
-  const lv = membershipLevels.value.find(i => i.ID === id)
-  return lv ? lv.name : ''
-}
-const loadMembershipLevels = async () => {
-  const res = await getMembershipLevelPublic()
-  if (res.code === 0) membershipLevels.value = res.data || []
-}
-loadMembershipLevels()
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
@@ -287,6 +249,23 @@ const total = ref(0)
 const pageSize = ref(10)
 const tableData = ref([])
 const searchInfo = ref({})
+// 排序
+const sortChange = ({ prop, order }) => {
+  const sortMap = {
+    CreatedAt:"created_at",
+    ID:"id",
+            name: 'name',
+  }
+
+  let sort = sortMap[prop]
+  if(!sort){
+   sort = prop.replace(/[A-Z]/g, match => `_${match.toLowerCase()}`)
+  }
+
+  searchInfo.value.sort = sort
+  searchInfo.value.order = order
+  getTableData()
+}
 // 重置
 const onReset = () => {
   searchInfo.value = {}
@@ -298,9 +277,6 @@ const onSubmit = () => {
   elSearchFormRef.value?.validate(async(valid) => {
     if (!valid) return
     page.value = 1
-    if (searchInfo.value.emailVerified === ""){
-        searchInfo.value.emailVerified=null
-    }
     getTableData()
   })
 }
@@ -319,7 +295,7 @@ const handleCurrentChange = (val) => {
 
 // 查询
 const getTableData = async() => {
-  const table = await getAppUsersList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
+  const table = await getMembershipLevelList({ page: page.value, pageSize: pageSize.value, ...searchInfo.value })
   if (table.code === 0) {
     tableData.value = table.data.list
     total.value = table.data.total
@@ -355,7 +331,7 @@ const deleteRow = (row) => {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(() => {
-            deleteAppUsersFunc(row)
+            deleteMembershipLevelFunc(row)
         })
     }
 
@@ -378,7 +354,7 @@ const onDelete = async() => {
         multipleSelection.value.map(item => {
           IDs.push(item.ID)
         })
-      const res = await deleteAppUsersByIds({ IDs })
+      const res = await deleteMembershipLevelByIds({ IDs })
       if (res.code === 0) {
         ElMessage({
           type: 'success',
@@ -396,8 +372,8 @@ const onDelete = async() => {
 const type = ref('')
 
 // 更新行
-const updateAppUsersFunc = async(row) => {
-    const res = await findAppUsers({ ID: row.ID })
+const updateMembershipLevelFunc = async(row) => {
+    const res = await findMembershipLevel({ ID: row.ID })
     type.value = 'update'
     if (res.code === 0) {
         formData.value = res.data
@@ -407,8 +383,8 @@ const updateAppUsersFunc = async(row) => {
 
 
 // 删除行
-const deleteAppUsersFunc = async (row) => {
-    const res = await deleteAppUsers({ ID: row.ID })
+const deleteMembershipLevelFunc = async (row) => {
+    const res = await deleteMembershipLevel({ ID: row.ID })
     if (res.code === 0) {
         ElMessage({
                 type: 'success',
@@ -434,8 +410,13 @@ const openDialog = () => {
 const closeDialog = () => {
     dialogFormVisible.value = false
     formData.value = {
-        nickname: '',
-        phone: '',
+        name: '',
+        code: '',
+        status: '',
+        sort: 0,
+        requirement: '',
+        requirementValue: 0,
+        benefits: '',
         }
 }
 // 弹窗确定
@@ -446,13 +427,13 @@ const enterDialog = async () => {
               let res
               switch (type.value) {
                 case 'create':
-                  res = await createAppUsers(formData.value)
+                  res = await createMembershipLevel(formData.value)
                   break
                 case 'update':
-                  res = await updateAppUsers(formData.value)
+                  res = await updateMembershipLevel(formData.value)
                   break
                 default:
-                  res = await createAppUsers(formData.value)
+                  res = await createMembershipLevel(formData.value)
                   break
               }
               btnLoading.value = false
@@ -482,7 +463,7 @@ const openDetailShow = () => {
 // 打开详情
 const getDetails = async (row) => {
   // 打开弹窗
-  const res = await findAppUsers({ ID: row.ID })
+  const res = await findMembershipLevel({ ID: row.ID })
   if (res.code === 0) {
     detailForm.value = res.data
     openDetailShow()

@@ -21,4 +21,5 @@ type service struct {
 	Consultation         CN
 	AppRelease           AR
 	MerchantCategory     MCAT
+	MembershipLevel      ML
 }

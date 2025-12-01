@@ -31,4 +31,5 @@ func Router(engine *gin.Engine) {
 	router.Router.Consultation.Init(public, private)
 	router.Router.AppRelease.Init(public, private)
 	router.Router.MerchantCategory.Init(public, private)
+	router.Router.MembershipLevel.Init(public, private)
 }

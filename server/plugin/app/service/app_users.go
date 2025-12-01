@@ -87,6 +87,9 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	if info.EmailVerified != nil {
 		db = db.Where("email_verified = ?", *info.EmailVerified)
 	}
+	if info.MembershipLevelID != nil {
+		db = db.Where("membership_level_id = ?", *info.MembershipLevelID)
+	}
 	err = db.Count(&total).Error
 	if err != nil {
 		return
