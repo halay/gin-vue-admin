@@ -21,8 +21,8 @@ import (
 // @Tag.Name        SysUser
 // @Tag.Description 用户
 
-// @title                       DeedMX Swagger API接口文档
-// @version                     v2.8.6
+// @title                       Gin-Vue-Admin Swagger API接口文档
+// @version                     v2.8.7
 // @description                 使用gin+vue进行极速开发的全栈开发基础平台
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
