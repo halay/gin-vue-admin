@@ -14,6 +14,7 @@ type AppUsersSearch struct {
 	LastLoginTimeRange []time.Time `json:"lastLoginTimeRange" form:"lastLoginTimeRange[]"`
 	EmailVerified      *bool       `json:"emailVerified" form:"emailVerified"`
 	MembershipLevelID  *int64      `json:"membershipLevelId" form:"membershipLevelId"`
+	NodeID             *int64      `json:"nodeId" form:"nodeId"`
 	request.PageInfo
 }
 

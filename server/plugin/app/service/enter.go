@@ -22,4 +22,5 @@ type service struct {
 	AppRelease           AR
 	MerchantCategory     MCAT
 	MembershipLevel      ML
+	Node                 NODE
 }

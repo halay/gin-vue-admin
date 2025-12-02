@@ -23,6 +23,7 @@ var (
 	serviceAppRelease           = service.Service.AppRelease
 	serviceMerchantCategory     = service.Service.MerchantCategory
 	serviceMembershipLevel      = service.Service.MembershipLevel
+	serviceNode                 = service.Service.Node
 )
 
 type api struct {
@@ -46,4 +47,5 @@ type api struct {
 	AppRelease           AR
 	MerchantCategory     MCAT
 	MembershipLevel      ML
+	Node                 NODE
 }

@@ -27,6 +27,7 @@ type UserResponse struct {
 	InviterID     uint       `json:"inviterId"`
 	InviteLevel   int        `json:"inviteLevel"`
 	MembershipLevelID int64  `json:"membershipLevelId"`
+	NodeID int64 `json:"nodeId"`
 }
 
 // UserListResponse 用户列表响应

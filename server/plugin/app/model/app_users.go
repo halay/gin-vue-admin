@@ -30,6 +30,7 @@ type AppUsers struct {
 	InvitePath    *string    `json:"invitePath" form:"invitePath" gorm:"comment:邀请路径;column:invite_path;type:text;"`                       //邀请路径 a/b/c...
 	InviteLevel   *int       `json:"inviteLevel" form:"inviteLevel" gorm:"comment:邀请层级;column:invite_level;"`                              //层级深度
 	MembershipLevelID *int64 `json:"membershipLevelId" form:"membershipLevelId" gorm:"comment:会员等级ID;column:membership_level_id;"`
+	NodeID *int64 `json:"nodeId" form:"nodeId" gorm:"comment:所属节点ID;column:node_id;"`
 }
 
 func (u AppUsers) GetUsername() string {

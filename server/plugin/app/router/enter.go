@@ -24,6 +24,7 @@ var (
 	apiAppRelease           = api.Api.AppRelease
 	apiMerchantCategory     = api.Api.MerchantCategory
 	apiMembershipLevel      = api.Api.MembershipLevel
+	apiNode                 = api.Api.Node
 )
 
 type router struct {
@@ -47,4 +48,5 @@ type router struct {
 	AppRelease           AR
 	MerchantCategory     MCAT
 	MembershipLevel      ML
+	Node                 NODE
 }

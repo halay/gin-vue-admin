@@ -90,6 +90,9 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	if info.MembershipLevelID != nil {
 		db = db.Where("membership_level_id = ?", *info.MembershipLevelID)
 	}
+	if info.NodeID != nil {
+		db = db.Where("node_id = ?", *info.NodeID)
+	}
 	err = db.Count(&total).Error
 	if err != nil {
 		return

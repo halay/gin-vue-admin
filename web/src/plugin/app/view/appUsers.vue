@@ -38,6 +38,11 @@
     <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
   </el-select>
 </el-form-item>
+            <el-form-item label="所属节点" prop="nodeId">
+  <el-select v-model="searchInfo.nodeId" clearable placeholder="请选择" style="width:220px">
+    <el-option v-for="(n,idx) in nodeOptions" :key="idx" :label="n.name" :value="n.ID" />
+  </el-select>
+</el-form-item>
            
             <el-form-item label="最后登录时间" prop="lastLoginTime">
   <template #label>
@@ -91,10 +96,15 @@
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
         
-            <el-table-column align="left" label="用户邮箱" prop="email" width="120" />
+            <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
             <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="120">
               <template #default="scope">
                 {{ formatLevel(scope.row.membershipLevelId) }}
+              </template>
+            </el-table-column>
+            <el-table-column align="left" label="所属节点" prop="nodeId" width="120">
+              <template #default="scope">
+                {{ formatNode(scope.row.nodeId) }}
               </template>
             </el-table-column>
             <el-table-column align="left" label="用户昵称" prop="nickname" width="120" />
@@ -168,6 +178,16 @@
     <el-input v-model="formData.phone" :clearable="true" placeholder="请输入用户手机号" />
 </el-form-item>
              <el-form-item label="会员等级:" prop="membershipLevelId">
+    <el-select v-model="formData.membershipLevelId" placeholder="请选择会员等级" filterable clearable>
+      <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
+    </el-select>
+</el-form-item>
+             <el-form-item label="所属节点:" prop="nodeId">
+    <el-select v-model="formData.nodeId" placeholder="请选择节点" filterable clearable>
+      <el-option v-for="(n,idx) in nodeOptions" :key="idx" :label="n.name" :value="n.ID" />
+    </el-select>
+</el-form-item>
+             <el-form-item label="会员等级:" prop="membershipLevelId">
     <el-select v-model="formData.membershipLevelId" placeholder="请选择会员等级">
       <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
     </el-select>
@@ -231,7 +251,8 @@ import {
 
 // 全量引入格式化工具 请按需保留
 import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
-import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
+import { getMembershipLevelPublic } from '@/plugin/app/api/membershiplevel'
+import { getNodeList } from '@/plugin/app/api/node'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 // 引入按钮权限标识
@@ -260,10 +281,12 @@ const showAllQuery = ref(false)
 // 自动化生成的字典（可能为空）以及字段
 const statusOptions = ref([])
 const membershipLevels = ref([])
+const nodeOptions = ref([])
 const formData = ref({
             nickname: '',
             phone: '',
             membershipLevelId: undefined,
+            nodeId: undefined,
         })
 
 
@@ -278,11 +301,20 @@ const formatLevel = (id) => {
   const lv = membershipLevels.value.find(i => i.ID === id)
   return lv ? lv.name : ''
 }
+const formatNode = (id) => {
+  const n = nodeOptions.value.find(i => i.ID === id)
+  return n ? n.name : ''
+}
 const loadMembershipLevels = async () => {
   const res = await getMembershipLevelPublic()
   if (res.code === 0) membershipLevels.value = res.data || []
 }
 loadMembershipLevels()
+const loadNodes = async () => {
+  const res = await getNodeList({ page:1, pageSize:9999 })
+  if (res.code === 0) nodeOptions.value = res.data.list || []
+}
+loadNodes()
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
