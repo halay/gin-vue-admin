@@ -92,7 +92,11 @@
         </el-table-column>
         
             <el-table-column align="left" label="用户邮箱" prop="email" width="120" />
-
+            <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="120">
+              <template #default="scope">
+                {{ formatLevel(scope.row.membershipLevelId) }}
+              </template>
+            </el-table-column>
             <el-table-column align="left" label="用户昵称" prop="nickname" width="120" />
 
             <el-table-column align="left" label="用户头像URL" prop="avatar" width="120" />
@@ -113,12 +117,6 @@
     <template #default="scope">{{ formatBoolean(scope.row.emailVerified) }}</template>
 </el-table-column>
             <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
-            <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="120">
-              <template #default="scope">
-                {{ formatLevel(scope.row.membershipLevelId) }}
-              </template>
-            </el-table-column>
-
             <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
             <el-table-column align="left" label="所有上级" prop="ancestors" min-width="240">
               <template #default="scope">
@@ -168,6 +166,11 @@
 </el-form-item>
              <el-form-item label="用户手机号:" prop="phone">
     <el-input v-model="formData.phone" :clearable="true" placeholder="请输入用户手机号" />
+</el-form-item>
+             <el-form-item label="会员等级:" prop="membershipLevelId">
+    <el-select v-model="formData.membershipLevelId" placeholder="请选择会员等级">
+      <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
+    </el-select>
 </el-form-item>
           </el-form>
     </el-drawer>
@@ -228,7 +231,7 @@ import {
 
 // 全量引入格式化工具 请按需保留
 import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
-import { getMembershipLevelPublic } from '@/plugin/app/api/membershiplevel'
+import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 // 引入按钮权限标识

@@ -34,22 +34,6 @@
     <el-tree-select v-model="searchInfo.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="false" check-strictly ></el-tree-select>
 </el-form-item>
            
-            <el-form-item label="排序" prop="sort">
-  <el-input v-model.number="searchInfo.sort" placeholder="搜索条件" />
-</el-form-item>
-           
-            <el-form-item label="要求描述" prop="requirement">
-  <el-input v-model="searchInfo.requirement" placeholder="搜索条件" />
-</el-form-item>
-           
-            <el-form-item label="要求值" prop="requirementValue">
-  <el-input v-model.number="searchInfo.requirementValue" placeholder="搜索条件" />
-</el-form-item>
-           
-            <el-form-item label="权益说明" prop="benefits">
-  <el-input v-model="searchInfo.benefits" placeholder="搜索条件" />
-</el-form-item>
-           
         <template v-if="showAllQuery">
           <!-- 将需要控制显示状态的查询条件添加到此范围内 -->
         </template>
@@ -96,9 +80,9 @@
 </el-table-column>
             <el-table-column align="left" label="排序" prop="sort" width="120" />
 
-            <el-table-column align="left" label="要求描述" prop="requirement" width="120" />
+            <el-table-column align="left" label="描述" prop="requirement" width="120" />
 
-            <el-table-column align="left" label="要求值" prop="requirementValue" width="120" />
+            <el-table-column align="left" label="要求值(美元/年)" prop="requirementValue" width="120" />
 
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
@@ -147,7 +131,7 @@
              <el-form-item label="要求描述:" prop="requirement">
     <el-input v-model="formData.requirement" :clearable="false" placeholder="请输入要求描述" />
 </el-form-item>
-             <el-form-item label="要求值:" prop="requirementValue">
+             <el-form-item label="要求值(美元/年):" prop="requirementValue">
     <el-input-number v-model="formData.requirementValue" style="width:100%" :precision="2" :clearable="false" />
 </el-form-item>
              <el-form-item label="权益说明:" prop="benefits">
@@ -158,6 +142,15 @@
 
     <el-drawer destroy-on-close size="800" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
             <el-descriptions :column="1" border>
+              <el-descriptions-item label="等级名称">
+    {{ detailForm.name }}
+</el-descriptions-item>
+                 <el-descriptions-item label="等级编码">
+    {{ detailForm.code }}
+</el-descriptions-item>
+                 <el-descriptions-item label="权益说明">
+    <RichView v-model="detailForm.benefits"/>
+</el-descriptions-item>
             </el-descriptions>
         </el-drawer>
 

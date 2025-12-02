@@ -242,19 +242,22 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 	phone := req.Phone
 	status := "1"
 	roleID := plugin.Config.AuthorityId // 外部用户角色ID
+	memberShipInfo, _ := MembershipLevel.GetMembershipLevelInfoByCode(ctx, "normal")
+	var membershipId = int64(memberShipInfo.ID)
 	user = model.AppUsers{
-		Email:         &req.Email,
-		Uuid:          uuid.New(),
-		Password:      &password,
-		Nickname:      &nickname,
-		Phone:         &phone,
-		EmailVerified: &trueVal,
-		Status:        &status,
-		AuthorityId:   &roleID, // 关联角色ID=123
-		InviteCode:    &myCode,
-		InviterID:     uintPtr(uint(inviter.ID)),
-		InvitePath:    &path,
-		InviteLevel:   &level,
+		Email:             &req.Email,
+		Uuid:              uuid.New(),
+		Password:          &password,
+		Nickname:          &nickname,
+		Phone:             &phone,
+		EmailVerified:     &trueVal,
+		Status:            &status,
+		AuthorityId:       &roleID, // 关联角色ID=123
+		InviteCode:        &myCode,
+		InviterID:         &inviter.ID,
+		InvitePath:        &path,
+		InviteLevel:       &level,
+		MembershipLevelID: &membershipId,
 	}
 
 	if err = global.GVA_DB.Create(&user).Error; err != nil {
