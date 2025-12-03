@@ -47,7 +47,7 @@ func (s *appUsers) DeleteAppUsersByIds(ctx context.Context, IDs []string) (err e
 
 // UpdateAppUsers 更新appUsers表记录
 // Author [yourname](https://github.com/yourname)
-func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers model.AppUsers) (err error) {
+func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRequest) (err error) {
 	err = global.GVA_DB.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Updates(&appUsers).Error
 	return err
 }

@@ -106,7 +106,7 @@ func (a *appUsers) UpdateAppUsers(c *gin.Context) {
 	// 创建业务用Context
 	ctx := c.Request.Context()
 
-	var info model.AppUsers
+	var info request.UpdateRequest
 	err := c.ShouldBindJSON(&info)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -141,7 +141,31 @@ func (a *appUsers) FindAppUsers(c *gin.Context) {
 		response.FailWithMessage("查询失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithData(reappUsers, c)
+	ancestors, _ := serviceAppUsers.FormatAncestors(ctx, reappUsers.InvitePath)
+	descendants, _ := serviceAppUsers.FormatDescendants(ctx, reappUsers.ID)
+	// enrich rows with invite info
+	u := reappUsers
+	var enriched = make(gin.H)
+	enriched = gin.H{
+		"ID":                u.ID,
+		"CreatedAt":         u.CreatedAt,
+		"email":             derefStr(u.Email),
+		"nickname":          derefStr(u.Nickname),
+		"avatar":            derefStr(u.Avatar),
+		"phone":             derefStr(u.Phone),
+		"status":            derefStr(u.Status),
+		"lastLoginTime":     u.LastLoginTime,
+		"lastLoginIp":       derefStr(u.LastLoginIP),
+		"emailVerified":     derefBool(u.EmailVerified),
+		"authorityId":       derefInt64u(u.AuthorityId),
+		"inviteCode":        derefStr(u.InviteCode),
+		"ancestors":         ancestors,
+		"descendants":       descendants,
+		"membershipLevelId": derefInt64(u.MembershipLevelID),
+		"nodeId":            derefInt64(u.NodeID),
+	}
+
+	response.OkWithData(enriched, c)
 }
 
 // GetAppUsersList 分页获取appUsers表列表
@@ -169,33 +193,9 @@ func (a *appUsers) GetAppUsersList(c *gin.Context) {
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
-	// enrich rows with invite info
-	enriched := make([]gin.H, 0, len(list))
-	for i := range list {
-		u := list[i]
-		ancestors, _ := serviceAppUsers.FormatAncestors(ctx, u.InvitePath)
-		descendants, _ := serviceAppUsers.FormatDescendants(ctx, u.ID)
-		enriched = append(enriched, gin.H{
-			"ID":            u.ID,
-			"CreatedAt":     u.CreatedAt,
-			"email":         derefStr(u.Email),
-			"nickname":      derefStr(u.Nickname),
-			"avatar":        derefStr(u.Avatar),
-			"phone":         derefStr(u.Phone),
-			"status":        derefStr(u.Status),
-			"lastLoginTime": u.LastLoginTime,
-			"lastLoginIp":   derefStr(u.LastLoginIP),
-			"emailVerified": derefBool(u.EmailVerified),
-			"authorityId":   derefInt64u(u.AuthorityId),
-			"inviteCode":    derefStr(u.InviteCode),
-			"ancestors":     ancestors,
-			"descendants":   descendants,
-			"membershipLevelId": derefInt64(u.MembershipLevelID),
-			"nodeId": derefInt64(u.NodeID),
-		})
-	}
+
 	response.OkWithDetailed(response.PageResult{
-		List:     enriched,
+		List:     list,
 		Total:    total,
 		Page:     pageInfo.Page,
 		PageSize: pageInfo.PageSize,
@@ -391,20 +391,20 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 
 	// 组装返回体，避免泄露敏感字段（如密码）
 	resp := appResponse.UserResponse{
-		ID:            user.ID,
-		Email:         derefStr(user.Email),
-		Nickname:      derefStr(user.Nickname),
-		Avatar:        derefStr(user.Avatar),
-		Phone:         derefStr(user.Phone),
-		Status:        derefStr(user.Status),
-		EmailVerified: derefBool(user.EmailVerified),
-		LastLoginTime: user.LastLoginTime,
-		LastLoginIP:   derefStr(user.LastLoginIP),
-		InviteCode:    derefStr(user.InviteCode),
-		InviterID:     uint(derefInt64u(user.InviterID)),
-		InviteLevel:   derefInt(user.InviteLevel),
+		ID:                user.ID,
+		Email:             derefStr(user.Email),
+		Nickname:          derefStr(user.Nickname),
+		Avatar:            derefStr(user.Avatar),
+		Phone:             derefStr(user.Phone),
+		Status:            derefStr(user.Status),
+		EmailVerified:     derefBool(user.EmailVerified),
+		LastLoginTime:     user.LastLoginTime,
+		LastLoginIP:       derefStr(user.LastLoginIP),
+		InviteCode:        derefStr(user.InviteCode),
+		InviterID:         uint(derefInt64u(user.InviterID)),
+		InviteLevel:       derefInt(user.InviteLevel),
 		MembershipLevelID: derefInt64(user.MembershipLevelID),
-		NodeID: derefInt64(user.NodeID),
+		NodeID:            derefInt64(user.NodeID),
 	}
 
 	response.OkWithData(resp, c)

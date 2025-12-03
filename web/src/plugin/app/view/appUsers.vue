@@ -95,9 +95,8 @@
         <el-table-column sortable align="left" label="日期" prop="CreatedAt" width="180">
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
-        
-            <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
-            <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="120">
+        <el-table-column align="left" label="用户邮箱" prop="email" width="180" />
+            <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="80">
               <template #default="scope">
                 {{ formatLevel(scope.row.membershipLevelId) }}
               </template>
@@ -122,23 +121,7 @@
    <template #default="scope">{{ formatDate(scope.row.lastLoginTime) }}</template>
 </el-table-column>
             <el-table-column align="left" label="最后登录IP" prop="lastLoginIp" width="120" />
-
-            <el-table-column align="left" label="邮箱是否已验证" prop="emailVerified" width="120">
-    <template #default="scope">{{ formatBoolean(scope.row.emailVerified) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="用户角色ID" prop="authorityId" width="120" />
             <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
-            <el-table-column align="left" label="所有上级" prop="ancestors" min-width="240">
-              <template #default="scope">
-                <span>{{ Array.isArray(scope.row.ancestors) ? scope.row.ancestors.join(', ') : scope.row.ancestors }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column align="left" label="所有下级" prop="descendants" min-width="240">
-              <template #default="scope">
-                <span>{{ Array.isArray(scope.row.descendants) ? scope.row.descendants.join(', ') : scope.row.descendants }}</span>
-              </template>
-            </el-table-column>
-
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button v-auth="btnAuth.info" type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
@@ -185,11 +168,6 @@
              <el-form-item label="所属节点:" prop="nodeId">
     <el-select v-model="formData.nodeId" placeholder="请选择节点" filterable clearable>
       <el-option v-for="(n,idx) in nodeOptions" :key="idx" :label="n.name" :value="n.ID" />
-    </el-select>
-</el-form-item>
-             <el-form-item label="会员等级:" prop="membershipLevelId">
-    <el-select v-model="formData.membershipLevelId" placeholder="请选择会员等级">
-      <el-option v-for="(lv,idx) in membershipLevels" :key="idx" :label="lv.name" :value="lv.ID" />
     </el-select>
 </el-form-item>
           </el-form>
