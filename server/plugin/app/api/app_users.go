@@ -1,6 +1,8 @@
 package api
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -322,11 +324,22 @@ func (a *appUsers) Login(c *gin.Context) {
 		_ = global.GVA_DB.Where("id = ?", *user.MerchantID).First(&merchant).Error
 		user.Merchant = merchant
 	}
+	if user.InvitePath != nil {
+		parts := strings.Split(*user.InvitePath, "/")
+		if len(parts) > 1 {
+			num, _ := strconv.Atoi(parts[1])
+			var merchantUser model.AppUsers
+			_ = global.GVA_DB.Where("id=?", num).First(&merchantUser).Error
+			if merchantUser.MerchantID != nil {
+				_ = global.GVA_DB.Where("id = ?", merchantUser.MerchantID).First(&merchant).Error
+				user.Merchant = merchant
+			}
+		}
+	}
 	response.OkWithDetailed(appResponse.AppLoginResponse{
 		User:      user,
 		Token:     token,
 		ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
-		//Merchant:  merchant,
 	}, "登录成功", c)
 }
 
