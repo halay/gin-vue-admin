@@ -13,9 +13,10 @@ type AppUsersSearch struct {
 	Status             *string     `json:"status" form:"status"`
 	LastLoginTimeRange []time.Time `json:"lastLoginTimeRange" form:"lastLoginTimeRange[]"`
 	EmailVerified      *bool       `json:"emailVerified" form:"emailVerified"`
-	MembershipLevelID  *int64      `json:"membershipLevelId" form:"membershipLevelId"`
-	NodeID             *int64      `json:"nodeId" form:"nodeId"`
-	request.PageInfo
+    MembershipLevelID  *int64      `json:"membershipLevelId" form:"membershipLevelId"`
+    NodeID             *int64      `json:"nodeId" form:"nodeId"`
+    MerchantID         *int64      `json:"merchantId" form:"merchantId"`
+    request.PageInfo
 }
 
 // SendVerificationCodeRequest 发送验证码请求
@@ -48,9 +49,10 @@ type ResetPasswordRequest struct {
 	NewPassword      string `json:"newPassword" binding:"required,min=6"`
 }
 type UpdateRequest struct {
-	ID                uint    `gorm:"primarykey" json:"ID"` // 主键ID
-	MembershipLevelID *int64  `json:"membershipLevelId" form:"membershipLevelId" gorm:"comment:会员等级ID;column:membership_level_id;"`
-	NodeID            *int64  `json:"nodeId" form:"nodeId" gorm:"comment:所属节点ID;column:node_id;"`
-	Nickname          *string `json:"nickname" form:"nickname" gorm:"comment:用户昵称;column:nickname;size:50;"` //用户昵称 //用户头像URL
-	Phone             *string `json:"phone" form:"phone" gorm:"comment:用户手机号;column:phone;size:20;"`
+    ID                uint    `gorm:"primarykey" json:"ID"` // 主键ID
+    MembershipLevelID *int64  `json:"membershipLevelId" form:"membershipLevelId" gorm:"comment:会员等级ID;column:membership_level_id;"`
+    NodeID            *int64  `json:"nodeId" form:"nodeId" gorm:"comment:所属节点ID;column:node_id;"`
+    MerchantID        *int64  `json:"merchantId" form:"merchantId" gorm:"comment:绑定商户ID;column:merchant_id;"`
+    Nickname          *string `json:"nickname" form:"nickname" gorm:"comment:用户昵称;column:nickname;size:50;"` //用户昵称 //用户头像URL
+    Phone             *string `json:"phone" form:"phone" gorm:"comment:用户手机号;column:phone;size:20;"`
 }

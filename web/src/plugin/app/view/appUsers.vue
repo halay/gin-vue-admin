@@ -31,7 +31,12 @@
 </el-form-item>
            
             <el-form-item label="用户状态" prop="status">
-    <el-tree-select v-model="formData.status" placeholder="请选择用户状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly ></el-tree-select>
+    <el-tree-select v-model="searchInfo.status" placeholder="请选择用户状态" :data="statusOptions" style="width:220px" filterable :clearable="true" check-strictly ></el-tree-select>
+</el-form-item>
+            <el-form-item label="所属商家" prop="merchantId">
+  <el-select v-model="searchInfo.merchantId" clearable filterable placeholder="请选择商家" style="width:220px">
+    <el-option v-for="(m,idx) in merchantOptions" :key="idx" :label="m.name" :value="m.ID" />
+  </el-select>
 </el-form-item>
             <el-form-item label="会员等级" prop="membershipLevelId">
   <el-select v-model="searchInfo.membershipLevelId" clearable placeholder="请选择" style="width:220px">
@@ -106,6 +111,11 @@
                 {{ formatNode(scope.row.nodeId) }}
               </template>
             </el-table-column>
+                        <el-table-column align="left" label="所属商家" prop="merchantId" width="160">
+              <template #default="scope">
+                {{ formatMerchant(scope.row.merchantId) }}
+              </template>
+            </el-table-column>
             <el-table-column align="left" label="用户昵称" prop="nickname" width="120" />
 
             <el-table-column align="left" label="用户头像URL" prop="avatar" width="120" />
@@ -170,6 +180,11 @@
       <el-option v-for="(n,idx) in nodeOptions" :key="idx" :label="n.name" :value="n.ID" />
     </el-select>
 </el-form-item>
+            <el-form-item label="所属商家:" prop="merchantId">
+    <el-select v-model="formData.merchantId" placeholder="请选择商家" filterable clearable>
+      <el-option v-for="(m,idx) in merchantOptions" :key="idx" :label="m.merchantName" :value="m.ID" />
+    </el-select>
+</el-form-item>
           </el-form>
     </el-drawer>
 
@@ -229,7 +244,8 @@ import {
 
 // 全量引入格式化工具 请按需保留
 import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, returnArrImg, onDownloadFile } from '@/utils/format'
-import { getMembershipLevelPublic } from '@/plugin/app/api/membershiplevel'
+import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
+import { getMerchantsList } from '@/plugin/app/api/merchants'
 import { getNodeList } from '@/plugin/app/api/node'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
@@ -259,12 +275,14 @@ const showAllQuery = ref(false)
 // 自动化生成的字典（可能为空）以及字段
 const statusOptions = ref([])
 const membershipLevels = ref([])
+const merchantOptions = ref([])
 const nodeOptions = ref([])
 const formData = ref({
             nickname: '',
             phone: '',
             membershipLevelId: undefined,
             nodeId: undefined,
+            merchantId: undefined,
         })
 
 
@@ -283,11 +301,20 @@ const formatNode = (id) => {
   const n = nodeOptions.value.find(i => i.ID === id)
   return n ? n.name : ''
 }
+const formatMerchant = (id) => {
+  const m = merchantOptions.value.find(i => i.ID === id)
+  return m ? m.merchantName : ''
+}
 const loadMembershipLevels = async () => {
   const res = await getMembershipLevelPublic()
   if (res.code === 0) membershipLevels.value = res.data || []
 }
 loadMembershipLevels()
+const loadMerchants = async () => {
+  const res = await getMerchantsList({ page:1, pageSize:9999 })
+  if (res.code === 0) merchantOptions.value = res.data.list || []
+}
+loadMerchants()
 const loadNodes = async () => {
   const res = await getNodeList({ page:1, pageSize:9999 })
   if (res.code === 0) nodeOptions.value = res.data.list || []
@@ -449,6 +476,7 @@ const closeDialog = () => {
     formData.value = {
         nickname: '',
         phone: '',
+        merchantId: undefined,
         }
 }
 // 弹窗确定
@@ -509,9 +537,5 @@ const closeDetailShow = () => {
   detailForm.value = {}
 }
 
-
 </script>
 
-<style>
-
-</style>

@@ -11,8 +11,9 @@ const props = defineProps({
   }
 })
 
-import darkLogoPath from "/public/logo.png";  // 系统没有暗黑模式logo，如果需要暗黑模式logo请自行修改文件路径。
-import lightLogoPath from "/public/logo.png";
+// 说明：public 下的资源不应通过 import 引入，直接使用根路径访问
+const darkLogoPath = "/logo-dark.png"; // 如无暗色logo，可留空或与亮色一致
+const lightLogoPath = "/logo.png";
 
 const appStore = useAppStore();
 const { isDark } = storeToRefs(appStore);
@@ -46,12 +47,8 @@ watchEffect(async () => {
 
   // 到这里就包没有提供两种 logo 了
   showTextPlaceholder.value = true;
-  console.error(
-    '错误: 在公共目录中找不到logo.png（或logo-dark.png）。'
-  );
-  console.warn(
-    '解决方案: 请在您的公共目录(/public)中放置logo.png和/或logo-dark.png文件，或确保路径正确。'
-  );
+  console.error('错误: 在公共目录中找不到 /logo.png 或 /logo-dark.png');
+  console.warn('解决方案: 请在项目 public 目录放置 logo.png 和/或 logo-dark.png 文件，或确保路径正确');
 });
 
 // 直接用 16px 作为默认的基准大小

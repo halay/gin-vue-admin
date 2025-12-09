@@ -163,6 +163,7 @@ func (a *appUsers) FindAppUsers(c *gin.Context) {
 		"descendants":       descendants,
 		"membershipLevelId": derefInt64(u.MembershipLevelID),
 		"nodeId":            derefInt64(u.NodeID),
+		"merchantId":        derefInt64(u.MerchantID),
 	}
 
 	response.OkWithData(enriched, c)
@@ -316,10 +317,16 @@ func (a *appUsers) Login(c *gin.Context) {
 		return
 	}
 	appUtils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
+	var merchant model.Merchants
+	if user.MerchantID != nil {
+		_ = global.GVA_DB.Where("id = ?", *user.MerchantID).First(&merchant).Error
+		user.Merchant = merchant
+	}
 	response.OkWithDetailed(appResponse.AppLoginResponse{
 		User:      user,
 		Token:     token,
 		ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		//Merchant:  merchant,
 	}, "登录成功", c)
 }
 
@@ -405,8 +412,20 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		InviteLevel:       derefInt(user.InviteLevel),
 		MembershipLevelID: derefInt64(user.MembershipLevelID),
 		NodeID:            derefInt64(user.NodeID),
+		MerchantID:        derefInt64(user.MerchantID),
 	}
-
+	/*	if user.MerchantID != nil {
+		var m model.Merchants
+		if err := global.GVA_DB.Where("id = ?", *user.MerchantID).First(&m).Error; err == nil {
+			// 附加商户基础信息
+			respMap := gin.H{
+				"user":     resp,
+				"merchant": m,
+			}
+			response.OkWithData(respMap, c)
+			return
+		}
+	}*/
 	response.OkWithData(resp, c)
 }
 

@@ -13,6 +13,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
+	"gorm.io/gorm"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
@@ -27,7 +29,18 @@ type appUsers struct{}
 // CreateAppUsers 创建appUsers表记录
 // Author [yourname](https://github.com/yourname)
 func (s *appUsers) CreateAppUsers(ctx context.Context, appUsers *model.AppUsers) (err error) {
-	err = global.GVA_DB.Create(appUsers).Error
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		if appUsers.MerchantID != nil {
+			var cnt int64
+			if e := tx.Model(&model.AppUsers{}).Where("merchant_id = ?", *appUsers.MerchantID).Count(&cnt).Error; e != nil {
+				return e
+			}
+			if cnt > 0 {
+				return errors.New("该商户已绑定其他用户")
+			}
+		}
+		return tx.Create(appUsers).Error
+	})
 	return err
 }
 
@@ -48,7 +61,18 @@ func (s *appUsers) DeleteAppUsersByIds(ctx context.Context, IDs []string) (err e
 // UpdateAppUsers 更新appUsers表记录
 // Author [yourname](https://github.com/yourname)
 func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRequest) (err error) {
-	err = global.GVA_DB.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Updates(&appUsers).Error
+	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		if appUsers.MerchantID != nil {
+			var cnt int64
+			if e := tx.Model(&model.AppUsers{}).Where("merchant_id = ? AND id <> ?", *appUsers.MerchantID, appUsers.ID).Count(&cnt).Error; e != nil {
+				return e
+			}
+			if cnt > 0 {
+				return errors.New("该商户已绑定其他用户")
+			}
+		}
+		return tx.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Updates(&appUsers).Error
+	})
 	return err
 }
 
@@ -92,6 +116,9 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	}
 	if info.NodeID != nil {
 		db = db.Where("node_id = ?", *info.NodeID)
+	}
+	if info.MerchantID != nil {
+		db = db.Where("merchant_id = ?", *info.MerchantID)
 	}
 	err = db.Count(&total).Error
 	if err != nil {
