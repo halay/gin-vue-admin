@@ -12,8 +12,13 @@
           <el-date-picker v-model="searchInfo.createdAtRange" class="!w-380px" type="datetimerange" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" />
         </el-form-item>
         <el-form-item label="标题" prop="title"><el-input v-model="searchInfo.title" placeholder="搜索条件" /></el-form-item>
+        <el-form-item label="咨询类型" prop="category">
+          <el-tree-select v-model="searchInfo.category" placeholder="请选择咨询类型" :data="categoryOptions" style="width:240px" filterable :clearable="true" check-strictly />
+        </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-tree-select v-model="searchInfo.status" placeholder="请选择状态" :data="statusOptions" style="width:240px" filterable :clearable="true" check-strictly />
+          <el-select v-model="searchInfo.status" placeholder="请选择状态" clearable style="width:240px">
+            <el-option v-for="(opt,idx) in statusOptions" :key="idx" :label="opt.label" :value="opt.value" />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="search" @click="onSubmit">查询</el-button>
@@ -32,7 +37,12 @@
         <el-table-column align="left" label="标题" prop="title" width="240" />
         <el-table-column label="封面图" prop="coverImage" width="160"><template #default="scope"><el-image preview-teleported style="width: 100px; height: 100px" :src="getUrl(scope.row.coverImage)" fit="cover"/></template></el-table-column>
         <el-table-column sortable align="left" label="排序" prop="sort" width="120" />
-        <el-table-column align="left" label="状态" prop="status" width="120"><template #default="scope">{{ filterDict(scope.row.status, statusOptions) }}</template></el-table-column>
+        <el-table-column align="left" label="咨询类型" prop="category" width="140">
+          <template #default="scope">{{ filterDict(scope.row.category, categoryOptions) || scope.row.category }}</template>
+        </el-table-column>
+        <el-table-column align="left" label="状态" prop="status" width="120">
+          <template #default="scope">{{ filterDict(scope.row.status, statusOptions) || scope.row.status }}</template>
+        </el-table-column>
         <el-table-column align="left" label="发布时间" prop="publishAt" width="180"><template #default="scope">{{ formatDate(scope.row.publishAt) }}</template></el-table-column>
         <el-table-column align="left" label="点击" prop="clicks" width="120" />
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
@@ -57,7 +67,12 @@
         <el-form-item label="跳转链接:" prop="jumpUrl"><el-input v-model="formData.jumpUrl" clearable placeholder="可选跳转链接"/></el-form-item>
         <el-form-item label="摘要:" prop="excerpt"><el-input type="textarea" v-model="formData.excerpt" placeholder="可选摘要"/></el-form-item>
         <el-form-item label="内容:" prop="content"><RichEdit v-model="formData.content"/></el-form-item>
-        <el-form-item label="状态:" prop="status"><el-tree-select v-model="formData.status" placeholder="请选择状态" :data="statusOptions" style="width:100%" filterable :clearable="true" check-strictly /></el-form-item>
+        <el-form-item label="咨询类型:" prop="category"><el-tree-select v-model="formData.category" placeholder="请选择咨询类型" :data="categoryOptions" style="width:100%" filterable :clearable="true" check-strictly /></el-form-item>
+        <el-form-item label="状态:" prop="status">
+          <el-select v-model="formData.status" placeholder="请选择状态" clearable style="width:100%">
+            <el-option v-for="(opt,idx) in statusOptions" :key="idx" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="排序:" prop="sort"><el-input v-model.number="formData.sort" placeholder="请输入排序"/></el-form-item>
         <el-form-item label="发布时间:" prop="publishAt"><el-date-picker v-model="formData.publishAt" type="datetime" style="width:100%" placeholder="选择时间"/></el-form-item>
         <el-form-item label="过期时间:" prop="expireAt"><el-date-picker v-model="formData.expireAt" type="datetime" style="width:100%" placeholder="选择时间"/></el-form-item>
@@ -68,6 +83,7 @@
         <el-descriptions-item label="标题">{{ detailForm.title }}</el-descriptions-item>
         <el-descriptions-item label="封面图"><el-image style="width: 50px; height: 50px" :src="getUrl(detailForm.coverImage)" fit="cover" /></el-descriptions-item>
         <el-descriptions-item label="跳转链接">{{ detailForm.jumpUrl }}</el-descriptions-item>
+        <el-descriptions-item label="咨询类型">{{ filterDict(detailForm.category, categoryOptions) }}</el-descriptions-item>
         <el-descriptions-item label="状态">{{ filterDict(detailForm.status, statusOptions) }}</el-descriptions-item>
         <el-descriptions-item label="发布时间">{{ formatDate(detailForm.publishAt) }}</el-descriptions-item>
         <el-descriptions-item label="点击">{{ detailForm.clicks }}</el-descriptions-item>
@@ -115,9 +131,15 @@ const getTableData = async() => {
 }
 getTableData()
 
-const statusOptions = ref([])
+const statusOptions = ref([
+  { label: '启用', value: 'enabled' },
+  { label: '启用', value: '1' },
+  { label: '禁用', value: 'disabled' },
+  { label: '禁用', value: '2' }
+])
+const categoryOptions = ref([])
 const setOptions = async () => {
-  statusOptions.value = await getDictFunc('banner_status')
+  categoryOptions.value = await getDictFunc('consultation_type')
 }
 setOptions()
 
@@ -150,7 +172,7 @@ const enterDialog = async () => {
   })
 }
 
-const initForm = () => ({ title:'', coverImage:'', content:'', jumpUrl:'', status:'', sort:0, publishAt:new Date(), expireAt:null, excerpt:'' })
+const initForm = () => ({ title:'', coverImage:'', content:'', jumpUrl:'', category:'1', status:'enabled', sort:0, publishAt:new Date(), expireAt:null, excerpt:'' })
 const formData = ref(initForm())
 const rule = reactive({ title:[{ required:true, message:'请输入标题', trigger:['input','blur'] },{ whitespace:true, message:'不能只输入空格', trigger:['input','blur']}], coverImage:[{ required:true, message:'请选择封面图', trigger:['change','blur'] }], content:[{ required:true, message:'请输入内容', trigger:['change','blur'] }] })
 

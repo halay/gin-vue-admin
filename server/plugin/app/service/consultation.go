@@ -50,6 +50,9 @@ func (s *CN) GetConsultationInfoList(ctx context.Context, info request.Consultat
 	if info.Title != nil && *info.Title != "" {
 		db = db.Where("title LIKE ?", "%"+*info.Title+"%")
 	}
+	if info.Category != nil && *info.Category != "" {
+		db = db.Where("category = ?", *info.Category)
+	}
 	if info.Status != nil && *info.Status != "" {
 		db = db.Where("status = ?", *info.Status)
 	}
@@ -78,6 +81,9 @@ func (s *CN) GetConsultationInfoList(ctx context.Context, info request.Consultat
 
 func (s *CN) GetConsultationPublicList(ctx context.Context, info request.ConsultationSearch) (list []response.ConsultationResponse, total int64, err error) {
 	info.Status = strPtr("enabled")
+	if info.Category == nil {
+		info.Category = strPtr("1")
+	}
 	return s.GetConsultationInfoList(ctx, info)
 }
 
