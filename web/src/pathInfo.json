@@ -108,6 +108,7 @@
   "/src/plugin/app/view/node.vue": "Node",
   "/src/plugin/app/view/order.vue": "Order",
   "/src/plugin/app/view/orderItem.vue": "OrderItem",
+  "/src/plugin/app/view/pointsConfig.vue": "PointsConfig",
   "/src/plugin/app/view/product.vue": "Product",
   "/src/plugin/app/view/productCategory.vue": "ProductCategory",
   "/src/plugin/app/view/productSku.vue": "ProductSku",
