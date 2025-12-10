@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -16,30 +17,30 @@ var PointsCfg = new(PCFG)
 type PCFG struct{}
 
 func (s *PCFG) CreatePointsConfig(ctx context.Context, m *model.PointsConfig) (err error) {
-    return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-        // 状态规范化：兼容字典返回的数值型字符串
-        if m.Status != nil {
-            switch *m.Status {
-            case "1":
-                v := "enabled"
-                m.Status = &v
-            case "0", "2":
-                v := "disabled"
-                m.Status = &v
-            }
-        }
-        // 首单优惠唯一性
-        if m.Type != nil && *m.Type == "first_order" {
-            var cnt int64
-            if e := tx.Model(&model.PointsConfig{}).Where("type = ?", "first_order").Count(&cnt).Error; e != nil {
-                return e
-            }
-            if cnt > 0 {
-                return errors.New("首单优惠配置已存在")
-            }
-        }
-        return tx.Create(m).Error
-    })
+	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		// 状态规范化：兼容字典返回的数值型字符串
+		if m.Status != nil {
+			switch *m.Status {
+			case "1":
+				v := "enabled"
+				m.Status = &v
+			case "0", "2":
+				v := "disabled"
+				m.Status = &v
+			}
+		}
+		// 首单优惠唯一性
+		if m.Type != nil && *m.Type == "first_order" {
+			var cnt int64
+			if e := tx.Model(&model.PointsConfig{}).Where("type = ?", "first_order").Count(&cnt).Error; e != nil {
+				return e
+			}
+			if cnt > 0 {
+				return errors.New("首单优惠配置已存在")
+			}
+		}
+		return tx.Create(m).Error
+	})
 }
 
 func (s *PCFG) DeletePointsConfig(ctx context.Context, ID string) (err error) {
@@ -53,29 +54,29 @@ func (s *PCFG) DeletePointsConfigByIds(ctx context.Context, IDs []string) (err e
 }
 
 func (s *PCFG) UpdatePointsConfig(ctx context.Context, m model.PointsConfig) (err error) {
-    return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-        // 状态规范化
-        if m.Status != nil {
-            switch *m.Status {
-            case "1":
-                v := "enabled"
-                m.Status = &v
-            case "0", "2":
-                v := "disabled"
-                m.Status = &v
-            }
-        }
-        if m.Type != nil && *m.Type == "first_order" {
-            var cnt int64
-            if e := tx.Model(&model.PointsConfig{}).Where("type = ? AND id <> ?", "first_order", m.ID).Count(&cnt).Error; e != nil {
-                return e
-            }
-            if cnt > 0 {
-                return errors.New("首单优惠配置已存在")
-            }
-        }
-        return tx.Model(&model.PointsConfig{}).Where("id = ?", m.ID).Updates(&m).Error
-    })
+	return global.GVA_DB.Transaction(func(tx *gorm.DB) error {
+		// 状态规范化
+		if m.Status != nil {
+			switch *m.Status {
+			case "1":
+				v := "enabled"
+				m.Status = &v
+			case "0", "2":
+				v := "disabled"
+				m.Status = &v
+			}
+		}
+		if m.Type != nil && *m.Type == "first_order" {
+			var cnt int64
+			if e := tx.Model(&model.PointsConfig{}).Where("type = ? AND id <> ?", "first_order", m.ID).Count(&cnt).Error; e != nil {
+				return e
+			}
+			if cnt > 0 {
+				return errors.New("首单优惠配置已存在")
+			}
+		}
+		return tx.Model(&model.PointsConfig{}).Where("id = ?", m.ID).Updates(&m).Error
+	})
 }
 
 func (s *PCFG) GetPointsConfig(ctx context.Context, ID string) (m model.PointsConfig, err error) {
@@ -123,6 +124,22 @@ func (s *PCFG) GetPointsConfigInfoList(ctx context.Context, info request.PointsC
 
 // 公共接口：返回已启用且在时间窗口内的配置列表
 func (s *PCFG) GetPointsConfigPublic(ctx context.Context, info request.PointsConfigSearch) (list []model.PointsConfig, total int64, err error) {
-	info.Status = strPtr("enabled")
-	return s.GetPointsConfigInfoList(ctx, info)
+	now := time.Now()
+	limit := info.PageSize
+	offset := info.PageSize * (info.Page - 1)
+	db := global.GVA_DB.Model(&model.PointsConfig{}).Where("status = ?", "enabled")
+	if info.Type != nil && *info.Type != "" {
+		db = db.Where("type = ?", *info.Type)
+	}
+	// limited=false 或 limited=true 且时间窗口内
+	db = db.Where("(limited = ? OR (limited = ? AND start_at <= ? AND end_at >= ?))", 0, 1, now, now)
+	err = db.Count(&total).Error
+	if err != nil {
+		return
+	}
+	if limit != 0 {
+		db = db.Limit(limit).Offset(offset)
+	}
+	err = db.Order("sort asc, id asc").Find(&list).Error
+	return
 }

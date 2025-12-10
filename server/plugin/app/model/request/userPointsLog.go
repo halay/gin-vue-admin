@@ -1,8 +1,9 @@
 package request
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"time"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 )
 
 type UserPointsLogSearch struct {
@@ -10,6 +11,8 @@ type UserPointsLogSearch struct {
 	UserID         *int        `json:"userId" form:"userId"`
 	Change         *int        `json:"change" form:"change"`
 	BalanceAfter   *int        `json:"balanceAfter" form:"balanceAfter"`
+	Type           *string     `json:"type" form:"type"`
+	Status         *string     `json:"status" form:"status"`
 	Reason         *string     `json:"reason" form:"reason"`
 	OrderNo        *string     `json:"orderNo" form:"orderNo"`
 	Remark         *string     `json:"remark" form:"remark"`

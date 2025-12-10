@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
@@ -68,6 +69,12 @@ func (s *UPL) GetUserPointsLogInfoList(ctx context.Context, info request.UserPoi
 	if info.BalanceAfter != nil {
 		db = db.Where("balance_after >= ?", *info.BalanceAfter)
 	}
+	if info.Type != nil && *info.Type != "" {
+		db = db.Where("type = ?", *info.Type)
+	}
+	if info.Status != nil && *info.Status != "" {
+		db = db.Where("status = ?", *info.Status)
+	}
 	if info.Reason != nil && *info.Reason != "" {
 		db = db.Where("reason LIKE ?", "%"+*info.Reason+"%")
 	}
@@ -85,7 +92,7 @@ func (s *UPL) GetUserPointsLogInfoList(ctx context.Context, info request.UserPoi
 	if limit != 0 {
 		db = db.Limit(limit).Offset(offset)
 	}
-	err = db.Find(&UPLs).Error
+	err = db.Order("created_at desc").Find(&UPLs).Error
 	return UPLs, total, err
 }
 func (s *UPL) GetUserPointsLogDataSource(ctx context.Context) (res map[string][]map[string]any, err error) {

@@ -12,7 +12,7 @@
           </el-tooltip>
         </span>
       </template>
-         <el-date-picker
+        <el-date-picker
                   v-model="searchInfo.createdAtRange"
                   class="!w-380px"
                   type="datetimerange"
@@ -20,7 +20,21 @@
                   start-placeholder="开始时间"
                   end-placeholder="结束时间"
                 />
-       </el-form-item>
+      </el-form-item>
+      <el-form-item label="记录类型" prop="type">
+        <el-select v-model="searchInfo.type" clearable placeholder="请选择类型" style="width:220px">
+          <el-option label="积分充值" value="recharge_purchase" />
+          <el-option label="积分赠送" value="bonus" />
+          <el-option label="购买实体商品" value="buy_physical" />
+          <el-option label="购买数字商品" value="buy_digital" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="交易状态" prop="status">
+        <el-select v-model="searchInfo.status" clearable placeholder="请选择状态" style="width:220px">
+          <el-option label="成功" value="success" />
+          <el-option label="失败" value="failed" />
+        </el-select>
+      </el-form-item>
       
             <el-form-item label="用户" prop="userId">
   <el-select v-model="searchInfo.userId" filterable placeholder="请选择用户" :clearable="false">
@@ -91,7 +105,9 @@
 
             <el-table-column align="left" label="变动后余额" prop="balanceAfter" width="120" />
 
-            <el-table-column align="left" label="原因" prop="reason" width="120" />
+            <el-table-column align="left" label="类型" prop="type" width="120" />
+            <el-table-column align="left" label="状态" prop="status" width="120" />
+            <el-table-column align="left" label="原因" prop="reason" width="160" />
 
             <el-table-column align="left" label="关联订单号" prop="orderNo" width="120" />
 

@@ -46,11 +46,11 @@
     </div>
     <div class="gva-table-box">
         <div class="gva-btn-list">
-            <el-button  type="primary" icon="plus" @click="openDialog()">新增</el-button>
-            <el-button  icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button>
-            <ExportTemplate  template-id="app_UserPointsAccount" />
+            <!-- <el-button  type="primary" icon="plus" @click="openDialog()">新增</el-button>
+            <el-button  icon="delete" style="margin-left: 10px;" :disabled="!multipleSelection.length" @click="onDelete">删除</el-button> 
+            <ExportTemplate  template-id="app_UserPointsAccount" />-->
             <ExportExcel  template-id="app_UserPointsAccount" filterDeleted/>
-            <ImportExcel  template-id="app_UserPointsAccount" @on-success="getTableData" />
+            <!-- <ImportExcel  template-id="app_UserPointsAccount" @on-success="getTableData" /> -->
         </div>
         <el-table
         ref="multipleTable"
@@ -62,24 +62,24 @@
         >
         <el-table-column type="selection" width="55" />
         
-        <el-table-column sortable align="left" label="日期" prop="CreatedAt" width="180">
+        <el-table-column sortable align="left" label="日期" prop="CreatedAt" width="280">
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
         
-            <el-table-column align="left" label="用户" prop="userId" width="120">
+            <el-table-column align="left" label="用户" prop="userId" width="320">
     <template #default="scope">
         <span>{{ filterDataSource(dataSource.userId,scope.row.userId) }}</span>
     </template>
 </el-table-column>
-            <el-table-column align="left" label="积分余额" prop="balance" width="120" />
+            <el-table-column align="left" label="积分余额" prop="balance" width="220" />
 
-        <el-table-column align="left" label="操作" fixed="right" min-width="240">
+        <!-- <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
             <el-button  type="primary" link icon="edit" class="table-button" @click="updateUserPointsAccountFunc(scope.row)">编辑</el-button>
             <el-button   type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
             </template>
-        </el-table-column>
+        </el-table-column> -->
         </el-table>
         <div class="gva-pagination">
             <el-pagination

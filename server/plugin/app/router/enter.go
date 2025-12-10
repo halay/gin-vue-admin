@@ -20,8 +20,9 @@ var (
 	apiUserPointsAccount    = api.Api.UserPointsAccount
 	apiUserPointsLog        = api.Api.UserPointsLog
 	apiSearch               = api.Api.Search
-    apiConsultation         = api.Api.Consultation
-    apiPointsCfg            = api.Api.PointsCfg
+	apiConsultation         = api.Api.Consultation
+	apiPointsCfg            = api.Api.PointsCfg
+	apiPointsRecharge       = api.Api.PointsRecharge
 	apiAppRelease           = api.Api.AppRelease
 	apiMerchantCategory     = api.Api.MerchantCategory
 	apiMembershipLevel      = api.Api.MembershipLevel
@@ -49,6 +50,7 @@ type router struct {
 	AppRelease           AR
 	MerchantCategory     MCAT
 	MembershipLevel      ML
-    Node                 NODE
-    PointsCfg            PCFG
+	Node                 NODE
+	PointsCfg            PCFG
+	PointsRecharge       PR
 }

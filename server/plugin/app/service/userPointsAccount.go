@@ -148,13 +148,29 @@ func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (aft
 
 // AddLog 记录积分流水
 func (s *UPA) AddLog(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark string) error {
-	l := model.UserPointsLog{
-		UserID:       &userID,
-		Change:       &change,
-		BalanceAfter: &balanceAfter,
-		Reason:       &reason,
-		OrderNo:      &orderNo,
-		Remark:       &remark,
-	}
-	return global.GVA_DB.WithContext(ctx).Create(&l).Error
+    l := model.UserPointsLog{
+        UserID:       &userID,
+        Change:       &change,
+        BalanceAfter: &balanceAfter,
+        Reason:       &reason,
+        OrderNo:      &orderNo,
+        Remark:       &remark,
+    }
+    return global.GVA_DB.WithContext(ctx).Create(&l).Error
+}
+
+// AddLogDetailed 记录积分流水（含类型、状态、关联ID）
+func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark, logType, status string, relatedID *int64) error {
+    l := model.UserPointsLog{
+        UserID:       &userID,
+        Change:       &change,
+        BalanceAfter: &balanceAfter,
+        Type:         &logType,
+        Status:       &status,
+        RelatedID:    relatedID,
+        Reason:       &reason,
+        OrderNo:      &orderNo,
+        Remark:       &remark,
+    }
+    return global.GVA_DB.WithContext(ctx).Create(&l).Error
 }

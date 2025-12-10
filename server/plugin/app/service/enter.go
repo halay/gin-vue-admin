@@ -22,6 +22,7 @@ type service struct {
 	AppRelease           AR
 	MerchantCategory     MCAT
 	MembershipLevel      ML
-    Node                 NODE
-    PointsCfg            PCFG
+	Node                 NODE
+	PointsCfg            PCFG
+	PointsRecharge       PR
 }
