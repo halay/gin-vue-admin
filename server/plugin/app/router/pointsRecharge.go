@@ -12,6 +12,8 @@ func (r *PR) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 	{
 		group := private.Group("pr")
 		group.POST("createRechargeOrder", apiPointsRecharge.CreateRechargeOrder)
+		group.GET("getMyRechargeOrders", apiPointsRecharge.GetMyRechargeOrders)
+		group.GET("getMyRechargeOrder", apiPointsRecharge.GetMyRechargeOrder)
 	}
 	{
 		group := public.Group("pr")

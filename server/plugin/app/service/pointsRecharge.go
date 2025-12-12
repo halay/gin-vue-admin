@@ -1,15 +1,16 @@
 package service
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"time"
+    "context"
+    "errors"
+    "fmt"
+    "time"
 
-	"gorm.io/gorm"
+    "gorm.io/gorm"
 
-	"github.com/flipped-aurora/gin-vue-admin/server/global"
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
+    "github.com/flipped-aurora/gin-vue-admin/server/global"
+    "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
+    "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 )
 
 var PointsRecharge = new(PR)
@@ -135,4 +136,36 @@ func (s *PR) PayCallback(ctx context.Context, orderNo string, paySuccess bool, t
 		}
 		return nil
 	})
+}
+
+// GetRechargeOrdersByUser 用户维度查询充值订单列表
+func (s *PR) GetRechargeOrdersByUser(ctx context.Context, userID int64, info request.PointsRechargeSearch) (list []model.PointsRechargeOrder, total int64, err error) {
+    limit := info.PageSize
+    offset := info.PageSize * (info.Page - 1)
+    db := global.GVA_DB.WithContext(ctx).Model(&model.PointsRechargeOrder{}).Where("user_id = ?", userID)
+    if len(info.CreatedAtRange) == 2 {
+        db = db.Where("created_at BETWEEN ? AND ?", info.CreatedAtRange[0], info.CreatedAtRange[1])
+    }
+    if info.Status != nil && *info.Status != "" { db = db.Where("status = ?", *info.Status) }
+    if info.PayMethod != nil && *info.PayMethod != "" { db = db.Where("pay_method = ?", *info.PayMethod) }
+    err = db.Count(&total).Error
+    if err != nil { return }
+    if limit != 0 { db = db.Limit(limit).Offset(offset) }
+    err = db.Order("created_at desc").Find(&list).Error
+    return
+}
+
+// GetRechargeOrderByUser 用户维度查询单条充值订单
+func (s *PR) GetRechargeOrderByUser(ctx context.Context, userID int64, orderNo string, id string) (ord model.PointsRechargeOrder, err error) {
+    q := global.GVA_DB.WithContext(ctx).Model(&model.PointsRechargeOrder{}).Where("user_id = ?", userID)
+    if orderNo != "" {
+        err = q.Where("order_no = ?", orderNo).First(&ord).Error
+        return
+    }
+    if id != "" {
+        err = q.Where("id = ?", id).First(&ord).Error
+        return
+    }
+    err = gorm.ErrRecordNotFound
+    return
 }
