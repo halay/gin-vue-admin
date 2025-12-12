@@ -33,6 +33,7 @@ type AppUsers struct {
     NodeID            *int64 `json:"nodeId" form:"nodeId" gorm:"comment:所属节点ID;column:node_id;"`
     MerchantID        *int64      `json:"merchantId" form:"merchantId" gorm:"comment:绑定商户ID;column:merchant_id;uniqueIndex;"`
     Merchant          Merchants    `json:"merchant" gorm:"foreignKey:MerchantID;references:ID"`
+    StripeCustomerID  *string      `json:"stripeCustomerId" gorm:"comment:Stripe客户ID;column:stripe_customer_id;size:128;"`
 }
 
 func (u AppUsers) GetUsername() string {
