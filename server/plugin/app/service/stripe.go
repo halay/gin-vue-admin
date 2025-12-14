@@ -51,14 +51,14 @@ func (s *StripeSvc) CreatePaymentIntent(amount int64, currency string, method st
 		Amount:   stripe.Int64(amount),
 		Currency: stripe.String(currency),
 		Confirm:  stripe.Bool(false),
-		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
-			Enabled: stripe.Bool(true),
-		},
+		//AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+		//	Enabled: stripe.Bool(true),
+		//},
 	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)
 	}
-	//params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay", "wechat_pay", "card"})
+	params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
 	//switch method {
 	//case "alipay":
 	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay"})
