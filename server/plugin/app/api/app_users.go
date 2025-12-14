@@ -283,10 +283,17 @@ func (a *appUsers) Register(c *gin.Context) {
 		return
 	}
 	appUtils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
+	// 积分账户余额
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	var balance int64
+	if acc.Balance != nil {
+		balance = *acc.Balance
+	}
 	response.OkWithDetailed(appResponse.AppLoginResponse{
-		User:      user,
-		Token:     token,
-		ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		User:          user,
+		Token:         token,
+		ExpiresAt:     claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		PointsBalance: balance,
 	}, "注册成功", c)
 	//response.OkWithData(user, c)
 }
@@ -336,10 +343,17 @@ func (a *appUsers) Login(c *gin.Context) {
 			}
 		}
 	}
+	// 积分账户余额
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	var balance int64
+	if acc.Balance != nil {
+		balance = *acc.Balance
+	}
 	response.OkWithDetailed(appResponse.AppLoginResponse{
-		User:      user,
-		Token:     token,
-		ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		User:          user,
+		Token:         token,
+		ExpiresAt:     claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		PointsBalance: balance,
 	}, "登录成功", c)
 }
 
@@ -426,6 +440,11 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		MembershipLevelID: derefInt64(user.MembershipLevelID),
 		NodeID:            derefInt64(user.NodeID),
 		MerchantID:        derefInt64(user.MerchantID),
+	}
+	// 积分余额
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	if acc.Balance != nil {
+		resp.PointsBalance = *acc.Balance
 	}
 	/*	if user.MerchantID != nil {
 		var m model.Merchants

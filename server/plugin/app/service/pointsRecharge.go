@@ -75,8 +75,11 @@ func (s *PR) CreateRechargeOrder(ctx context.Context, userID int64, configID uin
 	if amountCents < 0 {
 		amountCents = 0
 	}
-	piID, clientSecret, _ := Stripe.CreatePaymentIntent(amountCents, "cny", payMethod, getStr(user.StripeCustomerID), map[string]string{"order_no": orderNo, "user_id": fmt.Sprintf("%d", userID)})
+	piID, clientSecret, err := Stripe.CreatePaymentIntent(amountCents, "CNY", payMethod, getStr(user.StripeCustomerID), map[string]string{"order_no": orderNo, "user_id": fmt.Sprintf("%d", userID)})
 
+	if err != nil {
+		return
+	}
 	ord = model.PointsRechargeOrder{
 		OrderNo:            &orderNo,
 		UserID:             &userID,

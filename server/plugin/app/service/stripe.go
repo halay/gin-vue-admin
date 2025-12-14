@@ -3,9 +3,9 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/client"
-	"os"
 )
 
 type StripeSvc struct{ c *client.API }
@@ -16,7 +16,7 @@ func (s *StripeSvc) getClient() (*client.API, error) {
 	if s.c != nil {
 		return s.c, nil
 	}
-	key := os.Getenv("STRIPE_SECRET_KEY")
+	key := plugin.Config.StripeSk
 	if key == "" {
 		return nil, errors.New("STRIPE_SECRET_KEY 未配置")
 	}
@@ -50,24 +50,29 @@ func (s *StripeSvc) CreatePaymentIntent(amount int64, currency string, method st
 	params := &stripe.PaymentIntentParams{
 		Amount:   stripe.Int64(amount),
 		Currency: stripe.String(currency),
+		Confirm:  stripe.Bool(false),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
 	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)
 	}
-	switch method {
-	case "alipay":
-		params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay"})
-	case "wechat":
-		params.PaymentMethodTypes = stripe.StringSlice([]string{"wechat_pay"})
-		params.PaymentMethodOptions = &stripe.PaymentIntentPaymentMethodOptionsParams{
-			WeChatPay: &stripe.PaymentIntentPaymentMethodOptionsWeChatPayParams{Client: stripe.String("android")},
-		}
-	default:
-		params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
-	}
-	for k, v := range metadata {
-		params.AddMetadata(k, v)
-	}
+	//params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay", "wechat_pay", "card"})
+	//switch method {
+	//case "alipay":
+	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay"})
+	//case "wechat":
+	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"wechat_pay"})
+	//	params.PaymentMethodOptions = &stripe.PaymentIntentPaymentMethodOptionsParams{
+	//		WeChatPay: &stripe.PaymentIntentPaymentMethodOptionsWeChatPayParams{Client: stripe.String("android")},
+	//	}
+	//default:
+	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
+	//}
+	//for k, v := range metadata {
+	//	params.AddMetadata(k, v)
+	//}
 	pi, err := c.PaymentIntents.New(params)
 	if err != nil {
 		return "", "", err

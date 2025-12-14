@@ -14,21 +14,22 @@ type LoginResponse struct {
 
 // UserResponse 用户信息响应
 type UserResponse struct {
-	ID                uint       `json:"id"`
-	Email             string     `json:"email"`
-	Nickname          string     `json:"nickname"`
-	Avatar            string     `json:"avatar"`
-	Phone             string     `json:"phone"`
-	Status            string     `json:"status"`
-	EmailVerified     bool       `json:"emailVerified"`
-	LastLoginTime     *time.Time `json:"lastLoginTime,omitempty"`
-	LastLoginIP       string     `json:"lastLoginIP,omitempty"`
-	InviteCode        string     `json:"inviteCode"`
-	InviterID         uint       `json:"inviterId"`
-	InviteLevel       int        `json:"inviteLevel"`
-	MembershipLevelID int64      `json:"membershipLevelId"`
-	NodeID            int64      `json:"nodeId"`
-	MerchantID        int64      `json:"MerchantID"`
+    ID                uint       `json:"id"`
+    Email             string     `json:"email"`
+    Nickname          string     `json:"nickname"`
+    Avatar            string     `json:"avatar"`
+    Phone             string     `json:"phone"`
+    Status            string     `json:"status"`
+    EmailVerified     bool       `json:"emailVerified"`
+    LastLoginTime     *time.Time `json:"lastLoginTime,omitempty"`
+    LastLoginIP       string     `json:"lastLoginIP,omitempty"`
+    InviteCode        string     `json:"inviteCode"`
+    InviterID         uint       `json:"inviterId"`
+    InviteLevel       int        `json:"inviteLevel"`
+    MembershipLevelID int64      `json:"membershipLevelId"`
+    NodeID            int64      `json:"nodeId"`
+    MerchantID        int64      `json:"MerchantID"`
+    PointsBalance     int64      `json:"pointsBalance"`
 }
 
 // UserListResponse 用户列表响应
@@ -39,8 +40,9 @@ type UserListResponse struct {
 	PageSize int            `json:"pageSize"`
 }
 type AppLoginResponse struct {
-	User      model.AppUsers `json:"user"`
-	Token     string         `json:"token"`
-	ExpiresAt int64          `json:"expiresAt"`
-	//Merchant  model.Merchants `json:"merchant"`
+    User      model.AppUsers `json:"user"`
+    Token     string         `json:"token"`
+    ExpiresAt int64          `json:"expiresAt"`
+    PointsBalance int64      `json:"pointsBalance"`
+    //Merchant  model.Merchants `json:"merchant"`
 }

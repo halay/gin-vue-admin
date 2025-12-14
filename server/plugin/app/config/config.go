@@ -7,5 +7,6 @@ type Config struct {
 	XCgProApiKey string   `mapstructure:"x-cg-pro-api-key" json:"x-cg-pro-api-key" yaml:"x-cg-pro-api-key"`
 	XCgProApiUrl string   `mapstructure:"x-cg-pro-api-url" json:"x-cg-pro-api-url" yaml:"x-cg-pro-api-url"`
 	HrefUrl      string   `mapstructure:"href-url" json:"href-url" yaml:"href-url"`
+	StripeSk     string   `mapstructure:"stripe-sk" json:"stripe-sk" yaml:"stripe-sk"`
 	XCgApiIds    []string `mapstructure:"x-cg-api-ids" json:"x-cg-api-ids" yaml:"x-cg-api-ids"` // bitcoin,ethereum,ripple,binancecoin,solana,tron,staked-ether,dogecoin
 }
