@@ -3,9 +3,11 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
+
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/client"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
 )
 
 type StripeSvc struct{ c *client.API }
@@ -49,16 +51,16 @@ func (s *StripeSvc) CreatePaymentIntent(amount int64, currency string, method st
 	}
 	params := &stripe.PaymentIntentParams{
 		Amount:   stripe.Int64(amount),
-		Currency: stripe.String(currency),
+		Currency: stripe.String(stripe.Currency(currency)),
 		Confirm:  stripe.Bool(false),
-		//AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
-		//	Enabled: stripe.Bool(true),
-		//},
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
 	}
 	if customerID != "" {
 		params.Customer = stripe.String(customerID)
 	}
-	params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
+	//params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
 	//switch method {
 	//case "alipay":
 	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"alipay"})
@@ -70,9 +72,9 @@ func (s *StripeSvc) CreatePaymentIntent(amount int64, currency string, method st
 	//default:
 	//	//params.PaymentMethodTypes = stripe.StringSlice([]string{"card"})
 	//}
-	//for k, v := range metadata {
-	//	params.AddMetadata(k, v)
-	//}
+	for k, v := range metadata {
+		params.AddMetadata(k, v)
+	}
 	pi, err := c.PaymentIntents.New(params)
 	if err != nil {
 		return "", "", err
