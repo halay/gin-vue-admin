@@ -194,7 +194,7 @@ func (s *UPA) AddLog(ctx context.Context, userID int64, change int64, balanceAft
 }
 
 // AddLogDetailed 记录积分流水（含类型、状态、关联ID）
-func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark, logType, status string, relatedID *int64) error {
+func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark, logType, status string, relatedID *int64, merchantID *int64) error {
     l := model.UserPointsLog{
         UserID:       &userID,
         Change:       &change,
@@ -202,6 +202,7 @@ func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, ba
         Type:         &logType,
         Status:       &status,
         RelatedID:    relatedID,
+        MerchantID:   merchantID,
         Reason:       &reason,
         OrderNo:      &orderNo,
         Remark:       &remark,

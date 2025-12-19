@@ -152,10 +152,10 @@ func (s *PR) PayCallback(ctx context.Context, orderNo string, paySuccess bool, t
 		}
 		// 写流水：充值购买
 		relatedID := int64(ord.ID)
-		_ = UserPointsAccount.AddLogDetailed(ctx, uid, add, after, "积分充值", orderNo, "", "recharge_purchase", "success", &relatedID)
+        _ = UserPointsAccount.AddLogDetailed(ctx, uid, add, after, "积分充值", orderNo, "", "recharge_purchase", "success", &relatedID, nil)
 		// 如有赠送，单独记录赠送
 		if ord.BonusPoints != nil && *ord.BonusPoints > 0 {
-			_ = UserPointsAccount.AddLogDetailed(ctx, uid, *ord.BonusPoints, after, "积分赠送", orderNo, "", "bonus", "success", &relatedID)
+            _ = UserPointsAccount.AddLogDetailed(ctx, uid, *ord.BonusPoints, after, "积分赠送", orderNo, "", "bonus", "success", &relatedID, nil)
 		}
 		return nil
 	})

@@ -310,14 +310,14 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 	// 奖励注册用户
 	if cfg.RegisterReward != nil && *cfg.RegisterReward > 0 {
 		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.RegisterReward)
-		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.RegisterReward, after, "register_reward", "", "注册奖励", "reward", "success", nil)
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.RegisterReward, after, "register_reward", "", "注册奖励", "reward", "success", nil, nil)
 	}
 	// 奖励邀请人
 	if user.InviterID != nil && cfg.InviterReward != nil && *cfg.InviterReward > 0 {
 		invID := int64(*user.InviterID)
 		after, _ := UserPointsAccount.AddPoints(ctx, invID, *cfg.InviterReward)
 		rid := int64(user.ID)
-		_ = UserPointsAccount.AddLogDetailed(ctx, invID, *cfg.InviterReward, after, "inviter_reward", "", "邀请人奖励", "reward", "success", &rid)
+		_ = UserPointsAccount.AddLogDetailed(ctx, invID, *cfg.InviterReward, after, "inviter_reward", "", "邀请人奖励", "reward", "success", &rid, nil)
 	}
 	// 奖励被邀请人
 	if cfg.InviteeReward != nil && *cfg.InviteeReward > 0 {
@@ -326,9 +326,57 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 		if user.InviterID != nil {
 			invID = int64(*user.InviterID)
 		}
-		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.InviteeReward, after, "invitee_reward", "", "被邀请人奖励", "reward", "success", &invID)
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.InviteeReward, after, "invitee_reward", "", "被邀请人奖励", "reward", "success", &invID, nil)
 	}
-
+	// 商户积分配置发放：遍历所有启用的商户积分设置
+	type mptsRow struct {
+		MerchantID     int64
+		InviterReward  *int64
+		InviteeReward  *int64
+		RegisterReward *int64
+		CoverageMode   *string
+	}
+	var mrows []mptsRow
+	_ = global.GVA_DB.Table("app_merchant_points_settings").
+		Where("status IN (?)", []string{"enabled", "1"}).
+		Select("merchant_id,inviter_reward,invitee_reward,register_reward,coverage_mode").
+		Order("sort asc, id desc").Scan(&mrows).Error
+	for _, ms := range mrows {
+		mode := "directed"
+		if ms.CoverageMode != nil {
+			mode = *ms.CoverageMode
+		}
+		eligible := false
+		if mode == "platform" {
+			eligible = true
+		} else { // directed：邀请人必须属于该商户
+			eligible = s.isInviterUnderMerchant(ctx, inviter, ms.MerchantID)
+		}
+		if !eligible {
+			continue
+		}
+		mid64 := ms.MerchantID
+		// 注册奖励（商户）
+		if ms.RegisterReward != nil && *ms.RegisterReward > 0 {
+			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.RegisterReward)
+			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.RegisterReward, after, "merchant_register_reward", "", "注册奖励(商户)", "reward", "success", &mid64, &mid64)
+		}
+		// 邀请人奖励（商户）
+		if user.InviterID != nil && ms.InviterReward != nil && *ms.InviterReward > 0 {
+			invID := int64(*user.InviterID)
+			after, _ := UserPointsAccount.AddPoints(ctx, invID, *ms.InviterReward)
+			_ = UserPointsAccount.AddLogDetailed(ctx, invID, *ms.InviterReward, after, "merchant_inviter_reward", "", "邀请人奖励(商户)", "reward", "success", &mid64, &mid64)
+		}
+		// 被邀请人奖励（商户）
+		if ms.InviteeReward != nil && *ms.InviteeReward > 0 {
+			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.InviteeReward)
+			invID := int64(0)
+			if user.InviterID != nil {
+				invID = int64(*user.InviterID)
+			}
+			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.InviteeReward, after, "merchant_invitee_reward", "", "被邀请人奖励(商户)", "reward", "success", &invID, &mid64)
+		}
+	}
 	return user, nil
 }
 
@@ -500,4 +548,36 @@ func (s *appUsers) FormatDescendants(ctx context.Context, uid uint) ([]string, e
 		out = append(out, fmt.Sprintf("%s(%d)", mail, r.ID))
 	}
 	return out, nil
+}
+
+// isInviterUnderMerchant 判断邀请人是否是指定商户任意级别的下级用户：
+// 原理：查询该商户绑定的用户ID集合，检测这些ID是否出现在邀请人的 invite_path 字段中
+func (s *appUsers) isInviterUnderMerchant(ctx context.Context, inviter model.AppUsers, merchantID int64) bool {
+	if inviter.InvitePath == nil || *inviter.InvitePath == "" {
+		return false
+	}
+	// 查询商户对应的用户ID集合
+	type row struct{ ID uint }
+	var rs []row
+	if err := global.GVA_DB.WithContext(ctx).
+		Table("app_users").
+		Where("merchant_id = ?", merchantID).
+		Select("id").
+		Scan(&rs).Error; err != nil {
+		return false
+	}
+	if len(rs) == 0 {
+		return false
+	}
+	path := *inviter.InvitePath
+	for _, r := range rs {
+		idStr := fmt.Sprintf("%d", r.ID)
+		if path == idStr ||
+			strings.HasPrefix(path, idStr+"/") ||
+			strings.Contains(path, "/"+idStr+"/") ||
+			strings.HasSuffix(path, "/"+idStr) {
+			return true
+		}
+	}
+	return false
 }
