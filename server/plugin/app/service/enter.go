@@ -25,4 +25,5 @@ type service struct {
 	Node                 NODE
 	PointsCfg            PCFG
 	PointsRecharge       PR
+	PointsSettings       PTS
 }

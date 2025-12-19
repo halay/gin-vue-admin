@@ -27,6 +27,7 @@ var (
 	apiMerchantCategory     = api.Api.MerchantCategory
 	apiMembershipLevel      = api.Api.MembershipLevel
 	apiNode                 = api.Api.Node
+	apiPointsSettings       = api.Api.PointsSettings
 )
 
 type router struct {
@@ -53,4 +54,5 @@ type router struct {
 	Node                 NODE
 	PointsCfg            PCFG
 	PointsRecharge       PR
+	PointsSettings       PTS
 }

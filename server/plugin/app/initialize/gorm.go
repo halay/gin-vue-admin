@@ -10,7 +10,7 @@ import (
 )
 
 func Gorm(ctx context.Context) {
-    err := global.GVA_DB.WithContext(ctx).AutoMigrate(model.AppUsers{}, model.Merchants{}, model.Banner{}, model.MerchantAnnouncement{}, model.MerchantAdmin{}, model.ProductCategory{}, model.Product{}, model.ProductSku{}, model.ProductSpec{}, model.ProductSpecOption{}, model.ProductSkuOption{}, model.AppConsultation{}, model.PointsConfig{}, model.PointsRechargeOrder{}, model.Order{}, model.OrderItem{}, model.UserPointsAccount{}, model.UserPointsLog{}, model.AppRelease{}, model.MerchantCategory{}, model.MembershipLevel{}, model.Node{})
+	err := global.GVA_DB.WithContext(ctx).AutoMigrate(model.AppUsers{}, model.Merchants{}, model.Banner{}, model.MerchantAnnouncement{}, model.MerchantAdmin{}, model.ProductCategory{}, model.Product{}, model.ProductSku{}, model.ProductSpec{}, model.ProductSpecOption{}, model.ProductSkuOption{}, model.AppConsultation{}, model.PointsConfig{}, model.PointsRechargeOrder{}, model.Order{}, model.OrderItem{}, model.UserPointsAccount{}, model.UserPointsLog{}, model.AppRelease{}, model.MerchantCategory{}, model.MembershipLevel{}, model.Node{}, model.PointsSettings{})
 	if err != nil {
 		err = errors.Wrap(err, "注册表失败!")
 		zap.L().Error(fmt.Sprintf("%+v", err))

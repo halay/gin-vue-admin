@@ -105,6 +105,40 @@ func (s *UPA) EnsureAccount(ctx context.Context, userID int64) (acc model.UserPo
 	return
 }
 
+// AddPoints 增加积分（原子操作），返回加后余额
+func (s *UPA) AddPoints(ctx context.Context, userID int64, points int64) (after int64, err error) {
+	// 先确保存在账户
+	if _, err = s.EnsureAccount(ctx, userID); err != nil {
+		return 0, err
+	}
+	tx := global.GVA_DB.WithContext(ctx).Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+	res := tx.Model(&model.UserPointsAccount{}).
+		Where("user_id = ?", userID).
+		UpdateColumn("balance", gorm.Expr("balance + ?", points))
+	if res.Error != nil {
+		err = res.Error
+		return
+	}
+	var acc model.UserPointsAccount
+	if e := tx.Where("user_id = ?", userID).First(&acc).Error; e != nil {
+		err = e
+		return
+	}
+	if e := tx.Commit().Error; e != nil {
+		err = e
+		return
+	}
+	if acc.Balance != nil {
+		after = *acc.Balance
+	}
+	return
+}
+
 // DeductPoints 扣减积分（原子操作），返回扣后余额
 func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (after int64, err error) {
 	// 先确保存在账户

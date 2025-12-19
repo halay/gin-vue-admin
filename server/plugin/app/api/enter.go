@@ -26,6 +26,7 @@ var (
 	serviceNode                 = service.Service.Node
 	servicePointsCfg            = service.Service.PointsCfg
 	servicePointsRecharge       = service.Service.PointsRecharge
+	servicePointsSettings       = service.Service.PointsSettings
 )
 
 type api struct {
@@ -52,4 +53,5 @@ type api struct {
 	Node                 NODE
 	PointsCfg            PCFG
 	PointsRecharge       PR
+	PointsSettings       PTS
 }

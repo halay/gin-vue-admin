@@ -294,6 +294,41 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 		return user, err
 	}
 
+	// 积分奖励：注册、邀请人、被邀请人
+	// 获取启用的积分设置（取最新一条）
+	type pts struct {
+		RegisterReward *int64
+		InviterReward  *int64
+		InviteeReward  *int64
+	}
+	var cfg pts
+	_ = global.GVA_DB.Table("app_points_settings").
+		Where("status = ?", 1).
+		Select("register_reward,inviter_reward,invitee_reward").
+		Order("sort asc, id desc").
+		Limit(1).Scan(&cfg).Error
+	// 奖励注册用户
+	if cfg.RegisterReward != nil && *cfg.RegisterReward > 0 {
+		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.RegisterReward)
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.RegisterReward, after, "register_reward", "", "注册奖励", "reward", "success", nil)
+	}
+	// 奖励邀请人
+	if user.InviterID != nil && cfg.InviterReward != nil && *cfg.InviterReward > 0 {
+		invID := int64(*user.InviterID)
+		after, _ := UserPointsAccount.AddPoints(ctx, invID, *cfg.InviterReward)
+		rid := int64(user.ID)
+		_ = UserPointsAccount.AddLogDetailed(ctx, invID, *cfg.InviterReward, after, "inviter_reward", "", "邀请人奖励", "reward", "success", &rid)
+	}
+	// 奖励被邀请人
+	if cfg.InviteeReward != nil && *cfg.InviteeReward > 0 {
+		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.InviteeReward)
+		invID := int64(0)
+		if user.InviterID != nil {
+			invID = int64(*user.InviterID)
+		}
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.InviteeReward, after, "invitee_reward", "", "被邀请人奖励", "reward", "success", &invID)
+	}
+
 	return user, nil
 }
 
