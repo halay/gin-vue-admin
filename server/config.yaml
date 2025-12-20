@@ -266,4 +266,3 @@ app-user:
         - staked-ether
         - dogecoin
     href-url: "http://110.41.59.11/api/"
-    stripe-sk: "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"

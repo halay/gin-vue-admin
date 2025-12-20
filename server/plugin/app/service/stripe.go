@@ -3,11 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/stripe/stripe-go/v84"
 	"github.com/stripe/stripe-go/v84/client"
-
-	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
 )
 
 type StripeSvc struct{ c *client.API }
@@ -18,7 +17,7 @@ func (s *StripeSvc) getClient() (*client.API, error) {
 	if s.c != nil {
 		return s.c, nil
 	}
-	key := plugin.Config.StripeSk
+	key := os.Getenv("STRIPE_API_SECRET")
 	if key == "" {
 		return nil, errors.New("STRIPE_SECRET_KEY 未配置")
 	}
