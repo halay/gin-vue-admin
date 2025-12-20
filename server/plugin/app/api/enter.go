@@ -28,6 +28,7 @@ var (
 	servicePointsRecharge         = service.Service.PointsRecharge
 	servicePointsSettings         = service.Service.PointsSettings
 	serviceMerchantPointsSettings = service.Service.MerchantPointsSettings
+	serviceUserAddress            = service.Service.UserAddress
 )
 
 type api struct {
@@ -56,4 +57,5 @@ type api struct {
 	PointsRecharge         PR
 	PointsSettings         PTS
 	MerchantPointsSettings MPTS
+	UserAddress            UA
 }

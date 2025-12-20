@@ -27,4 +27,5 @@ type service struct {
 	PointsRecharge         PR
 	PointsSettings         PTS
 	MerchantPointsSettings MPTS
+	UserAddress            UA
 }
