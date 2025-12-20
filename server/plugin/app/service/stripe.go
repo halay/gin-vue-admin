@@ -17,7 +17,7 @@ func (s *StripeSvc) getClient() (*client.API, error) {
 	if s.c != nil {
 		return s.c, nil
 	}
-	key := os.Getenv("STRIPE_API_SECRET")
+	key := os.Getenv("STRIPE_SECRET_KEY")
 	if key == "" {
 		return nil, errors.New("STRIPE_SECRET_KEY 未配置")
 	}
