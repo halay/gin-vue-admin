@@ -307,7 +307,7 @@ func (a *ORD) GetMyOrderDetail(c *gin.Context) {
 
 // CreateOrderByPoints C端：创建积分订单（未支付）
 // @Tags Order
-// @Summary C端创建积分订单
+// @Summary C端创建订单（points或card）
 // @Accept application/json
 // @Produce application/json
 // @Param skuId body string true "SKU ID"
@@ -315,6 +315,10 @@ func (a *ORD) GetMyOrderDetail(c *gin.Context) {
 // @Param consigneeName body string false "收货人"
 // @Param consigneePhone body string false "收货电话"
 // @Param address body string false "收货地址"
+// @Param province body string false "省"
+// @Param city body string false "市"
+// @Param district body string false "区县"
+// @Param payMethod body string false "支付方式 points|card"
 // @Success 200 {object} response.Response{data=object,msg=string} "创建成功"
 // @Router /ORD/createOrderByPoints [post]
 func (a *ORD) CreateOrderByPoints(c *gin.Context) {
@@ -330,6 +334,10 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 		ConsigneeName  string `json:"consigneeName"`
 		ConsigneePhone string `json:"consigneePhone"`
 		Address        string `json:"address"`
+		Province       string `json:"province"`
+		City           string `json:"city"`
+		District       string `json:"district"`
+		PayMethod      string `json:"payMethod"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -344,10 +352,25 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 		response.FailWithMessage("SKU不存在", c)
 		return
 	}
-	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address)
+	pm := body.PayMethod
+	if pm == "" {
+		pm = "card"
+	}
+	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address, body.Province, body.City, body.District, pm)
 	if err != nil {
 		global.GVA_LOG.Error("创建订单失败!", zap.Error(err))
 		response.FailWithMessage("创建订单失败:"+err.Error(), c)
+		return
+	}
+	// 若为card支付，立即创建支付意图并返回
+	if pm == "card" && ord.OrderNo != nil {
+		piID, clientSecret, err2 := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), *ord.OrderNo)
+		if err2 != nil {
+			global.GVA_LOG.Error("创建支付意图失败!", zap.Error(err2))
+			response.FailWithMessage("创建支付意图失败:"+err2.Error(), c)
+			return
+		}
+		response.OkWithData(gin.H{"order": ord, "item": item, "paymentIntentId": piID, "clientSecret": clientSecret}, c)
 		return
 	}
 	response.OkWithData(gin.H{"order": ord, "item": item}, c)
@@ -385,4 +408,40 @@ func (a *ORD) PayOrderByPoints(c *gin.Context) {
 		return
 	}
 	response.OkWithMessage("支付成功", c)
+}
+
+// CreateOrderPaymentIntent C端：订单银行卡支付（Stripe）
+// @Tags Order
+// @Summary C端订单银行卡支付：创建支付意图
+// @Security ApiKeyAuth
+// @Accept application/json
+// @Produce application/json
+// @Param orderNo body string true "订单号"
+// @Success 200 {object} response.Response{data=object,msg=string} "创建成功"
+// @Router /ORD/createOrderPaymentIntent [post]
+func (a *ORD) CreateOrderPaymentIntent(c *gin.Context) {
+	ctx := c.Request.Context()
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("未登录", c)
+		return
+	}
+	var body struct {
+		OrderNo string `json:"orderNo"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if body.OrderNo == "" {
+		response.FailWithMessage("订单号不能为空", c)
+		return
+	}
+	id, clientSecret, err := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), body.OrderNo)
+	if err != nil {
+		global.GVA_LOG.Error("创建支付意图失败!", zap.Error(err))
+		response.FailWithMessage("创建失败:"+err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"paymentIntentId": id, "clientSecret": clientSecret}, c)
 }

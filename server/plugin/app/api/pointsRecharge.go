@@ -73,12 +73,22 @@ func (a *PR) PayCallback(c *gin.Context) {
 				return
 			}
 			orderNo := pi.Metadata["order_no"]
-			if err := servicePointsRecharge.PayCallback(ctx, orderNo, true, pi.ID); err != nil {
-				global.GVA_LOG.Error("回调失败!", zap.Error(err))
-				response.FailWithMessage("回调失败:"+err.Error(), c)
-				return
+			payType := pi.Metadata["pay_type"]
+			if payType == "order" {
+				if err := serviceOrder.PayCallbackCard(ctx, orderNo, true, pi.ID); err != nil {
+					global.GVA_LOG.Error("订单回调失败!", zap.Error(err))
+					response.FailWithMessage("回调失败:"+err.Error(), c)
+					return
+				}
+				response.OkWithMessage("订单回调处理成功", c)
+			} else {
+				if err := servicePointsRecharge.PayCallback(ctx, orderNo, true, pi.ID); err != nil {
+					global.GVA_LOG.Error("积分回调失败!", zap.Error(err))
+					response.FailWithMessage("回调失败:"+err.Error(), c)
+					return
+				}
+				response.OkWithMessage("积分回调处理成功", c)
 			}
-			response.OkWithMessage("回调处理成功", c)
 			return
 		case "payment_intent.payment_failed":
 			var pi stripe.PaymentIntent
@@ -87,12 +97,22 @@ func (a *PR) PayCallback(c *gin.Context) {
 				return
 			}
 			orderNo := pi.Metadata["order_no"]
-			if err := servicePointsRecharge.PayCallback(ctx, orderNo, false, pi.ID); err != nil {
-				global.GVA_LOG.Error("回调失败!", zap.Error(err))
-				response.FailWithMessage("回调失败:"+err.Error(), c)
-				return
+			payType := pi.Metadata["pay_type"]
+			if payType == "order" {
+				if err := serviceOrder.PayCallbackCard(ctx, orderNo, false, pi.ID); err != nil {
+					global.GVA_LOG.Error("订单回调失败!", zap.Error(err))
+					response.FailWithMessage("回调失败:"+err.Error(), c)
+					return
+				}
+				response.OkWithMessage("订单支付失败处理完成", c)
+			} else {
+				if err := servicePointsRecharge.PayCallback(ctx, orderNo, false, pi.ID); err != nil {
+					global.GVA_LOG.Error("积分回调失败!", zap.Error(err))
+					response.FailWithMessage("回调失败:"+err.Error(), c)
+					return
+				}
+				response.OkWithMessage("积分支付失败处理完成", c)
 			}
-			response.OkWithMessage("回调处理失败", c)
 			return
 		default:
 			response.OkWithMessage("事件忽略", c)
