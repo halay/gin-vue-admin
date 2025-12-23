@@ -314,6 +314,11 @@ func (s *ORD) CreateOrderPaymentIntent(ctx context.Context, userID uint, orderNo
 	if err = global.GVA_DB.WithContext(ctx).Where("order_no = ? AND user_id = ?", orderNo, int64(userID)).First(&ord).Error; err != nil {
 		return
 	}
+	// 已支付则不再创建支付意图
+	if ord.PayStatus != nil && *ord.PayStatus == "paid" {
+		err = fmt.Errorf("订单已支付，无需获取支付意图")
+		return
+	}
 	// 金额（分）
 	amount := 0.0
 	if ord.TotalAmount != nil {

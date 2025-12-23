@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/middleware"
 	"github.com/gin-gonic/gin"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/middleware"
 )
 
 var Order = new(ORD)
@@ -30,9 +31,10 @@ func (r *ORD) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 	}
 	{
 		group := private.Group("ORD")
-		group.GET("getMyOrderList", apiOrder.GetMyOrderList)       // 我的订单列表
-		group.GET("getMyOrderDetail", apiOrder.GetMyOrderDetail)   // 我的订单详情
-		group.POST("createAppOrder", apiOrder.CreateOrderByPoints) // C端创建订单
-		group.POST("payOrderByPoints", apiOrder.PayOrderByPoints)  // C端积分支付
+		group.GET("getMyOrderList", apiOrder.GetMyOrderList)            // 我的订单列表
+		group.GET("getMyOrderDetail", apiOrder.GetMyOrderDetail)        // 我的订单详情
+		group.POST("createAppOrder", apiOrder.CreateOrderByPoints)      // C端创建订单
+		group.POST("reloadPayOrder", apiOrder.CreateOrderPaymentIntent) // C端重新支付订单
+		group.POST("payOrderByPoints", apiOrder.PayOrderByPoints)       // C端积分支付
 	}
 }
