@@ -14,7 +14,19 @@ type UA struct {}
 // CreateUserAddress 创建用户收货地址记录
 // Author [yourname](https://github.com/yourname)
 func (s *UA) CreateUserAddress(ctx context.Context, UA *model.UserAddress) (err error) {
-	err = global.GVA_DB.Create(UA).Error
+	// 若设置为默认，取消当前用户其他默认地址
+	if UA.IsDefault != nil && *UA.IsDefault && UA.UserID != nil {
+		err = global.GVA_DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			if e := tx.Model(&model.UserAddress{}).
+				Where("user_id = ?", *UA.UserID).
+				Update("is_default", false).Error; e != nil {
+				return e
+			}
+			return tx.Create(UA).Error
+		})
+		return err
+	}
+	err = global.GVA_DB.WithContext(ctx).Create(UA).Error
 	return err
 }
 
@@ -35,7 +47,19 @@ func (s *UA) DeleteUserAddressByIds(ctx context.Context, IDs []string) (err erro
 // UpdateUserAddress 更新用户收货地址记录
 // Author [yourname](https://github.com/yourname)
 func (s *UA) UpdateUserAddress(ctx context.Context, UA model.UserAddress) (err error) {
-	err = global.GVA_DB.Model(&model.UserAddress{}).Where("id = ?",UA.ID).Updates(&UA).Error
+	// 若设置为默认，取消当前用户其他默认地址
+	if UA.IsDefault != nil && *UA.IsDefault && UA.UserID != nil {
+		err = global.GVA_DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			if e := tx.Model(&model.UserAddress{}).
+				Where("user_id = ? AND id <> ?", *UA.UserID, UA.ID).
+				Update("is_default", false).Error; e != nil {
+				return e
+			}
+			return tx.Model(&model.UserAddress{}).Where("id = ?", UA.ID).Updates(&UA).Error
+		})
+		return err
+	}
+	err = global.GVA_DB.WithContext(ctx).Model(&model.UserAddress{}).Where("id = ?",UA.ID).Updates(&UA).Error
 	return err
 }
 

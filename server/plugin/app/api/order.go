@@ -1,13 +1,14 @@
 package api
 
 import (
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	appUtils "github.com/flipped-aurora/gin-vue-admin/server/utils"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 )
 
 var Order = new(ORD)
@@ -337,6 +338,8 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 		Province       string `json:"province"`
 		City           string `json:"city"`
 		District       string `json:"district"`
+		Country        string `json:"country"`
+		PostalCode     string `json:"postalCode"`
 		PayMethod      string `json:"payMethod"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -356,7 +359,7 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 	if pm == "" {
 		pm = "card"
 	}
-	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address, body.Province, body.City, body.District, pm)
+	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address, body.Province, body.City, body.District, body.Country, body.PostalCode, pm)
 	if err != nil {
 		global.GVA_LOG.Error("创建订单失败!", zap.Error(err))
 		response.FailWithMessage("创建订单失败:"+err.Error(), c)

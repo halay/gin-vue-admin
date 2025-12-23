@@ -1,8 +1,9 @@
 package request
 
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"time"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 )
 
 type OrderSearch struct {
@@ -18,6 +19,8 @@ type OrderSearch struct {
 	ConsigneeName  *string     `json:"consigneeName" form:"consigneeName"`
 	ConsigneePhone *string     `json:"consigneePhone" form:"consigneePhone"`
 	Address        *string     `json:"address" form:"address"`
+	Country        *string     `json:"country" form:"country"`
+	PostalCode     *string     `json:"postalCode" form:"postalCode"`
 	DeliveryStatus *string     `json:"deliveryStatus" form:"deliveryStatus"`
 	ExpressName    *string     `json:"expressName" form:"expressName"`
 	ExpressNo      *string     `json:"expressNo" form:"expressNo"`

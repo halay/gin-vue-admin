@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	"gorm.io/gorm"
-	"time"
 )
 
 var Order = new(ORD)
@@ -94,6 +95,12 @@ func (s *ORD) GetOrderInfoList(ctx context.Context, info request.OrderSearch, me
 	if info.Address != nil && *info.Address != "" {
 		db = db.Where("address LIKE ?", "%"+*info.Address+"%")
 	}
+	if info.Country != nil && *info.Country != "" {
+		db = db.Where("country LIKE ?", "%"+*info.Country+"%")
+	}
+	if info.PostalCode != nil && *info.PostalCode != "" {
+		db = db.Where("postal_code LIKE ?", "%"+*info.PostalCode+"%")
+	}
 	if info.DeliveryStatus != nil && *info.DeliveryStatus != "" {
 		db = db.Where("delivery_status = ?", *info.DeliveryStatus)
 	}
@@ -159,6 +166,12 @@ func (s *ORD) GetOrderInfoListByUser(ctx context.Context, userID int64, info req
 	if info.Status != nil && *info.Status != "" {
 		db = db.Where("status = ?", *info.Status)
 	}
+	if info.Country != nil && *info.Country != "" {
+		db = db.Where("country LIKE ?", "%"+*info.Country+"%")
+	}
+	if info.PostalCode != nil && *info.PostalCode != "" {
+		db = db.Where("postal_code LIKE ?", "%"+*info.PostalCode+"%")
+	}
 	err = db.Count(&total).Error
 	if err != nil {
 		return
@@ -181,7 +194,7 @@ func (s *ORD) GetOrderDetailByUser(ctx context.Context, userID int64, orderNo st
 }
 
 // CreateOrderByPoints 生成订单并创建明细（仅积分支付），返回订单与明细
-func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.ProductSku, qty int64, consigneeName, consigneePhone, address string, province, city, district string, payMethod string) (ord model.Order, item model.OrderItem, err error) {
+func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.ProductSku, qty int64, consigneeName, consigneePhone, address string, province, city, district string, country string, postalCode string, payMethod string) (ord model.Order, item model.OrderItem, err error) {
 	orderNo := fmt.Sprintf("P%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)
 	// 计算金额或积分
 	totalPoints := int64(0)
@@ -222,6 +235,8 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 		ConsigneeName:  nilIfEmpty(consigneeName),
 		ConsigneePhone: nilIfEmpty(consigneePhone),
 		Address:        nilIfEmpty(address),
+		Country:        nilIfEmpty(country),
+		PostalCode:     nilIfEmpty(postalCode),
 		Province:       nilIfEmpty(province),
 		City:           nilIfEmpty(city),
 		District:       nilIfEmpty(district),
@@ -232,7 +247,7 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 		SkuID:       uToI64Ptr(sku.ID),
 		ProductName: ptrStr(prodName),
 		SkuAttrs:    sku.Attrs,
-		Price:       func() *float64 {
+		Price: func() *float64 {
 			if payMethod == "card" && sku.Price != nil {
 				return ptrFloat64(*sku.Price)
 			}
