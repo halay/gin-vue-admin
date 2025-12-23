@@ -28,4 +28,5 @@ type service struct {
 	PointsSettings         PTS
 	MerchantPointsSettings MPTS
 	UserAddress            UA
+	AgentLevel             AL
 }

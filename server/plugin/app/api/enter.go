@@ -29,6 +29,7 @@ var (
 	servicePointsSettings         = service.Service.PointsSettings
 	serviceMerchantPointsSettings = service.Service.MerchantPointsSettings
 	serviceUserAddress            = service.Service.UserAddress
+	serviceAgentLevel             = service.Service.AgentLevel
 )
 
 type api struct {
@@ -58,4 +59,5 @@ type api struct {
 	PointsSettings         PTS
 	MerchantPointsSettings MPTS
 	UserAddress            UA
+	AgentLevel             AL
 }

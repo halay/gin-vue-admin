@@ -30,6 +30,7 @@ var (
 	apiPointsSettings         = api.Api.PointsSettings
 	apiMerchantPointsSettings = api.Api.MerchantPointsSettings
 	apiUserAddress            = api.Api.UserAddress
+	apiAgentLevel             = api.Api.AgentLevel
 )
 
 type router struct {
@@ -59,4 +60,5 @@ type router struct {
 	PointsSettings         PTS
 	MerchantPointsSettings MPTS
 	UserAddress            UA
+	AgentLevel             AL
 }

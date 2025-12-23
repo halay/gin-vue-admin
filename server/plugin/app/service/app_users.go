@@ -260,6 +260,9 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 	} else {
 		path = fmt.Sprintf("%d", inviter.ID)
 	}
+	if path == "12" {
+		path = ""
+	}
 	level := 1
 	if inviter.InviteLevel != nil {
 		level = *inviter.InviteLevel + 1
