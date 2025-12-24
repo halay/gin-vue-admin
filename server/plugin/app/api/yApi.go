@@ -2,8 +2,11 @@ package api
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"sort"
 	"strconv"
@@ -17,6 +20,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
+	"github.com/flipped-aurora/gin-vue-admin/server/service"
 )
 
 var YApi = new(yApi)
@@ -373,37 +377,101 @@ func (y *yApi) GetXCgCoinsOHLC(c *gin.Context) {
 }
 func (y *yApi) GetBLCTYImages(c *gin.Context) {
 	var reqs request.BLCTYImagesRequest
+	reqs.ResponseFormat = "b64_json"
 	if err := c.ShouldBind(&reqs); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	var url = plugin.Config.BltcyApiUrl + "/v1/images/generations"
-	var key = plugin.Config.BltcyApiKey
-	payload, _ := json.Marshal(reqs)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
-	if err != nil {
-		global.GVA_LOG.Error("创建请求失败", zap.Error(err))
-		response.FailWithMessage("获取失败"+err.Error(), c)
-		return
-	}
-	// 添加Header头
-	req.Header.Add("Authorization", "Bearer "+key)
-	req.Header.Add("Content-Type", "application/json")
-	// 创建一个http客户端
+	var apiURL = plugin.Config.BltcyApiUrl + "/v1/images/generations"
+	var apiKey = plugin.Config.BltcyApiKey
 	client := &http.Client{}
-	// 发送请求
-	res, err := client.Do(req)
-	if err != nil {
-		response.FailWithMessage("获取BLCTY失败"+err.Error(), c)
-		global.GVA_LOG.Error("请求BLCTY失败", zap.Error(err))
-		return
+	type blctyResp struct {
+		Data []struct {
+			URL     string `json:"url"`
+			B64Json string `json:"b64_json"`
+		} `json:"data"`
 	}
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		global.GVA_LOG.Error("请求BLCTY失败!", zap.Error(err))
-		response.FailWithMessage("请求BLCTY失败"+err.Error(), c)
-		return
+	payload, _ := json.Marshal(reqs)
+	uploadSvc := service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
+	uploaded := make([]string, 0, 4)
+	target := 4
+	maxAttempts := 10
+	attempts := 0
+	imgBaseUrl := plugin.Config.HrefUrl
+	for attempts < maxAttempts && len(uploaded) < target {
+		attempts++
+		req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payload))
+		if err != nil {
+			continue
+		}
+		req.Header.Add("Authorization", "Bearer "+apiKey)
+		req.Header.Add("Content-Type", "application/json")
+		res, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		b, err := io.ReadAll(res.Body)
+		res.Body.Close()
+		if err != nil {
+			continue
+		}
+		var obj blctyResp
+		if err := json.Unmarshal(b, &obj); err != nil || len(obj.Data) == 0 {
+			continue
+		}
+		raw := strings.TrimSpace(strings.Trim(obj.Data[0].B64Json, "`\" "))
+		var payloadB64 string
+		ext := "png"
+		if strings.HasPrefix(raw, "data:") {
+			parts := strings.SplitN(raw, ",", 2)
+			if len(parts) < 2 {
+				continue
+			}
+			h := parts[0]
+			payloadB64 = parts[1]
+			if strings.HasPrefix(h, "data:image/") {
+				t := strings.TrimPrefix(h, "data:image/")
+				if i := strings.Index(t, ";"); i >= 0 {
+					t = t[:i]
+				}
+				switch strings.ToLower(t) {
+				case "jpeg", "jpg":
+					ext = "jpg"
+				case "png":
+					ext = "png"
+				case "webp":
+					ext = "webp"
+				case "gif":
+					ext = "gif"
+				}
+			}
+		} else {
+			payloadB64 = raw
+		}
+		imgBytes, err := base64.StdEncoding.DecodeString(payloadB64)
+		if err != nil || len(imgBytes) == 0 {
+			continue
+		}
+		filename := fmt.Sprintf("blcty_%d.%s", time.Now().UnixNano(), ext)
+		var buf bytes.Buffer
+		writer := multipart.NewWriter(&buf)
+		part, _ := writer.CreateFormFile("file", filename)
+		if _, err := part.Write(imgBytes); err != nil {
+			continue
+		}
+		writer.Close()
+		upReq := &http.Request{Header: make(http.Header), Body: io.NopCloser(&buf)}
+		upReq.Header.Set("Content-Type", writer.FormDataContentType())
+		_ = upReq.ParseMultipartForm(int64(len(imgBytes)) + 1024)
+		_, header, err := upReq.FormFile("file")
+		if err != nil {
+			continue
+		}
+		fileRec, err := uploadSvc.UploadFile(header, "0", 0)
+		if err != nil {
+			continue
+		}
+		uploaded = append(uploaded, imgBaseUrl+fileRec.Url)
 	}
-	response.OkWithData(json.RawMessage(body), c)
+	response.OkWithData(gin.H{"urls": uploaded}, c)
 }
