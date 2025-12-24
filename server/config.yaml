@@ -266,3 +266,6 @@ app-user:
         - staked-ether
         - dogecoin
     href-url: "http://110.41.59.11/api/"
+    bltcy-api-url: "https://api.bltcy.ai"
+    bltcy-api-url2: "https://hk-api.gptbest.vip"
+    bltcy-api-key: "sk-jYML4I6KAMGNbrRnp5sXuXu1FYTkrLKCO0WSwU0eoCzT8yQC"

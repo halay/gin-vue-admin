@@ -18,3 +18,12 @@ type YApiMarketInfoRequest struct {
 type XCgCoinOHLCRequest struct {
 	Coins string `json:"coins" form:"coins" binding:"required"` //bitcoin
 }
+
+type BLCTYImagesRequest struct {
+	Model          string   `json:"model" form:"model" binding:"required"`   //model
+	Prompt         string   `json:"prompt" form:"prompt" binding:"required"` //prompt
+	AspectRatio    string   `json:"aspect_ratio" form:"aspect_ratio"`        //aspect_ratio
+	ResponseFormat string   `json:"response_format" form:"response_format"`  //response_format
+	Image          []string `json:"image" form:"image"`                      //image
+	ImageSize      string   `json:"image_size" form:"image_size"`            //image_size
+}

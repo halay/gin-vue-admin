@@ -47,12 +47,6 @@ func (a *PR) CreateRechargeOrder(c *gin.Context) {
 	response.OkWithData(gin.H{"order": ord, "config": cfg}, c)
 }
 
-type PayCallbackRequest struct {
-	OrderNo       string `json:"orderNo" binding:"required"`
-	Success       bool   `json:"success"`
-	TransactionID string `json:"transactionId"`
-}
-
 // PayCallback 支付回调（公共，无需鉴权）
 func (a *PR) PayCallback(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -119,18 +113,7 @@ func (a *PR) PayCallback(c *gin.Context) {
 			return
 		}
 	}
-	// 兼容旧JSON结构
-	var req PayCallbackRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	if err := servicePointsRecharge.PayCallback(ctx, req.OrderNo, req.Success, req.TransactionID); err != nil {
-		global.GVA_LOG.Error("回调失败!", zap.Error(err))
-		response.FailWithMessage("回调失败:"+err.Error(), c)
-		return
-	}
-	response.OkWithMessage("回调处理成功", c)
+	response.OkWithMessage("回调处理失败:Stripe-Signature未发现", c)
 }
 
 // GetMyRechargeOrders 获取当前登录用户的积分充值订单列表

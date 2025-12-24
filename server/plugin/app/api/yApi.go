@@ -1,13 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
-	"sort"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -191,94 +192,109 @@ func (y *yApi) GetYApiMarketInfo(c *gin.Context) {
 // @Success 200 {object} response.Response{data=response.PageResult,msg=string}
 // @Router /yApi/getMerchantsMarketList [get]
 func (y *yApi) GetMerchantsMarketList(c *gin.Context) {
-    ctx := c.Request.Context()
-    // 读取分页参数
-    pageStr := c.Query("page")
-    sizeStr := c.Query("pageSize")
-    page, _ := strconv.Atoi(pageStr)
-    size, _ := strconv.Atoi(sizeStr)
-    if page <= 0 { page = 1 }
-    if size <= 0 { size = 10 }
+	ctx := c.Request.Context()
+	// 读取分页参数
+	pageStr := c.Query("page")
+	sizeStr := c.Query("pageSize")
+	page, _ := strconv.Atoi(pageStr)
+	size, _ := strconv.Atoi(sizeStr)
+	if page <= 0 {
+		page = 1
+	}
+	if size <= 0 {
+		size = 10
+	}
 
-    // 查询所有含交易对的商户
-    type mrow struct{
-        ID int64
-        MerchantName string
-        Logo string
-        TradingPair string
-    }
-    var rows []mrow
-    if err := global.GVA_DB.WithContext(ctx).Table("app_merchants").
-        Where("trading_pair IS NOT NULL AND trading_pair <> ''").
-        Select("id, merchant_name, logo, trading_pair").
-        Scan(&rows).Error; err != nil {
-        response.FailWithMessage("查询商户失败:"+err.Error(), c)
-        return
-    }
-    // 调行情
-    client := &http.Client{ Timeout: time.Duration(plugin.Config.YApiTimeout) * time.Second }
-    base := plugin.Config.YApiUrl + "/openapi/v1/market/getMarketInfo"
+	// 查询所有含交易对的商户
+	type mrow struct {
+		ID           int64
+		MerchantName string
+		Logo         string
+		TradingPair  string
+	}
+	var rows []mrow
+	if err := global.GVA_DB.WithContext(ctx).Table("app_merchants").
+		Where("trading_pair IS NOT NULL AND trading_pair <> ''").
+		Select("id, merchant_name, logo, trading_pair").
+		Scan(&rows).Error; err != nil {
+		response.FailWithMessage("查询商户失败:"+err.Error(), c)
+		return
+	}
+	// 调行情
+	client := &http.Client{Timeout: time.Duration(plugin.Config.YApiTimeout) * time.Second}
+	base := plugin.Config.YApiUrl + "/openapi/v1/market/getMarketInfo"
 
-    type item struct{
-        ID int64 `json:"id"`
-        MerchantName string `json:"merchantName"`
-        Logo string `json:"logo"`
-        Market string `json:"market"`
-        Token string `json:"token"`
-        LatestPrice string `json:"latest_price"`
-        PercentChange float64 `json:"percent_change"`
-        CirculateQuantity string `json:"circulate_quantity"`
-    }
-    list := make([]item, 0, len(rows))
-    for _, r := range rows {
-        parts := strings.Split(r.TradingPair, "/")
-        if len(parts) != 2 { continue }
-        token := strings.TrimSpace(parts[0])
-        market := strings.TrimSpace(parts[1])
-        // 请求行情
-        url := base + "?market=" + market + "&token=" + token
-        resp, err := client.Get(url)
-        if err != nil { continue }
-        b, _ := io.ReadAll(resp.Body); resp.Body.Close()
-        // 解析通用响应
-        var resStruct struct{
-            Code int `json:"code"`
-            Data struct{
-                LatestPrice string `json:"latest_price"`
-                PercentChange string `json:"percent_change"`
-                CirculateQuantity string `json:"circulate_quantity"`
-                Market string `json:"market"`
-                Token string `json:"token"`
-            } `json:"data"`
-        }
-        if err := json.Unmarshal(b, &resStruct); err != nil || resStruct.Code != 0 { continue }
-        pc, _ := strconv.ParseFloat(resStruct.Data.PercentChange, 64)
-        list = append(list, item{
-            ID: r.ID,
-            MerchantName: r.MerchantName,
-            Logo: r.Logo,
-            Market: market,
-            Token: token,
-            LatestPrice: resStruct.Data.LatestPrice,
-            PercentChange: pc,
-            CirculateQuantity: resStruct.Data.CirculateQuantity,
-        })
-    }
-    // 排序：percent_change 降序
-    sort.Slice(list, func(i, j int) bool { return list[i].PercentChange > list[j].PercentChange })
-    total := len(list)
-    start := (page-1)*size
-    if start > total { start = total }
-    end := start + size
-    if end > total { end = total }
-    pageList := list[start:end]
+	type item struct {
+		ID                int64   `json:"id"`
+		MerchantName      string  `json:"merchantName"`
+		Logo              string  `json:"logo"`
+		Market            string  `json:"market"`
+		Token             string  `json:"token"`
+		LatestPrice       string  `json:"latest_price"`
+		PercentChange     float64 `json:"percent_change"`
+		CirculateQuantity string  `json:"circulate_quantity"`
+	}
+	list := make([]item, 0, len(rows))
+	for _, r := range rows {
+		parts := strings.Split(r.TradingPair, "/")
+		if len(parts) != 2 {
+			continue
+		}
+		token := strings.TrimSpace(parts[0])
+		market := strings.TrimSpace(parts[1])
+		// 请求行情
+		url := base + "?market=" + market + "&token=" + token
+		resp, err := client.Get(url)
+		if err != nil {
+			continue
+		}
+		b, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		// 解析通用响应
+		var resStruct struct {
+			Code int `json:"code"`
+			Data struct {
+				LatestPrice       string `json:"latest_price"`
+				PercentChange     string `json:"percent_change"`
+				CirculateQuantity string `json:"circulate_quantity"`
+				Market            string `json:"market"`
+				Token             string `json:"token"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal(b, &resStruct); err != nil || resStruct.Code != 0 {
+			continue
+		}
+		pc, _ := strconv.ParseFloat(resStruct.Data.PercentChange, 64)
+		list = append(list, item{
+			ID:                r.ID,
+			MerchantName:      r.MerchantName,
+			Logo:              r.Logo,
+			Market:            market,
+			Token:             token,
+			LatestPrice:       resStruct.Data.LatestPrice,
+			PercentChange:     pc,
+			CirculateQuantity: resStruct.Data.CirculateQuantity,
+		})
+	}
+	// 排序：percent_change 降序
+	sort.Slice(list, func(i, j int) bool { return list[i].PercentChange > list[j].PercentChange })
+	total := len(list)
+	start := (page - 1) * size
+	if start > total {
+		start = total
+	}
+	end := start + size
+	if end > total {
+		end = total
+	}
+	pageList := list[start:end]
 
-    response.OkWithDetailed(response.PageResult{
-        List: pageList,
-        Total: int64(total),
-        Page: page,
-        PageSize: size,
-    }, "获取成功", c)
+	response.OkWithDetailed(response.PageResult{
+		List:     pageList,
+		Total:    int64(total),
+		Page:     page,
+		PageSize: size,
+	}, "获取成功", c)
 }
 func (y *yApi) GetXCgKLine(c *gin.Context) {
 	var url = plugin.Config.XCgProApiUrl + "/coins/markets?vs_currency=usd&price_change_percentage=1h,24h,7d"
@@ -351,6 +367,42 @@ func (y *yApi) GetXCgCoinsOHLC(c *gin.Context) {
 	if err != nil {
 		global.GVA_LOG.Error("请求OHLC失败!", zap.Error(err))
 		response.FailWithMessage("请求OHLC失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(json.RawMessage(body), c)
+}
+func (y *yApi) GetBLCTYImages(c *gin.Context) {
+	var reqs request.BLCTYImagesRequest
+	if err := c.ShouldBind(&reqs); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	var url = plugin.Config.BltcyApiUrl + "/v1/images/generations"
+	var key = plugin.Config.BltcyApiKey
+	payload, _ := json.Marshal(reqs)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		global.GVA_LOG.Error("创建请求失败", zap.Error(err))
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		return
+	}
+	// 添加Header头
+	req.Header.Add("Authorization", "Bearer "+key)
+	req.Header.Add("Content-Type", "application/json")
+	// 创建一个http客户端
+	client := &http.Client{}
+	// 发送请求
+	res, err := client.Do(req)
+	if err != nil {
+		response.FailWithMessage("获取BLCTY失败"+err.Error(), c)
+		global.GVA_LOG.Error("请求BLCTY失败", zap.Error(err))
+		return
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		global.GVA_LOG.Error("请求BLCTY失败!", zap.Error(err))
+		response.FailWithMessage("请求BLCTY失败"+err.Error(), c)
 		return
 	}
 	response.OkWithData(json.RawMessage(body), c)

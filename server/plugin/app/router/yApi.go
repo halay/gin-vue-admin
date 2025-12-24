@@ -12,12 +12,13 @@ type yApi struct{}
 func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 	{
 		group := public.Group("yApi")
-		group.GET("getKLine", apiYApi.GetYApiKLine)                 // K线
-		group.GET("getDeep", apiYApi.GetYApiDeep)                   // 深度
-		group.GET("getAllMarketInfo", apiYApi.GetYApiAllMarketInfo) // 所有交易对行情
-		group.GET("getMarketInfo", apiYApi.GetYApiMarketInfo)       // 指定交易对行情
+		group.GET("getKLine", apiYApi.GetYApiKLine)                         // K线
+		group.GET("getDeep", apiYApi.GetYApiDeep)                           // 深度
+		group.GET("getAllMarketInfo", apiYApi.GetYApiAllMarketInfo)         // 所有交易对行情
+		group.GET("getMarketInfo", apiYApi.GetYApiMarketInfo)               // 指定交易对行情
 		group.GET("getMerchantsMarketList", apiYApi.GetMerchantsMarketList) // 商户行情列表
-		group.GET("getXCgKLine", apiYApi.GetXCgKLine)               // XCgK线
-		group.GET("getXCgKOhlc", apiYApi.GetXCgCoinsOHLC)           // XCg Coins OHLC
+		group.GET("getXCgKLine", apiYApi.GetXCgKLine)                       // XCgK线
+		group.GET("getXCgKOhlc", apiYApi.GetXCgCoinsOHLC)                   // XCg Coins OHLC
+		group.POST("getBLCTYImages", apiYApi.GetBLCTYImages)                // GetBLCTYImages
 	}
 }

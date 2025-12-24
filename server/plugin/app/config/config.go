@@ -8,4 +8,6 @@ type Config struct {
 	XCgProApiUrl string   `mapstructure:"x-cg-pro-api-url" json:"x-cg-pro-api-url" yaml:"x-cg-pro-api-url"`
 	HrefUrl      string   `mapstructure:"href-url" json:"href-url" yaml:"href-url"`
 	XCgApiIds    []string `mapstructure:"x-cg-api-ids" json:"x-cg-api-ids" yaml:"x-cg-api-ids"` // bitcoin,ethereum,ripple,binancecoin,solana,tron,staked-ether,dogecoin
+	BltcyApiUrl  string   `mapstructure:"bltcy-api-url" json:"bltcy-api-url" yaml:"bltcy-api-url"`
+	BltcyApiKey  string   `mapstructure:"bltcy-api-key" json:"bltcy-api-key" yaml:"bltcy-api-key"`
 }
