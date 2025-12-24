@@ -273,7 +273,29 @@ func (a *ORD) GetMyOrderList(c *gin.Context) {
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
-	response.OkWithDetailed(response.PageResult{List: list, Total: total, Page: pageInfo.Page, PageSize: pageInfo.PageSize}, "获取成功", c)
+	// 聚合订单明细（商品信息）
+	ids := make([]int64, 0, len(list))
+	for _, o := range list {
+		ids = append(ids, int64(o.ID))
+	}
+	var items []model.OrderItem
+	if len(ids) > 0 {
+		_ = global.GVA_DB.WithContext(ctx).Where("order_id in ?", ids).Find(&items).Error
+	}
+	itemMap := make(map[int64][]model.OrderItem)
+	for _, it := range items {
+		if it.OrderID != nil {
+			itemMap[*it.OrderID] = append(itemMap[*it.OrderID], it)
+		}
+	}
+	enriched := make([]gin.H, 0, len(list))
+	for _, o := range list {
+		enriched = append(enriched, gin.H{
+			"order": o,
+			"items": itemMap[int64(o.ID)],
+		})
+	}
+	response.OkWithDetailed(response.PageResult{List: enriched, Total: total, Page: pageInfo.Page, PageSize: pageInfo.PageSize}, "获取成功", c)
 }
 
 // GetMyOrderDetail 获取当前登录用户的订单详情
@@ -341,6 +363,7 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 		Country        string `json:"country"`
 		PostalCode     string `json:"postalCode"`
 		PayMethod      string `json:"payMethod"`
+		Remark         string `json:"remark"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -359,7 +382,7 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 	if pm == "" {
 		pm = "card"
 	}
-	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address, body.Province, body.City, body.District, body.Country, body.PostalCode, pm)
+	ord, item, err := serviceOrder.CreateOrderByPoints(ctx, int64(userID), sku, body.Quantity, body.ConsigneeName, body.ConsigneePhone, body.Address, body.Province, body.City, body.District, body.Country, body.PostalCode, pm, body.Remark)
 	if err != nil {
 		global.GVA_LOG.Error("创建订单失败!", zap.Error(err))
 		response.FailWithMessage("创建订单失败:"+err.Error(), c)

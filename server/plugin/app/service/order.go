@@ -194,7 +194,7 @@ func (s *ORD) GetOrderDetailByUser(ctx context.Context, userID int64, orderNo st
 }
 
 // CreateOrderByPoints 生成订单并创建明细（仅积分支付），返回订单与明细
-func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.ProductSku, qty int64, consigneeName, consigneePhone, address string, province, city, district string, country string, postalCode string, payMethod string) (ord model.Order, item model.OrderItem, err error) {
+func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.ProductSku, qty int64, consigneeName, consigneePhone, address string, province, city, district string, country string, postalCode string, payMethod string, remark string) (ord model.Order, item model.OrderItem, err error) {
 	orderNo := fmt.Sprintf("P%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)
 	// 计算金额或积分
 	totalPoints := int64(0)
@@ -237,6 +237,7 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 		Address:        nilIfEmpty(address),
 		Country:        nilIfEmpty(country),
 		PostalCode:     nilIfEmpty(postalCode),
+		Remark:         nilIfEmpty(remark),
 		Province:       nilIfEmpty(province),
 		City:           nilIfEmpty(city),
 		District:       nilIfEmpty(district),
