@@ -275,8 +275,12 @@ func (a *ORD) GetMyOrderList(c *gin.Context) {
 	}
 	// 聚合订单明细（商品信息）
 	ids := make([]int64, 0, len(list))
+	mids := make([]int64, 0, len(list))
 	for _, o := range list {
 		ids = append(ids, int64(o.ID))
+		if o.MerchantID != nil {
+			mids = append(mids, *o.MerchantID)
+		}
 	}
 	var items []model.OrderItem
 	if len(ids) > 0 {
@@ -288,11 +292,35 @@ func (a *ORD) GetMyOrderList(c *gin.Context) {
 			itemMap[*it.OrderID] = append(itemMap[*it.OrderID], it)
 		}
 	}
+	// 聚合商户信息
+	type mrow struct {
+		ID           int64  `gorm:"column:id"`
+		MerchantName string `gorm:"column:merchant_name"`
+		Logo         string `gorm:"column:logo"`
+	}
+	mMap := make(map[int64]mrow)
+	if len(mids) > 0 {
+		var ms []mrow
+		_ = global.GVA_DB.WithContext(ctx).Table("app_merchants").Where("id in ?", mids).Select("id, merchant_name, logo").Find(&ms).Error
+		for _, m := range ms {
+			mMap[m.ID] = m
+		}
+	}
 	enriched := make([]gin.H, 0, len(list))
 	for _, o := range list {
+		var mid int64
+		if o.MerchantID != nil {
+			mid = *o.MerchantID
+		}
+		mi := mMap[mid]
 		enriched = append(enriched, gin.H{
 			"order": o,
 			"items": itemMap[int64(o.ID)],
+			"merchant": gin.H{
+				"id":           mid,
+				"merchantName": mi.MerchantName,
+				"logo":         mi.Logo,
+			},
 		})
 	}
 	response.OkWithDetailed(response.PageResult{List: enriched, Total: total, Page: pageInfo.Page, PageSize: pageInfo.PageSize}, "获取成功", c)
