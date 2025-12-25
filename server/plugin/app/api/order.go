@@ -417,8 +417,8 @@ func (a *ORD) CreateOrderByPoints(c *gin.Context) {
 		return
 	}
 	// 若为card支付，立即创建支付意图并返回
-	if pm == "card" && ord.OrderNo != nil {
-		piID, clientSecret, err2 := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), *ord.OrderNo)
+	if pm != "" && ord.OrderNo != nil {
+		piID, clientSecret, err2 := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), *ord.OrderNo, pm)
 		if err2 != nil {
 			global.GVA_LOG.Error("创建支付意图失败!", zap.Error(err2))
 			response.FailWithMessage("创建支付意图失败:"+err2.Error(), c)
@@ -481,7 +481,8 @@ func (a *ORD) CreateOrderPaymentIntent(c *gin.Context) {
 		return
 	}
 	var body struct {
-		OrderNo string `json:"orderNo"`
+		OrderNo   string `json:"orderNo"`
+		PayMethod string `json:"payMethod"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		response.FailWithMessage(err.Error(), c)
@@ -491,7 +492,10 @@ func (a *ORD) CreateOrderPaymentIntent(c *gin.Context) {
 		response.FailWithMessage("订单号不能为空", c)
 		return
 	}
-	id, clientSecret, err := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), body.OrderNo)
+	if body.PayMethod == "" {
+		body.PayMethod = "card"
+	}
+	id, clientSecret, err := serviceOrder.CreateOrderPaymentIntent(ctx, uint(userID), body.OrderNo, body.PayMethod)
 	if err != nil {
 		global.GVA_LOG.Error("创建支付意图失败!", zap.Error(err))
 		response.FailWithMessage("创建失败:"+err.Error(), c)

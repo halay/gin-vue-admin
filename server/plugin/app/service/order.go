@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
-	"gorm.io/gorm"
 )
 
 var Order = new(ORD)
@@ -199,7 +200,7 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 	// 计算金额或积分
 	totalPoints := int64(0)
 	totalAmount := 0.0
-	if payMethod == "card" && sku.Price != nil {
+	if payMethod != "" && sku.Price != nil {
 		totalAmount = *sku.Price * float64(qty)
 	} else {
 		if sku.Points != nil {
@@ -249,13 +250,13 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 		ProductName: ptrStr(prodName),
 		SkuAttrs:    sku.Attrs,
 		Price: func() *float64 {
-			if payMethod == "card" && sku.Price != nil {
+			if payMethod != "" && sku.Price != nil {
 				return ptrFloat64(*sku.Price)
 			}
 			return ptrFloat64(0)
 		}(),
 		Points: func() *int64 {
-			if payMethod != "card" {
+			if payMethod == "" {
 				return sku.Points
 			}
 			return nil
@@ -309,7 +310,7 @@ func (s *ORD) PayOrderByPoints(ctx context.Context, userID int64, orderNo string
 }
 
 // CreateOrderPaymentIntent 创建Stripe支付意图（银行卡支付）
-func (s *ORD) CreateOrderPaymentIntent(ctx context.Context, userID uint, orderNo string) (piID string, clientSecret string, err error) {
+func (s *ORD) CreateOrderPaymentIntent(ctx context.Context, userID uint, orderNo string, payMethod string) (piID string, clientSecret string, err error) {
 	// 查订单（归属校验）
 	var ord model.Order
 	if err = global.GVA_DB.WithContext(ctx).Where("order_no = ? AND user_id = ?", orderNo, int64(userID)).First(&ord).Error; err != nil {
@@ -342,14 +343,14 @@ func (s *ORD) CreateOrderPaymentIntent(ctx context.Context, userID uint, orderNo
 		}
 	}
 	// 创建支付意图，标记为商品订单
-	piID, clientSecret, err = Stripe.CreatePaymentIntent(amountCents, "cny", "card", getStr(user.StripeCustomerID), map[string]string{
+	piID, clientSecret, err = Stripe.CreatePaymentIntent(amountCents, "cny", payMethod, getStr(user.StripeCustomerID), map[string]string{
 		"order_no": orderNo,
 		"user_id":  fmt.Sprintf("%d", userID),
 		"pay_type": "order",
 	})
 	// 更新订单支付方式为card（可选）
 	if err == nil {
-		_ = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).Where("id = ?", ord.ID).Update("pay_method", "card").Error
+		_ = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).Where("id = ?", ord.ID).Update("pay_method", payMethod).Error
 	}
 	return
 }
