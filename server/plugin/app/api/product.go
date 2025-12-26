@@ -1,6 +1,9 @@
 package api
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -45,6 +48,36 @@ func (a *P) CreateProduct(c *gin.Context) {
 	if err != nil {
 		global.GVA_LOG.Error("创建失败!", zap.Error(err))
 		response.FailWithMessage("创建失败:"+err.Error(), c)
+		return
+	}
+	pid := int64(info.ID)
+	price := 0.0
+	if info.Price != nil {
+		price = *info.Price
+	}
+	points := int64(0)
+	if info.Points != nil {
+		points = *info.Points
+	}
+	stock := int64(0)
+	if info.Stock != nil {
+		stock = *info.Stock
+	}
+	code := fmt.Sprintf("SK%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)
+	status := "enabled"
+	def := model.ProductSku{
+		ProductID: &pid,
+		SKUCode:   &code,
+		Price:     &price,
+		Points:    &points,
+		Image:     info.CoverImage,
+		Stock:     &stock,
+		Status:    &status,
+	}
+	if e := serviceProductSku.CreateProductSku(ctx, &def, int(*mid)); e != nil {
+		_ = serviceProduct.DeleteProduct(ctx, fmt.Sprintf("%d", info.ID), int(*mid))
+		global.GVA_LOG.Error("创建默认SKU失败!", zap.Error(e))
+		response.FailWithMessage("创建默认SKU失败:"+e.Error(), c)
 		return
 	}
 	response.OkWithMessage("创建成功", c)
