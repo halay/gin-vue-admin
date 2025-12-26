@@ -61,4 +61,5 @@ type router struct {
 	MerchantPointsSettings MPTS
 	UserAddress            UA
 	AgentLevel             AL
+	DownlinePurchaseRecord DownlinePurchaseRecordRouter
 }

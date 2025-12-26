@@ -280,6 +280,9 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 		}
 		return nil
 	})
+	if err == nil {
+		err = Service.DownlinePurchaseRecord.CreateRecordsForOrder(ctx, ord)
+	}
 	return
 }
 
@@ -368,9 +371,13 @@ func (s *ORD) PayCallbackCard(ctx context.Context, orderNo string, paySuccess bo
 	if paySuccess {
 		newStatus = "paid"
 	}
-	return global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
+	err := global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
 		Where("id = ?", ord.ID).
 		Updates(map[string]any{"pay_status": newStatus, "status": newStatus}).Error
+	if err == nil {
+		_ = Service.DownlinePurchaseRecord.UpdateStatus(ctx, orderNo, newStatus, newStatus)
+	}
+	return err
 }
 
 func ptrStr(s string) *string       { return &s }

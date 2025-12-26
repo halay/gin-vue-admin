@@ -29,4 +29,5 @@ type service struct {
 	MerchantPointsSettings MPTS
 	UserAddress            UA
 	AgentLevel             AL
+	DownlinePurchaseRecord DPR
 }

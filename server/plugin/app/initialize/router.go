@@ -39,4 +39,5 @@ func Router(engine *gin.Engine) {
 	router.Router.MerchantPointsSettings.Init(public, private)
 	router.Router.UserAddress.Init(public, private)
 	router.Router.AgentLevel.Init(public, private)
+	router.Router.DownlinePurchaseRecord.InitDownlinePurchaseRecordRouter(private)
 }
