@@ -31,6 +31,8 @@ var (
 	apiMerchantPointsSettings = api.Api.MerchantPointsSettings
 	apiUserAddress            = api.Api.UserAddress
 	apiAgentLevel             = api.Api.AgentLevel
+	apiAgentTransactionDetail = api.Api.AgentTransactionDetail
+	apiSettlement             = api.Api.Settlement
 )
 
 type router struct {
@@ -62,4 +64,6 @@ type router struct {
 	UserAddress            UA
 	AgentLevel             AL
 	DownlinePurchaseRecord DownlinePurchaseRecordRouter
+	AgentTransactionDetail atd
+	Settlement             settlement
 }

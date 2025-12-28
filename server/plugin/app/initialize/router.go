@@ -40,4 +40,6 @@ func Router(engine *gin.Engine) {
 	router.Router.UserAddress.Init(public, private)
 	router.Router.AgentLevel.Init(public, private)
 	router.Router.DownlinePurchaseRecord.InitDownlinePurchaseRecordRouter(private)
+	router.Router.AgentTransactionDetail.Init(public, private)
+	router.Router.Settlement.Init(public, private)
 }

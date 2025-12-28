@@ -378,10 +378,32 @@ func (y *yApi) GetXCgCoinsOHLC(c *gin.Context) {
 func (y *yApi) GetBLCTYImages(c *gin.Context) {
 	var reqs request.BLCTYImagesRequest
 	reqs.ResponseFormat = "b64_json"
+	reqs.Model = "nano-banana-2"
+	// 尝试从multipart form中绑定普通字段
 	if err := c.ShouldBind(&reqs); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+
+	// 处理上传的文件
+	file, _, err := c.Request.FormFile("file")
+	if err == nil {
+		defer file.Close()
+		// 读取文件内容
+		fileBytes, err := io.ReadAll(file)
+		if err != nil {
+			response.FailWithMessage("读取文件失败: "+err.Error(), c)
+			return
+		}
+		// 转Base64
+		imgBase64 := base64.StdEncoding.EncodeToString(fileBytes)
+		reqs.Image = []string{imgBase64}
+	} else if err != http.ErrMissingFile {
+		// 如果有错误且不是没有文件，则报错
+		response.FailWithMessage("获取文件失败: "+err.Error(), c)
+		return
+	}
+
 	var apiURL = plugin.Config.BltcyApiUrl + "/v1/images/generations"
 	var apiKey = plugin.Config.BltcyApiKey
 	client := &http.Client{}

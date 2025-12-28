@@ -11,8 +11,9 @@ const posterGeniusElement = useTemplateRef('posterGeniusRef')
 const outputRatio = ref('9:16')
 const promptText = ref('')
 const imgFile = ref(null);
+const rawImgFile = ref(null); // 新增：保存原始文件对象
 const imgBase64 = ref('')
-const isUploaded = ref(false)
+const isReading = ref(false)
 const isGenerating = ref(false)
 
 const outcome = ref([])
@@ -32,24 +33,21 @@ const ratioOptions = [
 // 上传文件处理
 const handleUpload = (file) => {
   const fileData = file.raw
-  isUploaded.value = true
-  imgFile.value = URL.createObjectURL(fileData)
-  // ElMessage.success('产品原图上传成功')
-  // 获取base64编码
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const result = e.target.result
-    const base64 = result.split(',')[1]
-    imgBase64.value = base64;
-    isUploaded.value = false
+  // 释放之前的URL对象
+  if (imgFile.value) {
+    URL.revokeObjectURL(imgFile.value)
   }
-  reader.readAsDataURL(fileData)
+  isReading.value = false // 不需要读取base64了，直接使用file
+  imgFile.value = URL.createObjectURL(fileData)
+  rawImgFile.value = fileData // 保存原始文件
+  
+  // 移除FileReader相关逻辑，因为不再需要前端转Base64
   return false // 阻止自动上传
 }
 
 // 判断生成按钮是否可用
 const isGenerateDisabled = computed(() => {
-  return isGenerating.value
+  return isGenerating.value || isReading.value
   // return !isUploaded.value || !promptText.value.trim() || isGenerating.value
 })
 
@@ -59,16 +57,19 @@ const handleGenerate = () => {
   isGenerating.value = true
   outcome.value = []
   posterGeniusElement.value?.scrollIntoView({ behavior: 'smooth' })
-  const params = {
-    prompt: promptText.value || `根据我上传的图片，帮我生成一张${outputRatio.value}商品类型的宣传海报，这个海报要符合商品图的风格，商品图要非常完美的融入到海报中，海报整体设计要高级，专业，光影，材质，氛围感要完全体现在海报中，适合在各类电商平台进行宣传，能吸引用户点击查看`
-  };
+  const formData = new FormData()
+  formData.append('model', 'nano-banana-2')
+  formData.append('prompt', promptText.value || `根据我上传的图片，帮我生成一张${outputRatio.value}商品类型的宣传海报，这个海报要符合商品图的风格，商品图要非常完美的融入到海报中，海报整体设计要高级，专业，光影，材质，氛围感要完全体现在海报中，适合在各类电商平台进行宣传，能吸引用户点击查看`)
+  
   if (outputRatio.value) {
-    params.aspect_ratio = outputRatio.value
+    formData.append('aspect_ratio', outputRatio.value)
   }
-  if (imgBase64.value) {
-    params.image = [imgBase64.value]
+  
+  if (rawImgFile.value) {
+    formData.append('file', rawImgFile.value)
   }
-  getBLCTYImage(params)
+
+  getBLCTYImage(formData)
 //   request(params).then(response => {
 //     // 检查响应结构并提取图片URL
 //     isGenerating.value = false
@@ -114,6 +115,15 @@ const handleDownload = (url) => {
 const handleSave = (url) => {
   handleDownload(url)
 }
+
+const handleRemoveImage = () => {
+  if (imgFile.value) {
+    URL.revokeObjectURL(imgFile.value)
+  }
+  imgFile.value = null
+  rawImgFile.value = null
+  imgBase64.value = ''
+}
 </script>
 
 <template>
@@ -142,7 +152,7 @@ const handleSave = (url) => {
         </el-upload>
         <div v-if="imgFile" class="relative border-1 border-solid border-gray-300 rounded-4 overflow-hidden">
           <img class="block w-auto h-[220px] object-cover" :src="imgFile" alt="">
-          <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full cursor-pointer" @click="imgFile = null">删除</div>
+          <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full cursor-pointer" @click="handleRemoveImage">删除</div>
         </div>
       </div>
       

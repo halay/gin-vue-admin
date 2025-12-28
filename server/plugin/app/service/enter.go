@@ -30,4 +30,6 @@ type service struct {
 	UserAddress            UA
 	AgentLevel             AL
 	DownlinePurchaseRecord DPR
+	AgentTransactionDetail atd
+	Settlement             settlement
 }
