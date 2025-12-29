@@ -242,7 +242,7 @@ tencent-cos:
     path-prefix: github.com/flipped-aurora/gin-vue-admin/server
 zap:
     level: info
-    prefix: '[github.com/flipped-aurora/gin-vue-admin/server]'
+    prefix: '[deedmx/go-server]'
     format: console
     director: log
     encode-level: LowercaseColorLevelEncoder

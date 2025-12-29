@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
+	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,7 +21,6 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
-	"github.com/flipped-aurora/gin-vue-admin/server/service"
 )
 
 var YApi = new(yApi)
@@ -384,7 +384,9 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-
+	reqs.Model = "nano-banana-2"
+	reqs.ImageSize = "4K"
+	reqs.Prompt = reqs.Prompt + " 所有内容用中文显示"
 	// 处理上传的文件
 	file, _, err := c.Request.FormFile("file")
 	if err == nil {
@@ -398,12 +400,7 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		// 转Base64
 		imgBase64 := base64.StdEncoding.EncodeToString(fileBytes)
 		reqs.Image = []string{imgBase64}
-	} else if err != http.ErrMissingFile {
-		// 如果有错误且不是没有文件，则报错
-		response.FailWithMessage("获取文件失败: "+err.Error(), c)
-		return
 	}
-
 	var apiURL = plugin.Config.BltcyApiUrl + "/v1/images/generations"
 	var apiKey = plugin.Config.BltcyApiKey
 	client := &http.Client{}
@@ -414,7 +411,7 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		} `json:"data"`
 	}
 	payload, _ := json.Marshal(reqs)
-	uploadSvc := service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
+	//uploadSvc := service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
 	uploaded := make([]string, 0, 4)
 	target := 4
 	maxAttempts := 10
@@ -441,9 +438,10 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		if err := json.Unmarshal(b, &obj); err != nil || len(obj.Data) == 0 {
 			continue
 		}
-		raw := strings.TrimSpace(strings.Trim(obj.Data[0].B64Json, "`\" "))
+		//raw := strings.TrimSpace(strings.Trim(obj.Data[0].B64Json, "`\" "))
+		raw := obj.Data[0].B64Json
 		var payloadB64 string
-		ext := "png"
+		ext := "jpg"
 		if strings.HasPrefix(raw, "data:") {
 			parts := strings.SplitN(raw, ",", 2)
 			if len(parts) < 2 {
@@ -475,7 +473,7 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 			continue
 		}
 		filename := fmt.Sprintf("blcty_%d.%s", time.Now().UnixNano(), ext)
-		var buf bytes.Buffer
+		/*var buf bytes.Buffer
 		writer := multipart.NewWriter(&buf)
 		part, _ := writer.CreateFormFile("file", filename)
 		if _, err := part.Write(imgBytes); err != nil {
@@ -492,8 +490,12 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		fileRec, err := uploadSvc.UploadFile(header, "0", 0)
 		if err != nil {
 			continue
+		}*/
+		filePath := filepath.Join(global.GVA_CONFIG.Local.Path, filename)
+		if err := ioutil.WriteFile(filePath, imgBytes, 0644); err != nil {
+			fmt.Println(err)
 		}
-		uploaded = append(uploaded, imgBaseUrl+fileRec.Url)
+		uploaded = append(uploaded, imgBaseUrl+filePath)
 	}
 	response.OkWithData(gin.H{"urls": uploaded}, c)
 }
