@@ -111,7 +111,7 @@ const handleGenerate = async () => {
     console.log('工作流结果:', result, result.task_Id);
     // // 创建任务工作流轮训查询结果
     const taskRes = await pollWorkflowStatus({
-      task_id: '699eae0c-ca13-41d2-9832-c91049d419c9'//result.task_Id,
+      task_id: result.task_Id,
     });
     videoUrl.value = taskRes
     ElMessage.success('视频生成成功')
