@@ -127,119 +127,121 @@ const handleRemoveImage = () => {
 </script>
 
 <template>
-  <div class="poster-genius pt-8 pb-12 px-4 max-w-3xl mx-auto">
-    <div class="text-center mb-10">
-      <h1 class="text-3xl font-bold mb-2">AI智能海报系统</h1>
-      <p class="text-gray-400">输入产品风格关键词，让AI自动为您布置场景</p>
-    </div>
-    <div class="p-10 rounded-10 shadow-sm  bg-[var(--bg-color)] border-1 border-solid border-gray-100">
-      <div class="flex items-center justify-center mb-10">
-        <el-upload
-          v-if="!imgFile"
-          class="upload-box w-1/2 !opacity-100"
-          drag
-          accept="image/*"
-          :disabled="isGenerating"
-          :show-file-list="false"
-          :auto-upload="false"
-          :on-change="handleUpload"
-          :limit="1"
-        >
-          <div class="flex flex-col items-center justify-center py-4">
-            <el-icon class="text-4xl text-[var(--primary-color)] mb-3"><Upload /></el-icon>
-            <div class="text-gray-600 text-base">点击上传产品原图</div>
+  <div>
+    <div class="poster-genius pt-8 pb-12 px-4 max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold mb-2">AI智能海报系统</h1>
+        <p class="text-gray-400">输入产品风格关键词，让AI自动为您布置场景</p>
+      </div>
+      <div class="p-10 rounded-10 shadow-sm  bg-[var(--bg-color)] border-1 border-solid border-gray-100">
+        <div class="flex items-center justify-center mb-10">
+          <el-upload
+            v-if="!imgFile"
+            class="upload-box w-1/2 !opacity-100"
+            drag
+            accept="image/*"
+            :disabled="isGenerating"
+            :show-file-list="false"
+            :auto-upload="false"
+            :on-change="handleUpload"
+            :limit="1"
+          >
+            <div class="flex flex-col items-center justify-center py-4">
+              <el-icon class="text-4xl text-[var(--primary-color)] mb-3"><Upload /></el-icon>
+              <div class="text-gray-600 text-base">点击上传产品原图</div>
+            </div>
+          </el-upload>
+          <div v-if="imgFile" class="relative border-1 border-solid border-gray-300 rounded-4 overflow-hidden">
+            <img class="block w-auto h-[220px] object-cover" :src="imgFile" alt="">
+            <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full cursor-pointer" @click="handleRemoveImage">删除</div>
           </div>
-        </el-upload>
-        <div v-if="imgFile" class="relative border-1 border-solid border-gray-300 rounded-4 overflow-hidden">
-          <img class="block w-auto h-[220px] object-cover" :src="imgFile" alt="">
-          <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full cursor-pointer" @click="handleRemoveImage">删除</div>
         </div>
-      </div>
-      
-      <div class="flex items-center justify-between gap-2 mb-3">
-        <div class="flex items-center gap-2 text-[var(--text-color)]">
-          <span class="font-medium text-sm">创意描述（PROMPT）</span>
+        
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2 text-[var(--text-color)]">
+            <span class="font-medium text-sm">创意描述（PROMPT）</span>
+          </div>
+          <div class="text-[var(--primary-color)] text-sm">
+            建议包含：场景、灯光、背景材质
+          </div>
         </div>
-        <div class="text-[var(--primary-color)] text-sm">
-          建议包含：场景、灯光、背景材质
+        <el-input
+          type="textarea"
+          placeholder="例如：极简白色磨砂台面，侧面柔和阳光，背景虚化，点缀少量干花..."
+          :rows="5"
+          v-model="promptText"
+          resize="none"
+        ></el-input>
+        <el-divider class="my-4xl" content-position="center">输出比例</el-divider>
+        <div class="flex items-center justify-center">
+          <el-radio-group v-model="outputRatio" :disabled="isGenerating" class="ratio-group flex items-center justify-center gap-3">
+            <el-radio-button
+              v-for="option in ratioOptions"
+              :key="option.value"
+              :value="option.value"
+            >
+              {{ option.label }}
+            </el-radio-button>
+          </el-radio-group>
         </div>
-      </div>
-      <el-input
-        type="textarea"
-        placeholder="例如：极简白色磨砂台面，侧面柔和阳光，背景虚化，点缀少量干花..."
-        :rows="5"
-        v-model="promptText"
-        resize="none"
-      ></el-input>
-      <el-divider class="my-4xl" content-position="center">输出比例</el-divider>
-      <div class="flex items-center justify-center">
-        <el-radio-group v-model="outputRatio" :disabled="isGenerating" class="ratio-group flex items-center justify-center gap-3">
-          <el-radio-button
-            v-for="option in ratioOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </el-radio-button>
-        </el-radio-group>
-      </div>
 
-      <!-- 生成按钮 -->
-      <div class="pt-3xl flex items-center justify-center">
-        <el-button
-          type="primary"
-          size="large"
-          :disabled="isGenerateDisabled"
-          :loading="isGenerating"
-          @click="handleGenerate"
-          class="w-1/2 py-6 rounded-xl text-base font-medium"
-        >
-          <span v-if="isGenerating" class="ml-2">正在生成智能海报，请稍候...</span>
-          <span v-else>生成智能海报</span>
-        </el-button>
+        <!-- 生成按钮 -->
+        <div class="pt-3xl flex items-center justify-center">
+          <el-button
+            type="primary"
+            size="large"
+            :disabled="isGenerateDisabled"
+            :loading="isGenerating"
+            @click="handleGenerate"
+            class="w-1/2 py-6 rounded-xl text-base font-medium"
+          >
+            <span v-if="isGenerating" class="ml-2">正在生成智能海报，请稍候...</span>
+            <span v-else>生成智能海报</span>
+          </el-button>
+        </div>
       </div>
     </div>
-  </div>
-  <div ref="posterGeniusRef" class="poster-genius mb-6xl max-w-4xl min-h-[200px] bg-[#FDFDFE] mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100 flex items-center justify-center">
-    <p v-if="!outcome.length" class="text-center text-sm text-gray-400">
-      {{isGenerating ? '正在生成智能海报，请稍候...' : '等待生成任务'}}
-    </p>
-    <div v-else class="w-full grid grid-cols-4 gap-4">
-      <div
-        class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
-        v-for="(item, index) in outcome" :key="item">
-        <el-image
-          :src="item"
-          :zoom-rate="1.2"
-          :max-scale="7"
-          :min-scale="0.2"
-          :preview-src-list="outcome"
-          show-progress
-          :initial-index="index"
-          fit="cover"
-          class="w-full h-full"
-        />
-        <div class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2">
-          <el-button
-            type="default"
-            size="small"
-            round
-            class="flex items-center gap-1 bg-white"
-            @click="handleDownload(item)"
-          >
-            <el-icon class="mr-2"><Download /></el-icon>
-            下载
-          </el-button>
-          <!-- <el-button
-            type="default"
-            size="small"
-            round
-            class="flex items-center gap-1 bg-white"
-            @click="handleSave(item)"
-          >
-            <el-icon class="mr-2"><Folder /></el-icon>
-            保存
-          </el-button> -->
+    <div ref="posterGeniusRef" class="poster-genius mb-6xl max-w-4xl min-h-[200px] bg-[#FDFDFE] mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100 flex items-center justify-center">
+      <p v-if="!outcome.length" class="text-center text-sm text-gray-400">
+        {{isGenerating ? '正在生成智能海报，请稍候...' : '等待生成任务'}}
+      </p>
+      <div v-else class="w-full grid grid-cols-4 gap-4">
+        <div
+          class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
+          v-for="(item, index) in outcome" :key="item">
+          <el-image
+            :src="item"
+            :zoom-rate="1.2"
+            :max-scale="7"
+            :min-scale="0.2"
+            :preview-src-list="outcome"
+            show-progress
+            :initial-index="index"
+            fit="cover"
+            class="w-full h-full"
+          />
+          <div class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2">
+            <el-button
+              type="default"
+              size="small"
+              round
+              class="flex items-center gap-1 bg-white"
+              @click="handleDownload(item)"
+            >
+              <el-icon class="mr-2"><Download /></el-icon>
+              下载
+            </el-button>
+            <!-- <el-button
+              type="default"
+              size="small"
+              round
+              class="flex items-center gap-1 bg-white"
+              @click="handleSave(item)"
+            >
+              <el-icon class="mr-2"><Folder /></el-icon>
+              保存
+            </el-button> -->
+          </div>
         </div>
       </div>
     </div>

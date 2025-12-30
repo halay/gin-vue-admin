@@ -108,6 +108,8 @@
   "/src/plugin/app/view/banner.vue": "Banner",
   "/src/plugin/app/view/consultation.vue": "AppConsultation",
   "/src/plugin/app/view/cozeGenius.vue": "CozeGenius",
+  "/src/plugin/app/view/cozeProduct.vue": "CozeProduct",
+  "/src/plugin/app/view/cozeVlog.vue": "CozeVlog",
   "/src/plugin/app/view/downlinePurchaseRecord.vue": "DownlinePurchaseRecord",
   "/src/plugin/app/view/membershipLevel.vue": "MembershipLevel",
   "/src/plugin/app/view/merchantAdmin.vue": "MerchantAdmin",
