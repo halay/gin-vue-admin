@@ -51,7 +51,6 @@ const videoUrl = ref('')
 const checkedEffects = ref(['1','2','3'])
 
 const isGenerateDisabled = computed(() => {
-  return false
   const imgCount = imageList.value.filter(item => item).length
   return productName.value.trim() === '' || imgCount !== 2 || isGenerating.value
 })
@@ -111,7 +110,7 @@ const handleGenerate = async () => {
     console.log('工作流结果:', result, result.task_Id);
     // // 创建任务工作流轮训查询结果
     const taskRes = await pollWorkflowStatus({
-      task_id: result.task_Id,
+      task_id: result.output,
     });
     videoUrl.value = taskRes
     ElMessage.success('视频生成成功')
