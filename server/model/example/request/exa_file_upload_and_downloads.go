@@ -5,6 +5,8 @@ import (
 )
 
 type ExaAttachmentCategorySearch struct {
-	ClassId int `json:"classId" form:"classId"`
+	ClassId    int    `json:"classId" form:"classId"`
+	MerchantID *int64 `json:"merchantId" form:"merchantId"`
+	UserID     uint   `json:"userId" form:"userId"`
 	request.PageInfo
 }

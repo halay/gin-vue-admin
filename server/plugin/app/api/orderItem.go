@@ -5,6 +5,8 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -156,6 +158,15 @@ func (a *ORDI) GetOrderItemList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+
+	userID := utils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法获取订单列表", c)
+		return
+	}
+	pageInfo.MerchantID = mid
+
 	list, total, err := serviceOrderItem.GetOrderItemInfoList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))

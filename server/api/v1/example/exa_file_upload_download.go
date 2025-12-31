@@ -1,14 +1,18 @@
 package example
 
 import (
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example/request"
 	exampleRes "github.com/flipped-aurora/gin-vue-admin/server/model/example/response"
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"strconv"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/service"
+	appUtils "github.com/flipped-aurora/gin-vue-admin/server/utils"
 )
 
 type FileUploadAndDownloadApi struct{}
@@ -32,7 +36,18 @@ func (b *FileUploadAndDownloadApi) UploadFile(c *gin.Context) {
 		response.FailWithMessage("接收文件失败", c)
 		return
 	}
-	file, err = fileUploadAndDownloadService.UploadFile(header, noSave, classId) // 文件上传后拿到文件路径
+
+	userID := appUtils.GetUserID(c)
+	ctx := c.Request.Context()
+	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+
+	var merchantID *uint
+	if errMid == nil && mid != nil {
+		m := uint(*mid)
+		merchantID = &m
+	}
+
+	file, err = fileUploadAndDownloadService.UploadFile(header, noSave, classId, userID, merchantID) // 文件上传后拿到文件路径
 	if err != nil {
 		global.GVA_LOG.Error("上传文件失败!", zap.Error(err))
 		response.FailWithMessage("上传文件失败", c)
@@ -49,10 +64,11 @@ func (b *FileUploadAndDownloadApi) EditFileName(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	err = fileUploadAndDownloadService.EditFileName(file)
+	userID := appUtils.GetUserID(c)
+	err = fileUploadAndDownloadService.EditFileName(file, userID)
 	if err != nil {
 		global.GVA_LOG.Error("编辑失败!", zap.Error(err))
-		response.FailWithMessage("编辑失败", c)
+		response.FailWithMessage("编辑失败："+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("编辑成功", c)
@@ -73,9 +89,10 @@ func (b *FileUploadAndDownloadApi) DeleteFile(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err := fileUploadAndDownloadService.DeleteFile(file); err != nil {
+	userID := appUtils.GetUserID(c)
+	if err := fileUploadAndDownloadService.DeleteFile(file, userID); err != nil {
 		global.GVA_LOG.Error("删除失败!", zap.Error(err))
-		response.FailWithMessage("删除失败", c)
+		response.FailWithMessage("删除失败："+err.Error(), c)
 		return
 	}
 	response.OkWithMessage("删除成功", c)
@@ -97,6 +114,19 @@ func (b *FileUploadAndDownloadApi) GetFileList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+
+	userID := appUtils.GetUserID(c)
+	pageInfo.UserID = userID
+	ctx := c.Request.Context()
+	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+
+	var merchantID *int64
+	if errMid == nil && mid != nil {
+		id := int64(*mid)
+		merchantID = &id
+	}
+	pageInfo.MerchantID = merchantID
+
 	list, total, err := fileUploadAndDownloadService.GetFileRecordInfoList(pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))

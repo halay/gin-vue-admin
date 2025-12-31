@@ -5,11 +5,12 @@ import (
 	"mime/multipart"
 	"strings"
 
+	"gorm.io/gorm"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/example/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils/upload"
-	"gorm.io/gorm"
 )
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -34,18 +35,19 @@ func (e *FileUploadAndDownloadService) FindFile(id uint) (example.ExaFileUploadA
 	return file, err
 }
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: DeleteFile
-//@description: 删除文件记录
-//@param: file model.ExaFileUploadAndDownload
-//@return: err error
-
-func (e *FileUploadAndDownloadService) DeleteFile(file example.ExaFileUploadAndDownload) (err error) {
+// DeleteFile 删除文件记录
+func (e *FileUploadAndDownloadService) DeleteFile(file example.ExaFileUploadAndDownload, userID uint) (err error) {
 	var fileFromDb example.ExaFileUploadAndDownload
 	fileFromDb, err = e.FindFile(file.ID)
 	if err != nil {
 		return
 	}
+
+	// 权限校验
+	if fileFromDb.UserID != userID {
+		return errors.New("无权删除此文件")
+	}
+
 	oss := upload.NewOss()
 	if err = oss.DeleteFile(fileFromDb.Key); err != nil {
 		return errors.New("文件删除失败")
@@ -55,17 +57,18 @@ func (e *FileUploadAndDownloadService) DeleteFile(file example.ExaFileUploadAndD
 }
 
 // EditFileName 编辑文件名或者备注
-func (e *FileUploadAndDownloadService) EditFileName(file example.ExaFileUploadAndDownload) (err error) {
+func (e *FileUploadAndDownloadService) EditFileName(file example.ExaFileUploadAndDownload, userID uint) (err error) {
 	var fileFromDb example.ExaFileUploadAndDownload
+	if err = global.GVA_DB.Where("id = ?", file.ID).First(&fileFromDb).Error; err != nil {
+		return errors.New("文件不存在")
+	}
+	if fileFromDb.UserID != userID {
+		return errors.New("无权修改此文件")
+	}
 	return global.GVA_DB.Where("id = ?", file.ID).First(&fileFromDb).Update("name", file.Name).Error
 }
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: GetFileRecordInfoList
-//@description: 分页获取数据
-//@param: info request.ExaAttachmentCategorySearch
-//@return: list interface{}, total int64, err error
-
+// GetFileRecordInfoList 分页获取数据
 func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.ExaAttachmentCategorySearch) (list []example.ExaFileUploadAndDownload, total int64, err error) {
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
@@ -79,6 +82,12 @@ func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.ExaAtt
 		db = db.Where("class_id = ?", info.ClassId)
 	}
 
+	if info.MerchantID != nil {
+		db = db.Where("merchant_id = ?", *info.MerchantID)
+	} else {
+		db = db.Where("user_id = ?", info.UserID)
+	}
+
 	err = db.Count(&total).Error
 	if err != nil {
 		return
@@ -87,13 +96,8 @@ func (e *FileUploadAndDownloadService) GetFileRecordInfoList(info request.ExaAtt
 	return list, total, err
 }
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: UploadFile
-//@description: 根据配置文件判断是文件上传到本地或者七牛云
-//@param: header *multipart.FileHeader, noSave string
-//@return: file model.ExaFileUploadAndDownload, err error
-
-func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string, classId int) (file example.ExaFileUploadAndDownload, err error) {
+// UploadFile 根据配置文件判断是文件上传到本地或者七牛云
+func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, noSave string, classId int, userID uint, merchantID *uint) (file example.ExaFileUploadAndDownload, err error) {
 	oss := upload.NewOss()
 	filePath, key, uploadErr := oss.UploadFile(header)
 	if uploadErr != nil {
@@ -101,11 +105,13 @@ func (e *FileUploadAndDownloadService) UploadFile(header *multipart.FileHeader, 
 	}
 	s := strings.Split(header.Filename, ".")
 	f := example.ExaFileUploadAndDownload{
-		Url:     filePath,
-		Name:    header.Filename,
-		ClassId: classId,
-		Tag:     s[len(s)-1],
-		Key:     key,
+		Url:        filePath,
+		Name:       header.Filename,
+		ClassId:    classId,
+		Tag:        s[len(s)-1],
+		Key:        key,
+		UserID:     userID,
+		MerchantID: merchantID,
 	}
 	if noSave == "0" {
 		// 检查是否已存在相同key的记录
