@@ -8,7 +8,7 @@
         <a
           class="font-bold text-active"
           href=""
-          >DeedMX</a
+          >和生耕耘</a
         >
       </span>
     </div>
@@ -19,7 +19,7 @@
         <a
           class="font-bold text-active"
           href=""
-          >DeedMX</a
+          >和生耕耘</a
         >
       </span>
     </div>

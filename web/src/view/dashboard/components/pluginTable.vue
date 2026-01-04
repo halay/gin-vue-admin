@@ -55,7 +55,7 @@
     },
     {
       ranking: 5,
-      title: 'DeedMX全球领先的RWA',
+      title: '和生耕耘全球领先的RWA',
       click_num: 173,
       hot: 110,
       link: ''

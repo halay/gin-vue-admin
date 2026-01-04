@@ -42,7 +42,7 @@
     {
       type: 'danger',
       typeTitle: '你好',
-      title: '欢迎来到DeedMX。'
+      title: '欢迎来到和生耕耘。'
     },
     {
       type: 'info',

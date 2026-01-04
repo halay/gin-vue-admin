@@ -20,20 +20,20 @@
 <script setup>
   const wikis = [
     {
-      title: 'DeedMX官网',
-      url: 'https://www.deedmx.com/'
+      title: '和生耕耘官网',
+      url: 'https://www.和生耕耘.com/'
     },
     {
-      title: 'DeedMX简介',
-      url: 'https://www.deedmx.com/'
+      title: '和生耕耘简介',
+      url: 'https://www.和生耕耘.com/'
     },
     {
-      title: 'DeedMX市场',
-      url: 'https://www.deedmx.com/'
+      title: '和生耕耘市场',
+      url: 'https://www.和生耕耘.com/'
     },
     {
-      title: 'DeedMX前景',
-      url: 'https://www.deedmx.com/'
+      title: '和生耕耘前景',
+      url: 'https://www.和生耕耘.com/'
     },
   ]
 </script>
