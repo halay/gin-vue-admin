@@ -6,7 +6,7 @@ import packageInfo from '../../package.json'
 const greenText = (text) => `\x1b[32m${text}\x1b[0m`
 
 export const config = {
-  appName: '和生耕耘',
+  appName: '和生耘合',
   showViteLogo: true,
   keepAliveTabs: false,
   logs: []

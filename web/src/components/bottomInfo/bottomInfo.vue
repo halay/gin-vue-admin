@@ -8,7 +8,7 @@
         <a
           class="font-bold text-active"
           href=""
-          >和生耕耘</a
+          >和生耘合</a
         >
       </span>
     </div>
@@ -19,7 +19,7 @@
         <a
           class="font-bold text-active"
           href=""
-          >和生耕耘</a
+          >和生耘合</a
         >
       </span>
     </div>

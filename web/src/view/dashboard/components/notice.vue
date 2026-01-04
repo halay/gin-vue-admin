@@ -42,7 +42,7 @@
     {
       type: 'danger',
       typeTitle: '你好',
-      title: '欢迎来到和生耕耘。'
+      title: '欢迎来到和生耘合。'
     },
     {
       type: 'info',

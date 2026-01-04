@@ -20,20 +20,20 @@
 <script setup>
   const wikis = [
     {
-      title: '和生耕耘官网',
-      url: 'https://www.和生耕耘.com/'
+      title: '和生耘合官网',
+      url: 'https://www.和生耘合.com/'
     },
     {
-      title: '和生耕耘简介',
-      url: 'https://www.和生耕耘.com/'
+      title: '和生耘合简介',
+      url: 'https://www.和生耘合.com/'
     },
     {
-      title: '和生耕耘市场',
-      url: 'https://www.和生耕耘.com/'
+      title: '和生耘合市场',
+      url: 'https://www.和生耘合.com/'
     },
     {
-      title: '和生耕耘前景',
-      url: 'https://www.和生耕耘.com/'
+      title: '和生耘合前景',
+      url: 'https://www.和生耘合.com/'
     },
   ]
 </script>
