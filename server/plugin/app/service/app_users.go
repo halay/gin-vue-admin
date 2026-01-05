@@ -111,6 +111,13 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	if info.EmailVerified != nil {
 		db = db.Where("email_verified = ?", *info.EmailVerified)
 	}
+	if info.PathUser != "" {
+		db = db.Where("invite_path = ? OR invite_path LIKE ? OR invite_path LIKE ? OR invite_path LIKE ?",
+			info.PathUser,
+			info.PathUser+"/%",
+			"%/"+info.PathUser,
+			"%/"+info.PathUser+"/%")
+	}
 	if info.MembershipLevelID != nil {
 		db = db.Where("membership_level_id = ?", *info.MembershipLevelID)
 	}

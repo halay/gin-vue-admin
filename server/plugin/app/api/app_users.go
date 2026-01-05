@@ -190,6 +190,19 @@ func (a *appUsers) GetAppUsersList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	userID := appUtils.GetUserID(c)
+	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if errMid != nil || mid == nil {
+		response.FailWithMessage("未绑定商户，无法获取SKU列表", c)
+		return
+	}
+	//通过mid查询app_users表，查询商家的app_users信息
+	var merchantUser model.AppUsers
+	if err := global.GVA_DB.Where("merchant_id=?", mid).First(&merchantUser).Error; err == nil {
+		if merchantUser.ID != 0 {
+			pageInfo.PathUser = strconv.Itoa(int(merchantUser.ID))
+		}
+	}
 	list, total, err := serviceAppUsers.GetAppUsersInfoList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
@@ -330,19 +343,36 @@ func (a *appUsers) Login(c *gin.Context) {
 	if user.MerchantID != nil {
 		_ = global.GVA_DB.Where("id = ?", *user.MerchantID).First(&merchant).Error
 		user.Merchant = merchant
-	}
-	if user.InvitePath != nil {
-		parts := strings.Split(*user.InvitePath, "/")
-		if len(parts) > 1 {
-			num, _ := strconv.Atoi(parts[1])
-			var merchantUser model.AppUsers
-			_ = global.GVA_DB.Where("id=?", num).First(&merchantUser).Error
-			if merchantUser.MerchantID != nil {
-				_ = global.GVA_DB.Where("id = ?", merchantUser.MerchantID).First(&merchant).Error
-				user.Merchant = merchant
+	} else {
+		if user.InvitePath != nil && *user.InvitePath != "" {
+			parts := strings.Split(*user.InvitePath, "/")
+			// 无论是否有"/"，parts至少包含一个元素（本身）
+			// 从parts中最后一个开始查找merchantUser，直到找到了商家信息才停止遍历
+			for i := len(parts) - 1; i >= 0; i-- {
+				if parts[i] == "" {
+					continue
+				}
+				num, err := strconv.Atoi(parts[i])
+				if err != nil {
+					continue
+				}
+				// 排除自己（虽然InvitePath通常不包含自己，但为了保险）
+				if num == int(user.ID) {
+					continue
+				}
+
+				var merchantUser model.AppUsers
+				if err := global.GVA_DB.Where("id=?", num).First(&merchantUser).Error; err == nil {
+					if merchantUser.MerchantID != nil {
+						_ = global.GVA_DB.Where("id = ?", merchantUser.MerchantID).First(&merchant).Error
+						user.Merchant = merchant
+						break // 找到商户信息后停止遍历
+					}
+				}
 			}
 		}
 	}
+
 	// 积分账户余额
 	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
 	var balance int64
@@ -446,18 +476,40 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 	if acc.Balance != nil {
 		resp.PointsBalance = *acc.Balance
 	}
-	/*	if user.MerchantID != nil {
-		var m model.Merchants
-		if err := global.GVA_DB.Where("id = ?", *user.MerchantID).First(&m).Error; err == nil {
-			// 附加商户基础信息
-			respMap := gin.H{
-				"user":     resp,
-				"merchant": m,
+	var merchant model.Merchants
+	if user.MerchantID != nil {
+		_ = global.GVA_DB.Where("id = ?", *user.MerchantID).First(&merchant).Error
+		resp.Merchant = merchant
+	} else {
+		if user.InvitePath != nil && *user.InvitePath != "" {
+			parts := strings.Split(*user.InvitePath, "/")
+			// 无论是否有"/"，parts至少包含一个元素（本身）
+			// 从parts中最后一个开始查找merchantUser，直到找到了商家信息才停止遍历
+			for i := len(parts) - 1; i >= 0; i-- {
+				if parts[i] == "" {
+					continue
+				}
+				num, err := strconv.Atoi(parts[i])
+				if err != nil {
+					continue
+				}
+				// 排除自己（虽然InvitePath通常不包含自己，但为了保险）
+				if num == int(user.ID) {
+					continue
+				}
+
+				var merchantUser model.AppUsers
+				if err := global.GVA_DB.Where("id=?", num).First(&merchantUser).Error; err == nil {
+					if merchantUser.MerchantID != nil {
+						_ = global.GVA_DB.Where("id = ?", merchantUser.MerchantID).First(&merchant).Error
+						resp.Merchant = merchant
+						break // 找到商户信息后停止遍历
+					}
+				}
 			}
-			response.OkWithData(respMap, c)
-			return
 		}
-	}*/
+	}
+
 	response.OkWithData(resp, c)
 }
 
