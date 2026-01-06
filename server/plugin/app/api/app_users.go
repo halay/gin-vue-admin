@@ -191,16 +191,14 @@ func (a *appUsers) GetAppUsersList(c *gin.Context) {
 		return
 	}
 	userID := appUtils.GetUserID(c)
-	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
-	if errMid != nil || mid == nil {
-		response.FailWithMessage("未绑定商户，无法获取SKU列表", c)
-		return
-	}
-	//通过mid查询app_users表，查询商家的app_users信息
-	var merchantUser model.AppUsers
-	if err := global.GVA_DB.Where("merchant_id=?", mid).First(&merchantUser).Error; err == nil {
-		if merchantUser.ID != 0 {
-			pageInfo.PathUser = strconv.Itoa(int(merchantUser.ID))
+	mid, _ := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	if mid != nil {
+		//通过mid查询app_users表，查询商家的app_users信息
+		var merchantUser model.AppUsers
+		if err := global.GVA_DB.Where("merchant_id=?", mid).First(&merchantUser).Error; err == nil {
+			if merchantUser.ID != 0 {
+				pageInfo.PathUser = strconv.Itoa(int(merchantUser.ID))
+			}
 		}
 	}
 	list, total, err := serviceAppUsers.GetAppUsersInfoList(ctx, pageInfo)
