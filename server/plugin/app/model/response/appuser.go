@@ -29,8 +29,17 @@ type UserResponse struct {
 	MembershipLevelID int64           `json:"membershipLevelId"`
 	NodeID            int64           `json:"nodeId"`
 	MerchantID        int64           `json:"MerchantID"`
-	PointsBalance     int64           `json:"pointsBalance"`
+	PointsBalance     int64           `json:"pointsBalance"` // 废弃，保留兼容
+	PointsAccounts    []PointsAccount `json:"pointsAccounts"` // 新增：所有积分账户
 	Merchant          model.Merchants `json:"merchant"`
+}
+
+type PointsAccount struct {
+	MerchantID *int64  `json:"merchantId"`
+	TokenName  *string `json:"tokenName"`
+	Symbol     *string `json:"symbol"`
+	Balance    int64   `json:"balance"`
+	IsPlatform bool    `json:"isPlatform"`
 }
 
 // UserListResponse 用户列表响应
@@ -41,9 +50,10 @@ type UserListResponse struct {
 	PageSize int            `json:"pageSize"`
 }
 type AppLoginResponse struct {
-	User          model.AppUsers `json:"user"`
-	Token         string         `json:"token"`
-	ExpiresAt     int64          `json:"expiresAt"`
-	PointsBalance int64          `json:"pointsBalance"`
+	User          model.AppUsers  `json:"user"`
+	Token         string          `json:"token"`
+	ExpiresAt     int64           `json:"expiresAt"`
+	PointsBalance int64           `json:"pointsBalance"` // 废弃，保留兼容
+	PointsAccounts []PointsAccount `json:"pointsAccounts"` // 新增：所有积分账户
 	//Merchant  model.Merchants `json:"merchant"`
 }

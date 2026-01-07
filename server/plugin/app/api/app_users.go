@@ -294,17 +294,37 @@ func (a *appUsers) Register(c *gin.Context) {
 		return
 	}
 	appUtils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
-	// 积分账户余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
+	// 积分账户余额 (兼容旧逻辑: 获取平台积分)
+	accs, _ := serviceUserPointsAccount.GetUserAllPointsAccounts(c.Request.Context(), int64(user.ID))
 	var balance int64
-	if acc.Balance != nil {
-		balance = *acc.Balance
+	var pointsAccounts []appResponse.PointsAccount
+	for _, a := range accs {
+		bal := int64(0)
+		if a.Balance != nil {
+			bal = *a.Balance
+		}
+		// 转换到 Response 模型
+		pa := appResponse.PointsAccount{
+			MerchantID: a.MerchantID,
+			TokenName:  a.TokenName,
+			Symbol:     a.Symbol,
+			Balance:    bal,
+			IsPlatform: a.MerchantID == nil || *a.MerchantID == 0,
+		}
+		pointsAccounts = append(pointsAccounts, pa)
+
+		// 平台积分赋值给 PointsBalance 以兼容旧逻辑
+		if pa.IsPlatform {
+			balance = bal
+		}
 	}
+
 	response.OkWithDetailed(appResponse.AppLoginResponse{
-		User:          user,
-		Token:         token,
-		ExpiresAt:     claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
-		PointsBalance: balance,
+		User:           user,
+		Token:          token,
+		ExpiresAt:      claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		PointsBalance:  balance,
+		PointsAccounts: pointsAccounts,
 	}, "注册成功", c)
 	//response.OkWithData(user, c)
 }
@@ -371,17 +391,36 @@ func (a *appUsers) Login(c *gin.Context) {
 		}
 	}
 
-	// 积分账户余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
+	// 积分账户余额 (兼容旧逻辑: 获取平台积分)
+	accs, _ := serviceUserPointsAccount.GetUserAllPointsAccounts(c.Request.Context(), int64(user.ID))
 	var balance int64
-	if acc.Balance != nil {
-		balance = *acc.Balance
+	var pointsAccounts []appResponse.PointsAccount
+	for _, a := range accs {
+		bal := int64(0)
+		if a.Balance != nil {
+			bal = *a.Balance
+		}
+		// 转换到 Response 模型
+		pa := appResponse.PointsAccount{
+			MerchantID: a.MerchantID,
+			TokenName:  a.TokenName,
+			Symbol:     a.Symbol,
+			Balance:    bal,
+			IsPlatform: a.MerchantID == nil || *a.MerchantID == 0,
+		}
+		pointsAccounts = append(pointsAccounts, pa)
+
+		// 平台积分赋值给 PointsBalance 以兼容旧逻辑
+		if pa.IsPlatform {
+			balance = bal
+		}
 	}
 	response.OkWithDetailed(appResponse.AppLoginResponse{
-		User:          user,
-		Token:         token,
-		ExpiresAt:     claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
-		PointsBalance: balance,
+		User:           user,
+		Token:          token,
+		ExpiresAt:      claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
+		PointsBalance:  balance,
+		PointsAccounts: pointsAccounts,
 	}, "登录成功", c)
 }
 
@@ -497,11 +536,31 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		NodeID:            derefInt64(user.NodeID),
 		MerchantID:        derefInt64(user.MerchantID),
 	}
-	// 积分余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
-	if acc.Balance != nil {
-		resp.PointsBalance = *acc.Balance
+	// 积分余额 (兼容旧逻辑: 获取平台积分)
+	accs, _ := serviceUserPointsAccount.GetUserAllPointsAccounts(c.Request.Context(), int64(user.ID))
+	var pointsAccounts []appResponse.PointsAccount
+	for _, a := range accs {
+		bal := int64(0)
+		if a.Balance != nil {
+			bal = *a.Balance
+		}
+		// 转换到 Response 模型
+		pa := appResponse.PointsAccount{
+			MerchantID: a.MerchantID,
+			TokenName:  a.TokenName,
+			Symbol:     a.Symbol,
+			Balance:    bal,
+			IsPlatform: a.MerchantID == nil || *a.MerchantID == 0,
+		}
+		pointsAccounts = append(pointsAccounts, pa)
+
+		// 平台积分赋值给 PointsBalance 以兼容旧逻辑
+		if pa.IsPlatform {
+			resp.PointsBalance = bal
+		}
 	}
+	resp.PointsAccounts = pointsAccounts
+
 	var merchant model.Merchants
 	if user.MerchantID != nil {
 		_ = global.GVA_DB.Where("id = ?", *user.MerchantID).First(&merchant).Error
