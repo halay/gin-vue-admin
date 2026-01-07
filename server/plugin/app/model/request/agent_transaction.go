@@ -1,12 +1,18 @@
-
 package request
+
 import (
-	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 	"time"
+
+	"github.com/flipped-aurora/gin-vue-admin/server/model/common/request"
 )
-type AgentTransactionDetailSearch struct{
-    CreatedAtRange []time.Time `json:"createdAtRange" form:"createdAtRange[]"`
-    request.PageInfo
-    Sort  string `json:"sort" form:"sort"`
-    Order string `json:"order" form:"order"`
+
+type AgentTransactionSearch struct {
+	request.PageInfo
+	OrderNo        *string    `json:"orderNo" form:"orderNo"`
+	MerchantId     *uint      `json:"merchantId" form:"merchantId"`
+	BeneficiaryId  *uint      `json:"beneficiaryId" form:"beneficiaryId"`
+	SourceUserId   *uint      `json:"sourceUserId" form:"sourceUserId"`
+	AgentLevelName *string    `json:"agentLevelName" form:"agentLevelName"`
+	StartCreatedAt *time.Time `json:"startCreatedAt" form:"startCreatedAt"`
+	EndCreatedAt   *time.Time `json:"endCreatedAt" form:"endCreatedAt"`
 }

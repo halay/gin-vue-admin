@@ -307,9 +307,17 @@ func (s *ORD) PayOrderByPoints(ctx context.Context, userID int64, orderNo string
 	// 写流水
 	_ = UserPointsAccount.AddLog(ctx, userID, -need, after, "订单积分支付", orderNo, "")
 	// 更新订单状态
-	return global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
+	err = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
 		Where("id = ?", ord.ID).
 		Updates(map[string]any{"pay_status": "paid", "status": "paid"}).Error
+	if err == nil {
+		// 同步更新下级购买记录状态
+		_ = Service.DownlinePurchaseRecord.UpdateStatus(ctx, orderNo, "paid", "paid")
+		// 触发代理分润逻辑
+		ord.PayStatus = ptrStr("paid")
+		_ = Service.AgentTransaction.ProcessOrderPayment(ctx, ord)
+	}
+	return err
 }
 
 // CreateOrderPaymentIntent 创建Stripe支付意图（银行卡支付）
@@ -376,6 +384,10 @@ func (s *ORD) PayCallbackCard(ctx context.Context, orderNo string, paySuccess bo
 		Updates(map[string]any{"pay_status": newStatus, "status": newStatus}).Error
 	if err == nil {
 		_ = Service.DownlinePurchaseRecord.UpdateStatus(ctx, orderNo, newStatus, newStatus)
+		if paySuccess {
+			ord.PayStatus = ptrStr("paid")
+			_ = Service.AgentTransaction.ProcessOrderPayment(ctx, ord)
+		}
 	}
 	return err
 }

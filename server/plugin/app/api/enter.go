@@ -31,7 +31,7 @@ var (
 	serviceUserAddress            = service.Service.UserAddress
 	serviceAgentLevel             = service.Service.AgentLevel
 	serviceDownlinePurchaseRecord = service.Service.DownlinePurchaseRecord
-	serviceAgentTransactionDetail = service.Service.AgentTransactionDetail
+	serviceAgentTransaction       = service.Service.AgentTransaction
 	serviceSettlement             = service.Service.Settlement
 )
 
@@ -64,6 +64,6 @@ type api struct {
 	UserAddress            UA
 	AgentLevel             AL
 	DownlinePurchaseRecord DownlinePurchaseRecordApi
-	AgentTransactionDetail atd
+	AgentTransaction       AgentTransactionApi
 	Settlement             settlement
 }
