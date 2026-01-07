@@ -258,7 +258,7 @@ func (a *ORD) GetOrderPublic(c *gin.Context) {
 func (a *ORD) GetMyOrderList(c *gin.Context) {
 	ctx := c.Request.Context()
 	var pageInfo request.OrderSearch
-	if err := c.ShouldBindJSON(&pageInfo); err != nil {
+	if err := c.ShouldBind(&pageInfo); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
