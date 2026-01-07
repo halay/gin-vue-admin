@@ -158,7 +158,7 @@ func (a *UPA) GetUserPointsAccountList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	list, total, err := serviceUserPointsAccount.GetUserPointsAccountInfoList(ctx, pageInfo)
+	list, total, err := serviceUserPointsAccount.GetUserPointsAccountList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
@@ -209,9 +209,9 @@ func (a *UPA) GetUserPointsAccountPublic(c *gin.Context) {
 	response.OkWithDetailed(gin.H{"info": "不需要鉴权的用户积分账户接口信息"}, "获取成功", c)
 }
 
-// GetMyPointsBalance 获取当前登录用户的积分余额
+// GetMyPointsBalance 获取当前登录用户的积分余额（包括平台和商户）
 // @Tags UserPointsAccount
-// @Summary 获取当前登录用户积分余额
+// @Summary 获取当前登录用户积分余额（包括平台和商户）
 // @Security ApiKeyAuth
 // @Accept application/json
 // @Produce application/json
@@ -224,15 +224,34 @@ func (a *UPA) GetMyPointsBalance(c *gin.Context) {
 		response.FailWithMessage("未登录", c)
 		return
 	}
-	acc, err := serviceUserPointsAccount.EnsureAccount(ctx, int64(uid))
+	// 获取用户所有积分账户
+	accounts, err := serviceUserPointsAccount.GetUserAllPointsAccounts(ctx, int64(uid))
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))
 		response.FailWithMessage("获取失败:"+err.Error(), c)
 		return
 	}
-	bal := int64(0)
-	if acc.Balance != nil {
-		bal = *acc.Balance
+
+	// 构造返回数据
+	var res []map[string]interface{}
+	for _, acc := range accounts {
+		item := map[string]interface{}{
+			"merchantId": acc.MerchantID,
+			"tokenName":  acc.TokenName,
+			"symbol":     acc.Symbol,
+			"balance":    0,
+		}
+		if acc.Balance != nil {
+			item["balance"] = *acc.Balance
+		}
+		// 平台积分特殊标记
+		if acc.MerchantID != nil && *acc.MerchantID == 0 {
+			item["isPlatform"] = true
+		} else {
+			item["isPlatform"] = false
+		}
+		res = append(res, item)
 	}
-	response.OkWithData(gin.H{"balance": bal}, c)
+
+	response.OkWithData(gin.H{"accounts": res}, c)
 }

@@ -123,7 +123,8 @@ func (s *PR) PayCallback(ctx context.Context, orderNo string, paySuccess bool, t
 		if ord.UserID != nil {
 			uid = *ord.UserID
 		}
-		acc, e := UserPointsAccount.EnsureAccount(ctx, uid)
+		// 充值默认到平台账户，merchantID=0
+		acc, e := UserPointsAccount.EnsureAccount(ctx, uid, 0)
 		if e != nil {
 			return e
 		}
@@ -152,10 +153,12 @@ func (s *PR) PayCallback(ctx context.Context, orderNo string, paySuccess bool, t
 		}
 		// 写流水：充值购买
 		relatedID := int64(ord.ID)
-        _ = UserPointsAccount.AddLogDetailed(ctx, uid, add, after, "积分充值", orderNo, "", "recharge_purchase", "success", &relatedID, nil)
+		mid := int64(0)
+		isRecharge := true
+		_ = UserPointsAccount.AddLogDetailed(ctx, uid, add, after, "积分充值", orderNo, "", "recharge_purchase", "success", &relatedID, &mid, nil, nil, nil, nil, &isRecharge)
 		// 如有赠送，单独记录赠送
 		if ord.BonusPoints != nil && *ord.BonusPoints > 0 {
-            _ = UserPointsAccount.AddLogDetailed(ctx, uid, *ord.BonusPoints, after, "积分赠送", orderNo, "", "bonus", "success", &relatedID, nil)
+			_ = UserPointsAccount.AddLogDetailed(ctx, uid, *ord.BonusPoints, after, "积分赠送", orderNo, "", "bonus", "success", &relatedID, &mid, nil, nil, nil, nil, &isRecharge)
 		}
 		return nil
 	})

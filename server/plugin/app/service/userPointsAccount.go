@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+
+	"gorm.io/gorm"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
-	"gorm.io/gorm"
 )
 
 var UserPointsAccount = new(UPA)
@@ -47,9 +49,14 @@ func (s *UPA) GetUserPointsAccount(ctx context.Context, ID string) (UPA model.Us
 	return
 }
 
-// GetUserPointsAccountInfoList 分页获取用户积分账户记录
-// Author [yourname](https://github.com/yourname)
-func (s *UPA) GetUserPointsAccountInfoList(ctx context.Context, info request.UserPointsAccountSearch) (list []model.UserPointsAccount, total int64, err error) {
+// GetUserAllPointsAccounts 获取用户所有积分账户列表（包括平台和各商户）
+func (s *UPA) GetUserAllPointsAccounts(ctx context.Context, userID int64) (list []model.UserPointsAccount, err error) {
+	err = global.GVA_DB.WithContext(ctx).Where("user_id = ?", userID).Find(&list).Error
+	return
+}
+
+func (s *UPA) GetUserPointsAccountList(ctx context.Context, info request.UserPointsAccountSearch) (list []model.UserPointsAccount, total int64, err error) {
+	// GetUserPointsAccountInfoList 分页获取用户积分账户记录
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	// 创建db
@@ -91,10 +98,27 @@ func (s *UPA) GetUserPointsAccountPublic(ctx context.Context) {
 }
 
 // EnsureAccount 确保用户积分账户存在
-func (s *UPA) EnsureAccount(ctx context.Context, userID int64) (acc model.UserPointsAccount, err error) {
-	err = global.GVA_DB.WithContext(ctx).Where("user_id = ?", userID).First(&acc).Error
+func (s *UPA) EnsureAccount(ctx context.Context, userID int64, merchantID int64) (acc model.UserPointsAccount, err error) {
+	err = global.GVA_DB.WithContext(ctx).Where("user_id = ? AND merchant_id = ?", userID, merchantID).First(&acc).Error
 	if err == gorm.ErrRecordNotFound {
-		acc = model.UserPointsAccount{UserID: &userID}
+		acc = model.UserPointsAccount{
+			UserID:     &userID,
+			MerchantID: &merchantID,
+		}
+		// 获取TokenName和Symbol
+		if merchantID == 0 {
+			var ps model.PointsSettings
+			if e := global.GVA_DB.WithContext(ctx).First(&ps).Error; e == nil {
+				acc.TokenName = ps.TokenName
+				acc.Symbol = ps.Symbol
+			}
+		} else {
+			var mps model.MerchantPointsSettings
+			if e := global.GVA_DB.WithContext(ctx).Where("merchant_id = ?", merchantID).First(&mps).Error; e == nil {
+				acc.TokenName = mps.TokenName
+				acc.Symbol = mps.Symbol
+			}
+		}
 		zero := int64(0)
 		acc.Balance = &zero
 		if e := global.GVA_DB.WithContext(ctx).Create(&acc).Error; e != nil {
@@ -106,9 +130,9 @@ func (s *UPA) EnsureAccount(ctx context.Context, userID int64) (acc model.UserPo
 }
 
 // AddPoints 增加积分（原子操作），返回加后余额
-func (s *UPA) AddPoints(ctx context.Context, userID int64, points int64) (after int64, err error) {
+func (s *UPA) AddPoints(ctx context.Context, userID int64, points int64, merchantID int64) (after int64, err error) {
 	// 先确保存在账户
-	if _, err = s.EnsureAccount(ctx, userID); err != nil {
+	if _, err = s.EnsureAccount(ctx, userID, merchantID); err != nil {
 		return 0, err
 	}
 	tx := global.GVA_DB.WithContext(ctx).Begin()
@@ -118,14 +142,14 @@ func (s *UPA) AddPoints(ctx context.Context, userID int64, points int64) (after 
 		}
 	}()
 	res := tx.Model(&model.UserPointsAccount{}).
-		Where("user_id = ?", userID).
+		Where("user_id = ? AND merchant_id = ?", userID, merchantID).
 		UpdateColumn("balance", gorm.Expr("balance + ?", points))
 	if res.Error != nil {
 		err = res.Error
 		return
 	}
 	var acc model.UserPointsAccount
-	if e := tx.Where("user_id = ?", userID).First(&acc).Error; e != nil {
+	if e := tx.Where("user_id = ? AND merchant_id = ?", userID, merchantID).First(&acc).Error; e != nil {
 		err = e
 		return
 	}
@@ -140,9 +164,9 @@ func (s *UPA) AddPoints(ctx context.Context, userID int64, points int64) (after 
 }
 
 // DeductPoints 扣减积分（原子操作），返回扣后余额
-func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (after int64, err error) {
+func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64, merchantID int64) (after int64, err error) {
 	// 先确保存在账户
-	if _, err = s.EnsureAccount(ctx, userID); err != nil {
+	if _, err = s.EnsureAccount(ctx, userID, merchantID); err != nil {
 		return 0, err
 	}
 	tx := global.GVA_DB.WithContext(ctx).Begin()
@@ -154,7 +178,7 @@ func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (aft
 
 	// 乐观扣减
 	res := tx.Model(&model.UserPointsAccount{}).
-		Where("user_id = ? AND balance >= ?", userID, points).
+		Where("user_id = ? AND merchant_id = ? AND balance >= ?", userID, merchantID, points).
 		UpdateColumn("balance", gorm.Expr("balance - ?", points))
 	if res.Error != nil {
 		err = res.Error
@@ -166,7 +190,7 @@ func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (aft
 	}
 	// 查询余额
 	var acc model.UserPointsAccount
-	if e := tx.Where("user_id = ?", userID).First(&acc).Error; e != nil {
+	if e := tx.Where("user_id = ? AND merchant_id = ?", userID, merchantID).First(&acc).Error; e != nil {
 		err = e
 		return
 	}
@@ -181,31 +205,74 @@ func (s *UPA) DeductPoints(ctx context.Context, userID int64, points int64) (aft
 }
 
 // AddLog 记录积分流水
-func (s *UPA) AddLog(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark string) error {
-    l := model.UserPointsLog{
-        UserID:       &userID,
-        Change:       &change,
-        BalanceAfter: &balanceAfter,
-        Reason:       &reason,
-        OrderNo:      &orderNo,
-        Remark:       &remark,
-    }
-    return global.GVA_DB.WithContext(ctx).Create(&l).Error
+func (s *UPA) AddLog(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark string, merchantID int64) error {
+	l := model.UserPointsLog{
+		UserID:       &userID,
+		Change:       &change,
+		BalanceAfter: &balanceAfter,
+		Reason:       &reason,
+		OrderNo:      &orderNo,
+		Remark:       &remark,
+		MerchantID:   &merchantID,
+	}
+
+	// 补充Token信息
+	if merchantID == 0 {
+		var ps model.PointsSettings
+		if e := global.GVA_DB.WithContext(ctx).First(&ps).Error; e == nil {
+			l.TokenName = ps.TokenName
+			l.Symbol = ps.Symbol
+		}
+	} else {
+		var mps model.MerchantPointsSettings
+		if e := global.GVA_DB.WithContext(ctx).Where("merchant_id = ?", merchantID).First(&mps).Error; e == nil {
+			l.TokenName = mps.TokenName
+			l.Symbol = mps.Symbol
+		}
+	}
+
+	return global.GVA_DB.WithContext(ctx).Create(&l).Error
 }
 
 // AddLogDetailed 记录积分流水（含类型、状态、关联ID）
-func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark, logType, status string, relatedID *int64, merchantID *int64) error {
-    l := model.UserPointsLog{
-        UserID:       &userID,
-        Change:       &change,
-        BalanceAfter: &balanceAfter,
-        Type:         &logType,
-        Status:       &status,
-        RelatedID:    relatedID,
-        MerchantID:   merchantID,
-        Reason:       &reason,
-        OrderNo:      &orderNo,
-        Remark:       &remark,
-    }
-    return global.GVA_DB.WithContext(ctx).Create(&l).Error
+func (s *UPA) AddLogDetailed(ctx context.Context, userID int64, change int64, balanceAfter int64, reason, orderNo, remark, logType, status string, relatedID *int64, merchantID *int64, inviterUserID *int64, inviterEmail *string, inviteeUserID *int64, inviteeEmail *string, isRecharge *bool) error {
+	mID := int64(0)
+	if merchantID != nil {
+		mID = *merchantID
+	}
+
+	l := model.UserPointsLog{
+		UserID:        &userID,
+		Change:        &change,
+		BalanceAfter:  &balanceAfter,
+		Type:          &logType,
+		Status:        &status,
+		RelatedID:     relatedID,
+		MerchantID:    merchantID,
+		Reason:        &reason,
+		OrderNo:       &orderNo,
+		Remark:        &remark,
+		InviterUserID: inviterUserID,
+		InviterEmail:  inviterEmail,
+		InviteeUserID: inviteeUserID,
+		InviteeEmail:  inviteeEmail,
+		IsRecharge:    isRecharge,
+	}
+
+	// 补充Token信息
+	if mID == 0 {
+		var ps model.PointsSettings
+		if e := global.GVA_DB.WithContext(ctx).First(&ps).Error; e == nil {
+			l.TokenName = ps.TokenName
+			l.Symbol = ps.Symbol
+		}
+	} else {
+		var mps model.MerchantPointsSettings
+		if e := global.GVA_DB.WithContext(ctx).Where("merchant_id = ?", mID).First(&mps).Error; e == nil {
+			l.TokenName = mps.TokenName
+			l.Symbol = mps.Symbol
+		}
+	}
+
+	return global.GVA_DB.WithContext(ctx).Create(&l).Error
 }

@@ -300,12 +300,13 @@ func (s *ORD) PayOrderByPoints(ctx context.Context, userID int64, orderNo string
 	if ord.TotalPoints != nil {
 		need = *ord.TotalPoints
 	}
-	after, err := UserPointsAccount.DeductPoints(ctx, userID, need)
+	// 默认使用平台积分进行支付，merchantID=0
+	after, err := UserPointsAccount.DeductPoints(ctx, userID, need, 0)
 	if err != nil {
 		return err
 	}
 	// 写流水
-	_ = UserPointsAccount.AddLog(ctx, userID, -need, after, "订单积分支付", orderNo, "")
+	_ = UserPointsAccount.AddLog(ctx, userID, -need, after, "订单积分支付", orderNo, "", 0)
 	// 更新订单状态
 	err = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
 		Where("id = ?", ord.ID).

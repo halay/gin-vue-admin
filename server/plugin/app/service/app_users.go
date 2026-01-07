@@ -76,6 +76,28 @@ func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRe
 	return err
 }
 
+// GetInviteCount 获取用户的邀请统计（累计邀请、今日邀请）
+func (s *appUsers) GetInviteCount(ctx context.Context, userID uint) (total int64, today int64, err error) {
+	// 1. 累计邀请数 (inviter_id = userID)
+	if err = global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).
+		Where("inviter_id = ?", userID).
+		Count(&total).Error; err != nil {
+		return 0, 0, err
+	}
+
+	// 2. 今日邀请数 (inviter_id = userID AND created_at >= today_start)
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	if err = global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).
+		Where("inviter_id = ? AND created_at >= ?", userID, todayStart).
+		Count(&today).Error; err != nil {
+		return total, 0, err
+	}
+
+	return total, today, nil
+}
+
 // GetAppUsers 根据ID获取appUsers表记录
 // Author [yourname](https://github.com/yourname)
 func (s *appUsers) GetAppUsers(ctx context.Context, ID string) (appUsers model.AppUsers, err error) {
@@ -319,24 +341,26 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 		Limit(1).Scan(&cfg).Error
 	// 奖励注册用户
 	if cfg.RegisterReward != nil && *cfg.RegisterReward > 0 {
-		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.RegisterReward)
-		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.RegisterReward, after, "register_reward", "", "注册奖励", "reward", "success", nil, nil)
+		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.RegisterReward, 0)
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.RegisterReward, after, "register_reward", "", "注册奖励", "reward", "success", nil, ptrInt64(0), nil, nil, nil, nil, nil)
 	}
 	// 奖励邀请人
 	if user.InviterID != nil && cfg.InviterReward != nil && *cfg.InviterReward > 0 {
 		invID := int64(*user.InviterID)
-		after, _ := UserPointsAccount.AddPoints(ctx, invID, *cfg.InviterReward)
+		after, _ := UserPointsAccount.AddPoints(ctx, invID, *cfg.InviterReward, 0)
 		rid := int64(user.ID)
-		_ = UserPointsAccount.AddLogDetailed(ctx, invID, *cfg.InviterReward, after, "inviter_reward", "", "邀请人奖励", "reward", "success", &rid, nil)
+		_ = UserPointsAccount.AddLogDetailed(ctx, invID, *cfg.InviterReward, after, "inviter_reward", "", "邀请人奖励", "reward", "success", &rid, ptrInt64(0), nil, nil, ptrInt64(int64(user.ID)), user.Email, nil)
 	}
 	// 奖励被邀请人
 	if cfg.InviteeReward != nil && *cfg.InviteeReward > 0 {
-		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.InviteeReward)
+		after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *cfg.InviteeReward, 0)
 		invID := int64(0)
+		var inviterEmail *string
 		if user.InviterID != nil {
 			invID = int64(*user.InviterID)
+			inviterEmail = inviter.Email
 		}
-		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.InviteeReward, after, "invitee_reward", "", "被邀请人奖励", "reward", "success", &invID, nil)
+		_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *cfg.InviteeReward, after, "invitee_reward", "", "被邀请人奖励", "reward", "success", &invID, ptrInt64(0), &invID, inviterEmail, nil, nil, nil)
 	}
 	// 商户积分配置发放：遍历所有启用的商户积分设置
 	type mptsRow struct {
@@ -368,23 +392,25 @@ func (s *appUsers) Register(ctx context.Context, req request.RegisterRequest) (u
 		mid64 := ms.MerchantID
 		// 注册奖励（商户）
 		if ms.RegisterReward != nil && *ms.RegisterReward > 0 {
-			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.RegisterReward)
-			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.RegisterReward, after, "merchant_register_reward", "", "注册奖励(商户)", "reward", "success", &mid64, &mid64)
+			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.RegisterReward, mid64)
+			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.RegisterReward, after, "merchant_register_reward", "", "注册奖励(商户)", "reward", "success", &mid64, &mid64, nil, nil, nil, nil, nil)
 		}
 		// 邀请人奖励（商户）
 		if user.InviterID != nil && ms.InviterReward != nil && *ms.InviterReward > 0 {
 			invID := int64(*user.InviterID)
-			after, _ := UserPointsAccount.AddPoints(ctx, invID, *ms.InviterReward)
-			_ = UserPointsAccount.AddLogDetailed(ctx, invID, *ms.InviterReward, after, "merchant_inviter_reward", "", "邀请人奖励(商户)", "reward", "success", &mid64, &mid64)
+			after, _ := UserPointsAccount.AddPoints(ctx, invID, *ms.InviterReward, mid64)
+			_ = UserPointsAccount.AddLogDetailed(ctx, invID, *ms.InviterReward, after, "merchant_inviter_reward", "", "邀请人奖励(商户)", "reward", "success", &mid64, &mid64, nil, nil, ptrInt64(int64(user.ID)), user.Email, nil)
 		}
 		// 被邀请人奖励（商户）
 		if ms.InviteeReward != nil && *ms.InviteeReward > 0 {
-			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.InviteeReward)
+			after, _ := UserPointsAccount.AddPoints(ctx, int64(user.ID), *ms.InviteeReward, mid64)
 			invID := int64(0)
+			var inviterEmail *string
 			if user.InviterID != nil {
 				invID = int64(*user.InviterID)
+				inviterEmail = inviter.Email
 			}
-			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.InviteeReward, after, "merchant_invitee_reward", "", "被邀请人奖励(商户)", "reward", "success", &invID, &mid64)
+			_ = UserPointsAccount.AddLogDetailed(ctx, int64(user.ID), *ms.InviteeReward, after, "merchant_invitee_reward", "", "被邀请人奖励(商户)", "reward", "success", &invID, &mid64, &invID, inviterEmail, nil, nil, nil)
 		}
 	}
 	return user, nil

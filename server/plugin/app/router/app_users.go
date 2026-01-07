@@ -24,6 +24,7 @@ func (r *appUsers) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("findAppUsers", apiAppUsers.FindAppUsers)       // 根据ID获取appUsers表
 		group.GET("getAppUsersList", apiAppUsers.GetAppUsersList) // 获取appUsers表列表
 		group.GET("getUserInfo", apiAppUsers.GetUserInfo)         // 获取当前登录用户信息
+		group.GET("getInviteCount", apiAppUsers.GetInviteCount)   // 获取邀请统计
 		group.POST("logout", apiAppUsers.Logout)                  //退出登录
 	}
 	{

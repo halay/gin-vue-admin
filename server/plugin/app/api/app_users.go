@@ -295,7 +295,7 @@ func (a *appUsers) Register(c *gin.Context) {
 	}
 	appUtils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
 	// 积分账户余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
 	var balance int64
 	if acc.Balance != nil {
 		balance = *acc.Balance
@@ -372,7 +372,7 @@ func (a *appUsers) Login(c *gin.Context) {
 	}
 
 	// 积分账户余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
 	var balance int64
 	if acc.Balance != nil {
 		balance = *acc.Balance
@@ -430,6 +430,34 @@ func (a *appUsers) Logout(c *gin.Context) {
 
 }
 
+// GetInviteCount 获取用户的邀请统计
+// @Tags AppUser
+// @Summary 获取用户的邀请统计（累计和今日）
+// @Security ApiKeyAuth
+// @Produce application/json
+// @Success 200 {object} response.Response{data=map[string]int64,msg=string} "获取成功"
+// @Router /appUsers/getInviteCount [get]
+func (a *appUsers) GetInviteCount(c *gin.Context) {
+	ctx := c.Request.Context()
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("无法从token提取用户标识", c)
+		return
+	}
+
+	total, today, err := serviceAppUsers.GetInviteCount(ctx, userID)
+	if err != nil {
+		global.GVA_LOG.Error("获取邀请统计失败!", zap.Error(err))
+		response.FailWithMessage("获取邀请统计失败:"+err.Error(), c)
+		return
+	}
+
+	response.OkWithData(gin.H{
+		"totalInvite": total,
+		"todayInvite": today,
+	}, c)
+}
+
 // GetUserInfo 通过x-token获取当前用户信息
 // @Tags     AppUser
 // @Summary  获取当前登录用户信息
@@ -470,7 +498,7 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		MerchantID:        derefInt64(user.MerchantID),
 	}
 	// 积分余额
-	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID))
+	acc, _ := serviceUserPointsAccount.EnsureAccount(c.Request.Context(), int64(user.ID), 0)
 	if acc.Balance != nil {
 		resp.PointsBalance = *acc.Balance
 	}

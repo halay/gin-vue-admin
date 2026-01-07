@@ -10,8 +10,15 @@ type UserPointsLog struct {
     UserID       *int64  `json:"userId" form:"userId" gorm:"comment:app用户ID;column:user_id;" binding:"required"`                 //用户
     Change       *int64  `json:"change" form:"change" gorm:"comment:积分变动，正负;column:change;" binding:"required"`                  //变动值
     BalanceAfter *int64  `json:"balanceAfter" form:"balanceAfter" gorm:"comment:变动后余额;column:balance_after;" binding:"required"` //变动后余额
-    MerchantID   *int64  `json:"merchantId" form:"merchantId" gorm:"comment:来源商户ID;column:merchant_id;"`                          //来源商户
-    Type         *string `json:"type" form:"type" gorm:"comment:记录类型;column:type;size:32;"`                                        //记录类型
+    MerchantID      *int64  `json:"merchantId" form:"merchantId" gorm:"comment:来源商户ID;column:merchant_id;"`                          //来源商户
+	TokenName       *string `json:"tokenName" form:"tokenName" gorm:"comment:积分名称;column:token_name;size:64;"`                       //积分名称
+	Symbol          *string `json:"symbol" form:"symbol" gorm:"comment:积分符号;column:symbol;size:32;"`                                 //积分符号
+	InviterUserID   *int64  `json:"inviterUserId" form:"inviterUserId" gorm:"comment:邀请人用户ID;column:inviter_user_id;"`               //邀请人ID
+	InviterEmail    *string `json:"inviterEmail" form:"inviterEmail" gorm:"comment:邀请人邮箱;column:inviter_email;size:255;"`            //邀请人邮箱
+	InviteeUserID   *int64  `json:"inviteeUserId" form:"inviteeUserId" gorm:"comment:被邀请人用户ID;column:invitee_user_id;"`              //被邀请人ID
+	InviteeEmail    *string `json:"inviteeEmail" form:"inviteeEmail" gorm:"comment:被邀请人邮箱;column:invitee_email;size:255;"`           //被邀请人邮箱
+	IsRecharge      *bool   `json:"isRecharge" form:"isRecharge" gorm:"comment:是否充值来源;column:is_recharge;default:false;"`            //是否充值
+	Type            *string `json:"type" form:"type" gorm:"comment:记录类型;column:type;size:32;"`                                        //记录类型
     Status       *string `json:"status" form:"status" gorm:"comment:交易状态;column:status;size:32;default:success;"`                 //状态
     RelatedID    *int64  `json:"relatedId" form:"relatedId" gorm:"comment:关联记录ID;column:related_id;"`                             //关联记录
     Reason       *string `json:"reason" form:"reason" gorm:"comment:变动原因;column:reason;size:255;"`                               //原因
