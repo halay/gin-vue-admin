@@ -133,7 +133,7 @@
     {{ filterDict(scope.row.status,product_statusOptions) }}
     </template>
 </el-table-column>
-            <el-table-column sortable align="left" label="所属分类" prop="categoryId" width="120">
+            <el-table-column sortable align="left" label="所属分类" prop="categoryId">
     <template #default="scope">
         <span>{{ filterDataSource(dataSource.categoryId,scope.row.categoryId) }}</span>
     </template>
@@ -245,6 +245,15 @@
              <el-form-item label="库存:" prop="stock">
     <el-input v-model.number="formData.stock" :clearable="true" placeholder="请输入库存" />
 </el-form-item>
+        <el-form-item label="税点(%)" prop="taxRate">
+          <el-input-number v-model="formData.taxRate" :precision="2" :step="0.1" :min="0" :max="100" />
+        </el-form-item>
+        <el-form-item label="赠送积分" prop="giftPoints">
+          <el-input-number v-model="formData.giftPoints" :min="0" />
+        </el-form-item>
+        <el-form-item label="关联商户" prop="merchantId" v-show="false">
+          <el-input v-model.number="formData.merchantId" disabled placeholder="请输入关联商户" />
+        </el-form-item>
           </el-form>
     </el-drawer>
 
@@ -298,9 +307,14 @@ import ImportExcel from '@/components/exportExcel/importExcel.vue'
 import ExportTemplate from '@/components/exportExcel/exportTemplate.vue'
 
 
+import { useUserStore } from '@/pinia/modules/user'
+
 defineOptions({
-    name: 'Product'
+  name: 'Product'
 })
+
+const userStore = useUserStore()
+
 
 // 提交按钮loading
 const btnLoading = ref(false)
@@ -326,6 +340,8 @@ const product_typeOptions = ref([])
             price: 0,
             points: 0,
             stock: 0,
+            taxRate: 0,
+            giftPoints: 0,
         })
   const dataSource = ref([])
   const getDataSourceFunc = async()=>{
@@ -560,6 +576,7 @@ const dialogFormVisible = ref(false)
 const openDialog = () => {
     type.value = 'create'
     dialogFormVisible.value = true
+    formData.value.merchantId = userStore.userInfo.merchantId
 }
 
 // 关闭弹窗
@@ -578,8 +595,11 @@ const closeDialog = () => {
         hasVariants: false,
         enablePoints: false,
         price: 0,
-        points: 0,
-        stock: 0,
+       points: 0,
+      stock: 0,
+      taxRate: 0,
+      giftPoints: 0,
+      merchantId: userStore.userInfo.merchantId,
         }
 }
 // 弹窗确定

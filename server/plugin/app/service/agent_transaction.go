@@ -215,12 +215,43 @@ func (s *AgentTransactionService) DistributeCommissions(ctx context.Context, ord
 	merchantID := uint(*order.MerchantID)
 	sourceUserID := uint(*order.UserID)
 
-	// 基础金额 87%
+	// 基础金额
 	orderTotal := 0.0
 	if order.TotalAmount != nil {
 		orderTotal = *order.TotalAmount
 	}
-	baseAmount := orderTotal * 0.87
+	// 计算税后分润基数: TotalAmount * (1 - TaxRate) * 0.87 (保留原有0.87逻辑吗？用户说改成(1-税点%)，之前是0.87，现在需要替换掉0.87)
+	// 用户需求：DistributeCommissions方法里写死的0.87要改成(1-商品的税点*%)
+	// 这里需要获取订单对应的商品的税点。订单可能包含多个商品，每个商品税点可能不同。
+	// 但 AgentTransaction 是基于 Order 维度的。
+	// 简化处理：假设订单中所有商品税点一致，或者取平均？
+	// 更准确的做法：遍历 OrderItems，累加每个 Item 的 (ItemAmount * (1 - ItemTaxRate))。
+	
+	// 重新计算 BaseAmount
+	baseAmount := 0.0
+	var items []model.OrderItem
+	if err := global.GVA_DB.WithContext(ctx).Where("order_id = ?", order.ID).Find(&items).Error; err != nil {
+		return err
+	}
+	
+	for _, item := range items {
+		itemTotal := 0.0
+		if item.TotalAmount != nil {
+			itemTotal = *item.TotalAmount
+		}
+		
+		// 获取商品税点
+		taxRate := 0.0
+		var prod model.Product
+		if err := global.GVA_DB.WithContext(ctx).Select("tax_rate").First(&prod, item.ProductID).Error; err == nil {
+			if prod.TaxRate != nil {
+				taxRate = *prod.TaxRate
+			}
+		}
+		
+		// 计算该商品的基数: 金额 * (1 - 税率/100)
+		baseAmount += itemTotal * (1 - taxRate/100.0)
+	}
 
 	// 获取用户及路径
 	var user model.AppUsers

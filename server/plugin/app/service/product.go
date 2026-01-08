@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
@@ -115,6 +116,7 @@ func (s *P) GetProductInfoList(ctx context.Context, info request.ProductSearch, 
 		db = db.Where("stock >= ?", *info.Stock)
 	}
 	db = db.Where("merchant_id = ?", merchantID)
+	db = db.Order("id desc")
 	err = db.Count(&total).Error
 	if err != nil {
 		return

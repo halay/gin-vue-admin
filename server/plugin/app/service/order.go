@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -314,11 +315,70 @@ func (s *ORD) PayOrderByPoints(ctx context.Context, userID int64, orderNo string
 	if err == nil {
 		// 同步更新下级购买记录状态
 		_ = Service.DownlinePurchaseRecord.UpdateStatus(ctx, orderNo, "paid", "paid")
+
+		// 触发赠送积分逻辑
+		go func(o model.Order) {
+			subCtx := context.Background()
+			if err := processOrderGiftPoints(subCtx, o); err != nil {
+				global.GVA_LOG.Error("processOrderGiftPoints error", zap.Error(err))
+			}
+		}(ord)
+
 		// 触发代理分润逻辑
 		ord.PayStatus = ptrStr("paid")
 		_ = Service.AgentTransaction.ProcessOrderPayment(ctx, ord)
 	}
 	return err
+}
+
+// processOrderGiftPoints 处理订单赠送积分
+func processOrderGiftPoints(ctx context.Context, order model.Order) error {
+	if order.UserID == nil {
+		return nil
+	}
+	userID := int64(*order.UserID)
+
+	// 获取订单明细
+	var items []model.OrderItem
+	if err := global.GVA_DB.WithContext(ctx).Where("order_id = ?", order.ID).Find(&items).Error; err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		// 获取商品赠送积分配置
+		var prod model.Product
+		if err := global.GVA_DB.WithContext(ctx).Select("gift_points, merchant_id").First(&prod, item.ProductID).Error; err != nil {
+			continue
+		}
+
+		if prod.GiftPoints != nil && *prod.GiftPoints > 0 {
+			qty := int64(1)
+			if item.Quantity != nil {
+				qty = *item.Quantity
+			}
+			giftPoints := *prod.GiftPoints * qty
+			merchantID := int64(0)
+			if prod.MerchantID != nil {
+				merchantID = *prod.MerchantID
+			}
+
+			// 增加积分
+			after, err := UserPointsAccount.AddPoints(ctx, userID, giftPoints, merchantID)
+			if err != nil {
+				global.GVA_LOG.Error("AddPoints error", zap.Error(err))
+				continue
+			}
+
+			// 记录流水
+			orderNo := ""
+			if order.OrderNo != nil {
+				orderNo = *order.OrderNo
+			}
+			relatedID := int64(order.ID)
+			_ = UserPointsAccount.AddLogDetailed(ctx, userID, giftPoints, after, "购买赠送", orderNo, fmt.Sprintf("购买商品[%s]赠送", *item.ProductName), "gift", "success", &relatedID, &merchantID, nil, nil, nil, nil, nil)
+		}
+	}
+	return nil
 }
 
 // CreateOrderPaymentIntent 创建Stripe支付意图（银行卡支付）
@@ -384,9 +444,20 @@ func (s *ORD) PayCallbackCard(ctx context.Context, orderNo string, paySuccess bo
 		Where("id = ?", ord.ID).
 		Updates(map[string]any{"pay_status": newStatus, "status": newStatus}).Error
 	if err == nil {
+		// 同步更新下级购买记录状态
 		_ = Service.DownlinePurchaseRecord.UpdateStatus(ctx, orderNo, newStatus, newStatus)
 		if paySuccess {
 			ord.PayStatus = ptrStr("paid")
+
+			// 触发赠送积分逻辑
+			go func(o model.Order) {
+				subCtx := context.Background()
+				if err := processOrderGiftPoints(subCtx, o); err != nil {
+					global.GVA_LOG.Error("processOrderGiftPoints error", zap.Error(err))
+				}
+			}(ord)
+
+			// 触发代理分润逻辑
 			_ = Service.AgentTransaction.ProcessOrderPayment(ctx, ord)
 		}
 	}
