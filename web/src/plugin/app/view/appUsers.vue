@@ -354,7 +354,7 @@ const loadShareholders = async () => {
   const res = await getShareholderProfitList({ page:1, pageSize:9999 })
   if (res.code === 0) shareholderOptions.value = res.data.list || []
 }
-
+loadShareholders()
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
@@ -579,7 +579,6 @@ const identityForm = ref({
 })
 
 const openIdentityDialog = (row) => {
-  loadShareholders()
   identityForm.value.ID = row.ID
   identityForm.value.shareholderProfitId = row.shareholderProfitId
   identityDialogVisible.value = true

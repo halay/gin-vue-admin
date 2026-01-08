@@ -191,7 +191,7 @@ func (a *spr) GetShareholderProfitList(c *gin.Context) {
 	userID := utils.GetUserID(c)
 	mid, errMid := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
 	if errMid != nil || mid == nil {
-		response.FailWithMessage("未绑定商户，无法获取订单列表", c)
+		//response.FailWithMessage("未绑定商户，无法获取订单列表", c)
 		return
 	}
 	list, total, err := serviceShareholderProfit.GetShareholderProfitInfoList(ctx, pageInfo, *mid)
