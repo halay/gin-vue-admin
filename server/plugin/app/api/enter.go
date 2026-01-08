@@ -33,6 +33,7 @@ var (
 	serviceDownlinePurchaseRecord = service.Service.DownlinePurchaseRecord
 	serviceAgentTransaction       = service.Service.AgentTransaction
 	serviceSettlement             = service.Service.Settlement
+	serviceShareholderProfit      = service.Service.ShareholderProfit
 )
 
 type api struct {
@@ -66,4 +67,5 @@ type api struct {
 	DownlinePurchaseRecord DownlinePurchaseRecordApi
 	AgentTransaction       AgentTransactionApi
 	Settlement             settlement
+	ShareholderProfit      spr
 }

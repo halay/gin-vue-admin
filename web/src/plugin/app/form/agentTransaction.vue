@@ -45,9 +45,6 @@
 
 <script setup>
 import {
-  createAgentTransactionDetail,
-  updateAgentTransactionDetail,
-  findAgentTransactionDetail
 } from '@/plugin/app/api/agentTransaction'
 
 defineOptions({
@@ -87,11 +84,11 @@ const elFormRef = ref()
 const init = async () => {
  // 建议通过url传参获取目标数据ID 调用 find方法进行查询数据操作 从而决定本页面是create还是update 以下为id作为url参数示例
     if (route.query.id) {
-      const res = await findAgentTransactionDetail({ ID: route.query.id })
-      if (res.code === 0) {
-        formData.value = res.data
-        type.value = 'update'
-      }
+    //   const res = await findAgentTransactionDetail({ ID: route.query.id })
+    //   if (res.code === 0) {
+    //     formData.value = res.data
+    //     type.value = 'update'
+    //   }
     } else {
       type.value = 'create'
     }
@@ -104,17 +101,17 @@ const save = async() => {
       elFormRef.value?.validate( async (valid) => {
          if (!valid) return btnLoading.value = false
             let res
-           switch (type.value) {
-             case 'create':
-               res = await createAgentTransactionDetail(formData.value)
-               break
-             case 'update':
-               res = await updateAgentTransactionDetail(formData.value)
-               break
-             default:
-               res = await createAgentTransactionDetail(formData.value)
-               break
-           }
+        //    switch (type.value) {
+        //      case 'create':
+        //        res = await createAgentTransactionDetail(formData.value)
+        //        break
+        //      case 'update':
+        //        res = await updateAgentTransactionDetail(formData.value)
+        //        break
+        //      default:
+        //        res = await createAgentTransactionDetail(formData.value)
+        //        break
+        //    }
            btnLoading.value = false
            if (res.code === 0) {
              ElMessage({

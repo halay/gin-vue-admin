@@ -102,6 +102,11 @@
         </el-table-column>
         <el-table-column align="left" label="用户ID" prop="ID" width="80" />
         <el-table-column align="left" label="用户邮箱" prop="email" width="180" />
+        <el-table-column align="left" label="股东身份" prop="shareholderProfitId" width="140">
+              <template #default="scope">
+                {{ formatShareholder(scope.row.shareholderProfitId) }}
+              </template>
+            </el-table-column>
             <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="80">
               <template #default="scope">
                 {{ formatLevel(scope.row.membershipLevelId) }}
@@ -133,9 +138,11 @@
 </el-table-column>
             <el-table-column align="left" label="最后登录IP" prop="lastLoginIp" width="120" />
             <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
+
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
+            <el-button type="primary" link icon="user" class="table-button" @click="openIdentityDialog(scope.row)">编辑身份</el-button>
             <el-button v-auth="btnAuth.edit" type="primary" link icon="edit" class="table-button" @click="updateAppUsersFunc(scope.row)">编辑</el-button>
             <el-button  v-auth="btnAuth.delete" type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
             </template>
@@ -188,6 +195,22 @@
 </el-form-item>
           </el-form>
     </el-drawer>
+
+    <el-dialog v-model="identityDialogVisible" title="编辑身份" width="500px">
+      <el-form :model="identityForm" label-width="100px">
+        <el-form-item label="股东身份">
+          <el-select v-model="identityForm.shareholderProfitId" placeholder="请选择股东身份" clearable style="width: 100%">
+            <el-option v-for="item in shareholderOptions" :key="item.ID" :label="item.name" :value="item.ID" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="identityDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="btnLoading" @click="updateIdentityFunc">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <el-drawer destroy-on-close size="800" v-model="detailShow" :show-close="true" :before-close="closeDetailShow" title="查看">
             <el-descriptions :column="1" border>
@@ -248,6 +271,7 @@ import { getDictFunc, formatDate, formatBoolean, filterDict ,filterDataSource, r
 import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
 import { getMerchantsList } from '@/plugin/app/api/merchants'
 import { getNodeList } from '@/plugin/app/api/node'
+import { getShareholderProfitList } from '@/plugin/app/api/shareholder'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 // 引入按钮权限标识
@@ -278,6 +302,7 @@ const statusOptions = ref([])
 const membershipLevels = ref([])
 const merchantOptions = ref([])
 const nodeOptions = ref([])
+const shareholderOptions = ref([])
 const formData = ref({
             nickname: '',
             phone: '',
@@ -306,6 +331,10 @@ const formatMerchant = (id) => {
   const m = merchantOptions.value.find(i => i.ID === id)
   return m ? m.merchantName : ''
 }
+const formatShareholder = (id) => {
+  const s = shareholderOptions.value.find(i => i.ID === id)
+  return s ? s.name : ''
+}
 const loadMembershipLevels = async () => {
   const res = await getMembershipLevelPublic()
   if (res.code === 0) membershipLevels.value = res.data || []
@@ -321,6 +350,11 @@ const loadNodes = async () => {
   if (res.code === 0) nodeOptions.value = res.data.list || []
 }
 loadNodes()
+const loadShareholders = async () => {
+  const res = await getShareholderProfitList({ page:1, pageSize:9999 })
+  if (res.code === 0) shareholderOptions.value = res.data.list || []
+}
+loadShareholders()
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
@@ -537,6 +571,43 @@ const closeDetailShow = () => {
   detailShow.value = false
   detailForm.value = {}
 }
+
+const identityDialogVisible = ref(false)
+const identityForm = ref({
+  ID: 0,
+  shareholderProfitId: undefined
+})
+
+const openIdentityDialog = (row) => {
+  identityForm.value.ID = row.ID
+  identityForm.value.shareholderProfitId = row.shareholderProfitId
+  identityDialogVisible.value = true
+}
+
+const updateIdentityFunc = async () => {
+  btnLoading.value = true
+  // 我们只更新 ID 和 shareholderProfitId，后端 UpdateAppUsers 应该支持局部更新
+  // 或者我们需要先 findAppUsers 获取全量数据再更新？
+  // GORM 的 Updates 方法通常只更新非零值，但如果传的是结构体，零值字段会被忽略。
+  // 前端 API updateAppUsers 传递的是整个对象。
+  // 为了安全起见，先获取详情，修改字段，再保存。
+  const res = await findAppUsers({ ID: identityForm.value.ID })
+  if (res.code === 0) {
+    const data = res.data
+    data.shareholderProfitId = identityForm.value.shareholderProfitId
+    const updateRes = await updateAppUsers(data)
+    if (updateRes.code === 0) {
+      ElMessage({
+        type: 'success',
+        message: '更新成功'
+      })
+      identityDialogVisible.value = false
+      getTableData()
+    }
+  }
+  btnLoading.value = false
+}
+
 
 </script>
 

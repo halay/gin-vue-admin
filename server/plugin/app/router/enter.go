@@ -33,6 +33,7 @@ var (
 	apiAgentLevel             = api.Api.AgentLevel
 	apiAgentTransaction       = api.Api.AgentTransaction
 	apiSettlement             = api.Api.Settlement
+	apiShareholderProfit      = api.Api.ShareholderProfit
 )
 
 type router struct {
@@ -66,4 +67,5 @@ type router struct {
 	DownlinePurchaseRecord DownlinePurchaseRecordRouter
 	AgentTransaction       AgentTransactionRouter
 	Settlement             settlement
+	ShareholderProfit      spr
 }

@@ -32,4 +32,5 @@ type service struct {
 	DownlinePurchaseRecord DPR
 	AgentTransaction       AgentTransactionService
 	Settlement             settlement
+	ShareholderProfit      spr
 }

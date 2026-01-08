@@ -62,7 +62,8 @@ func (s *appUsers) DeleteAppUsersByIds(ctx context.Context, IDs []string) (err e
 // Author [yourname](https://github.com/yourname)
 func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRequest) (err error) {
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
-		if appUsers.MerchantID != nil {
+		//过滤掉appUsers.MerchantID=0
+		if appUsers.MerchantID != nil && *appUsers.MerchantID != 0 {
 			var cnt int64
 			if e := tx.Model(&model.AppUsers{}).Where("merchant_id = ? AND id <> ?", *appUsers.MerchantID, appUsers.ID).Count(&cnt).Error; e != nil {
 				return e
@@ -70,6 +71,10 @@ func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRe
 			if cnt > 0 {
 				return errors.New("该商户已绑定其他用户")
 			}
+		}
+		//去掉appUsers.MerchantID=0
+		if appUsers.MerchantID != nil && *appUsers.MerchantID == 0 {
+			appUsers.MerchantID = nil
 		}
 		return tx.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Updates(&appUsers).Error
 	})

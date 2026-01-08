@@ -32,8 +32,10 @@ type AppUsers struct {
     MembershipLevelID *int64 `json:"membershipLevelId" form:"membershipLevelId" gorm:"comment:会员等级ID;column:membership_level_id;"`
     NodeID            *int64 `json:"nodeId" form:"nodeId" gorm:"comment:所属节点ID;column:node_id;"`
     MerchantID        *int64      `json:"merchantId" form:"merchantId" gorm:"comment:绑定商户ID;column:merchant_id;uniqueIndex;"`
-    Merchant          Merchants    `json:"merchant" gorm:"foreignKey:MerchantID;references:ID"`
-    StripeCustomerID  *string      `json:"stripeCustomerId" gorm:"comment:Stripe客户ID;column:stripe_customer_id;size:128;"`
+    Merchant          Merchants          `json:"merchant" gorm:"foreignKey:MerchantID;references:ID"`
+	StripeCustomerID  *string            `json:"stripeCustomerId" gorm:"comment:Stripe客户ID;column:stripe_customer_id;size:128;"`
+	ShareholderProfitID *int64           `json:"shareholderProfitId" form:"shareholderProfitId" gorm:"comment:股东身份ID;column:shareholder_profit_id;"`
+	ShareholderProfit   ShareholderProfit `json:"shareholderProfit" gorm:"foreignKey:ShareholderProfitID;references:ID"`
 }
 
 func (u AppUsers) GetUsername() string {

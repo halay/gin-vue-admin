@@ -8,11 +8,11 @@ import (
 
 func main() {
 	g := gen.NewGenerator(gen.Config{OutPath: filepath.Join("..", "..", "..", "app", "blender", "model", "dao"), Mode: gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface})
-	g.ApplyBasic(new(model.AppUsers), new(model.Merchants), new(model.Banner), new(model.MerchantAnnouncement), new(model.MerchantAdmin), new(model.ProductCategory), new(model.Product), new(model.ProductSku), new(model.ProductSpec), new(model.ProductSpecOption), new(model.Order), new(model.OrderItem), new(model.UserPointsAccount), new(model.UserPointsLog), new(model.AppRelease), new(model.MerchantCategory), new(model.MembershipLevel), new(model.Node), new(model.PointsSettings), new(model.MerchantPointsSettings), new(model.UserAddress), new(model.AgentLevel), new(model.AgentTransactionDetail), //go:generate go mod tidy
+	g.ApplyBasic(new(model.AppUsers), new(model.Merchants), new(model.Banner), new(model.MerchantAnnouncement), new(model.MerchantAdmin), new(model.ProductCategory), new(model.Product), new(model.ProductSku), new(model.ProductSpec), new(model.ProductSpecOption), new(model.Order), new(model.OrderItem), new(model.UserPointsAccount), new(model.UserPointsLog), new(model.AppRelease), new(model.MerchantCategory), new(model.MembershipLevel), new(model.Node), new(model.PointsSettings), new(model.MerchantPointsSettings), new(model.UserAddress), new(model.AgentLevel), new(model.AgentTransactionDetail), new(model.Settlement), //go:generate go mod tidy
 		//go:generate go mod download
 		//go:generate go run gen.go
 
-		new(model.Settlement),
+		new(model.ShareholderProfit),
 	)
 	g.Execute()
 }
