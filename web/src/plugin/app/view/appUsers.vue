@@ -100,6 +100,7 @@
         <el-table-column sortable align="left" label="日期" prop="CreatedAt" width="180">
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
+        <el-table-column align="left" label="用户ID" prop="ID" width="80" />
         <el-table-column align="left" label="用户邮箱" prop="email" width="180" />
             <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="80">
               <template #default="scope">
@@ -134,7 +135,7 @@
             <el-table-column align="left" label="邀请码" prop="inviteCode" width="140" />
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
-            <el-button v-auth="btnAuth.info" type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
+            <el-button type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
             <el-button v-auth="btnAuth.edit" type="primary" link icon="edit" class="table-button" @click="updateAppUsersFunc(scope.row)">编辑</el-button>
             <el-button  v-auth="btnAuth.delete" type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
             </template>
