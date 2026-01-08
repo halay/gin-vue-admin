@@ -142,7 +142,7 @@
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
-            <el-button type="primary" link icon="user" class="table-button" @click="openIdentityDialog(scope.row)">编辑身份</el-button>
+            <el-button v-auth="btnAuth.profit" type="primary" link icon="user" class="table-button" @click="openIdentityDialog(scope.row)">编辑身份</el-button>
             <el-button v-auth="btnAuth.edit" type="primary" link icon="edit" class="table-button" @click="updateAppUsersFunc(scope.row)">编辑</el-button>
             <el-button  v-auth="btnAuth.delete" type="primary" link icon="delete" @click="deleteRow(scope.row)">删除</el-button>
             </template>
@@ -354,7 +354,7 @@ const loadShareholders = async () => {
   const res = await getShareholderProfitList({ page:1, pageSize:9999 })
   if (res.code === 0) shareholderOptions.value = res.data.list || []
 }
-loadShareholders()
+
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
@@ -579,6 +579,7 @@ const identityForm = ref({
 })
 
 const openIdentityDialog = (row) => {
+  loadShareholders()
   identityForm.value.ID = row.ID
   identityForm.value.shareholderProfitId = row.shareholderProfitId
   identityDialogVisible.value = true
