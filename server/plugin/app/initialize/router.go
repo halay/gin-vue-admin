@@ -43,4 +43,5 @@ func Router(engine *gin.Engine) {
 	router.Router.AgentTransaction.InitAgentTransactionRouter(private)
 	router.Router.Settlement.Init(public, private)
 	router.Router.ShareholderProfit.Init(public, private)
+	router.Router.AppDealer.Init(public, private)
 }

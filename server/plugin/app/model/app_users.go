@@ -36,6 +36,8 @@ type AppUsers struct {
 	StripeCustomerID  *string            `json:"stripeCustomerId" gorm:"comment:Stripe客户ID;column:stripe_customer_id;size:128;"`
 	ShareholderProfitID *int64           `json:"shareholderProfitId" form:"shareholderProfitId" gorm:"comment:股东身份ID;column:shareholder_profit_id;"`
 	ShareholderProfit   ShareholderProfit `json:"shareholderProfit" gorm:"foreignKey:ShareholderProfitID;references:ID"`
+	AppDealerID *int64           `json:"appDealerId" form:"appDealerId" gorm:"comment:经销商身份ID;column:app_dealer_id;"`
+	AppDealer   AppDealer `json:"appDealer" gorm:"foreignKey:AppDealerID;references:ID"`
 }
 
 func (u AppUsers) GetUsername() string {

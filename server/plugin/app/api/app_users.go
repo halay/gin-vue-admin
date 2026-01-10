@@ -415,12 +415,38 @@ func (a *appUsers) Login(c *gin.Context) {
 			balance = bal
 		}
 	}
+	
+	var shareholderProfitId int64
+	var shareholderProfitName string
+	if user.ShareholderProfitID != nil {
+		shareholderProfitId = *user.ShareholderProfitID
+		var sp model.ShareholderProfit
+		if global.GVA_DB.Where("id = ?", shareholderProfitId).First(&sp).Error == nil && sp.Name != nil {
+			shareholderProfitName = *sp.Name
+		}
+	}
+	
+	var appDealerId int64
+	var appDealerName string
+	if user.AppDealerID != nil {
+		appDealerId = *user.AppDealerID
+		var ad model.AppDealer
+		if global.GVA_DB.Where("id = ?", appDealerId).First(&ad).Error == nil && ad.Name != nil {
+			appDealerName = *ad.Name
+		}
+	}
+
 	response.OkWithDetailed(appResponse.AppLoginResponse{
 		User:           user,
 		Token:          token,
 		ExpiresAt:      claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
 		PointsBalance:  balance,
 		PointsAccounts: pointsAccounts,
+		//Merchant:  model.Merchants `json:"merchant"`
+		ShareholderProfitID: shareholderProfitId,
+		ShareholderProfitName: shareholderProfitName,
+		AppDealerID:       appDealerId,
+		AppDealerName:     appDealerName,
 	}, "登录成功", c)
 }
 
@@ -595,7 +621,56 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 		}
 	}
 
-	response.OkWithData(resp, c)
+	var shareholderProfitId int64
+	var shareholderProfitName string
+	if user.ShareholderProfitID != nil {
+		shareholderProfitId = *user.ShareholderProfitID
+		// 尝试获取股东名称
+		var sp model.ShareholderProfit
+		if global.GVA_DB.Where("id = ?", shareholderProfitId).First(&sp).Error == nil && sp.Name != nil {
+			shareholderProfitName = *sp.Name
+		}
+	}
+	
+	var appDealerId int64
+	var appDealerName string
+	if user.AppDealerID != nil {
+		appDealerId = *user.AppDealerID
+		if user.AppDealer.Name != nil {
+			appDealerName = *user.AppDealer.Name
+		} else {
+			// 如果预加载未成功，尝试单独查询
+			var ad model.AppDealer
+			if global.GVA_DB.Where("id = ?", appDealerId).First(&ad).Error == nil && ad.Name != nil {
+				appDealerName = *ad.Name
+			}
+		}
+	}
+
+	response.OkWithDetailed(appResponse.UserResponse{
+		ID:                user.ID,
+		Email:             *user.Email,
+		Nickname:          *user.Nickname,
+		Avatar:            *user.Avatar,
+		Phone:             *user.Phone,
+		Status:            *user.Status,
+		EmailVerified:     *user.EmailVerified,
+		LastLoginTime:     user.LastLoginTime,
+		LastLoginIP:       *user.LastLoginIP,
+		InviteCode:        *user.InviteCode,
+		InviterID:         *user.InviterID,
+		InviteLevel:       *user.InviteLevel,
+		MembershipLevelID: *user.MembershipLevelID,
+		NodeID:            *user.NodeID,
+		MerchantID:        *user.MerchantID,
+		PointsBalance:     resp.PointsBalance,
+		PointsAccounts:    resp.PointsAccounts,
+		Merchant:          resp.Merchant,
+		ShareholderProfitID: shareholderProfitId,
+		ShareholderProfitName: shareholderProfitName,
+		AppDealerID:       appDealerId,
+		AppDealerName:     appDealerName,
+	}, "获取成功", c)
 }
 
 func derefStr(p *string) string {

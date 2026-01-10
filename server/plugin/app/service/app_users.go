@@ -76,6 +76,11 @@ func (s *appUsers) UpdateAppUsers(ctx context.Context, appUsers request.UpdateRe
 		if appUsers.MerchantID != nil && *appUsers.MerchantID == 0 {
 			appUsers.MerchantID = nil
 		}
+		if appUsers.AppDealerID != nil {
+			if err := tx.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Update("app_dealer_id", appUsers.AppDealerID).Error; err != nil {
+				return err
+			}
+		}
 		return tx.Model(&model.AppUsers{}).Where("id = ?", appUsers.ID).Updates(&appUsers).Error
 	})
 	return err
@@ -148,6 +153,8 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	if info.MembershipLevelID != nil {
 		db = db.Where("membership_level_id = ?", *info.MembershipLevelID)
 	}
+	// 预加载经销商
+	db = db.Preload("AppDealer")
 	if info.NodeID != nil {
 		db = db.Where("node_id = ?", *info.NodeID)
 	}

@@ -107,6 +107,11 @@
                 {{ formatShareholder(scope.row.shareholderProfitId) }}
               </template>
             </el-table-column>
+        <el-table-column align="left" label="经销商身份" prop="appDealerId" width="140">
+              <template #default="scope">
+                {{ formatAppDealer(scope.row.appDealerId) }}
+              </template>
+            </el-table-column>
             <el-table-column align="left" label="会员等级" prop="membershipLevelId" width="80">
               <template #default="scope">
                 {{ formatLevel(scope.row.membershipLevelId) }}
@@ -203,6 +208,11 @@
             <el-option v-for="item in shareholderOptions" :key="item.ID" :label="item.name" :value="item.ID" />
           </el-select>
         </el-form-item>
+        <el-form-item label="经销商身份">
+          <el-select v-model="identityForm.appDealerId" placeholder="请选择经销商身份" clearable style="width: 100%">
+            <el-option v-for="item in appDealerOptions" :key="item.ID" :label="item.name" :value="item.ID" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -272,6 +282,7 @@ import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
 import { getMerchantsList } from '@/plugin/app/api/merchants'
 import { getNodeList } from '@/plugin/app/api/node'
 import { getShareholderProfitList } from '@/plugin/app/api/shareholder'
+import { getAppDealerList } from '@/plugin/app/api/appdealer'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 // 引入按钮权限标识
@@ -303,6 +314,7 @@ const membershipLevels = ref([])
 const merchantOptions = ref([])
 const nodeOptions = ref([])
 const shareholderOptions = ref([])
+const appDealerOptions = ref([])
 const formData = ref({
             nickname: '',
             phone: '',
@@ -335,6 +347,10 @@ const formatShareholder = (id) => {
   const s = shareholderOptions.value.find(i => i.ID === id)
   return s ? s.name : ''
 }
+const formatAppDealer = (id) => {
+  const d = appDealerOptions.value.find(i => i.ID === id)
+  return d ? d.name : ''
+}
 const loadMembershipLevels = async () => {
   const res = await getMembershipLevelPublic()
   if (res.code === 0) membershipLevels.value = res.data || []
@@ -355,6 +371,11 @@ const loadShareholders = async () => {
   if (res.code === 0) shareholderOptions.value = res.data.list || []
 }
 loadShareholders()
+const loadAppDealers = async () => {
+  const res = await getAppDealerList({ page:1, pageSize:9999 })
+  if (res.code === 0) appDealerOptions.value = res.data.list || []
+}
+loadAppDealers()
 
 // =========== 表格控制部分 ===========
 const page = ref(1)
@@ -575,12 +596,14 @@ const closeDetailShow = () => {
 const identityDialogVisible = ref(false)
 const identityForm = ref({
   ID: 0,
-  shareholderProfitId: undefined
+  shareholderProfitId: undefined,
+  appDealerId: undefined
 })
 
 const openIdentityDialog = (row) => {
   identityForm.value.ID = row.ID
   identityForm.value.shareholderProfitId = row.shareholderProfitId
+  identityForm.value.appDealerId = row.appDealerId
   identityDialogVisible.value = true
 }
 
@@ -595,6 +618,7 @@ const updateIdentityFunc = async () => {
   if (res.code === 0) {
     const data = res.data
     data.shareholderProfitId = identityForm.value.shareholderProfitId
+    data.appDealerId = identityForm.value.appDealerId
     const updateRes = await updateAppUsers(data)
     if (updateRes.code === 0) {
       ElMessage({

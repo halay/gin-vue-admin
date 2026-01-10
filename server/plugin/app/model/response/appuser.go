@@ -32,6 +32,10 @@ type UserResponse struct {
 	PointsBalance     int64           `json:"pointsBalance"` // 废弃，保留兼容
 	PointsAccounts    []PointsAccount `json:"pointsAccounts"` // 新增：所有积分账户
 	Merchant          model.Merchants `json:"merchant"`
+	ShareholderProfitID int64 `json:"shareholderProfitId"`
+	ShareholderProfitName string `json:"shareholderProfitName"`
+	AppDealerID       int64   `json:"appDealerId"`
+	AppDealerName     string  `json:"appDealerName"`
 }
 
 type PointsAccount struct {
@@ -56,4 +60,8 @@ type AppLoginResponse struct {
 	PointsBalance int64           `json:"pointsBalance"` // 废弃，保留兼容
 	PointsAccounts []PointsAccount `json:"pointsAccounts"` // 新增：所有积分账户
 	//Merchant  model.Merchants `json:"merchant"`
+	ShareholderProfitID int64 `json:"shareholderProfitId"`
+	ShareholderProfitName string `json:"shareholderProfitName"`
+	AppDealerID       int64   `json:"appDealerId"`
+	AppDealerName     string  `json:"appDealerName"`
 }

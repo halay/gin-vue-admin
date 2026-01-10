@@ -57,4 +57,5 @@ type UpdateRequest struct {
 	Nickname            *string `json:"nickname" form:"nickname" gorm:"comment:用户昵称;column:nickname;size:50;"` //用户昵称 //用户头像URL
 	Phone               *string `json:"phone" form:"phone" gorm:"comment:用户手机号;column:phone;size:20;"`
 	ShareholderProfitID *int64  `json:"shareholderProfitId" form:"shareholderProfitId" gorm:"comment:股东身份ID;column:shareholder_profit_id;"`
+	AppDealerID         *int64  `json:"appDealerId" form:"appDealerId" gorm:"comment:经销商身份ID;column:app_dealer_id;"`
 }
