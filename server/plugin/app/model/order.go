@@ -9,6 +9,7 @@ type Order struct {
 	global.GVA_MODEL
 	OrderNo        *string  `json:"orderNo" form:"orderNo" gorm:"comment:订单号;column:order_no;size:64;" binding:"required"`                          //订单号
 	UserID         *int64   `json:"userId" form:"userId" gorm:"comment:app用户ID;column:user_id;" binding:"required"`                                 //下单用户
+	ProduceID      *int64   `json:"product_id" form:"productId" gorm:"comment:商品ID;column:product_id;"`                                             //下单用户
 	MerchantID     *int64   `json:"merchantId" form:"merchantId" gorm:"comment:商户ID;column:merchant_id;" binding:"required"`                        //商户
 	TotalAmount    *float64 `json:"totalAmount" form:"totalAmount" gorm:"comment:金额汇总(现金);column:total_amount;"`                                    //总金额
 	TotalPoints    *int64   `json:"totalPoints" form:"totalPoints" gorm:"comment:积分汇总;column:total_points;"`                                        //总积分

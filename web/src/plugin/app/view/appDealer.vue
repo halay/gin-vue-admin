@@ -107,6 +107,11 @@
         <span>{{ filterDataSource(dataSource.merchantId,scope.row.merchantId) }}</span>
     </template>
 </el-table-column>
+            <el-table-column align="left" label="是否默认" prop="isDefault" width="120">
+    <template #default="scope">
+    {{ formatBoolean(scope.row.isDefault) }}
+    </template>
+</el-table-column>
         <el-table-column align="left" label="操作" fixed="right" min-width="240">
             <template #default="scope">
             <el-button  type="primary" link class="table-button" @click="getDetails(scope.row)"><el-icon style="margin-right: 5px"><InfoFilled /></el-icon>查看</el-button>
@@ -160,6 +165,9 @@
 </el-form-item>
              <el-form-item label="备注:" prop="remark">
     <el-input v-model="formData.remark" :clearable="false" placeholder="请输入备注" />
+</el-form-item>
+             <el-form-item label="是否默认:" prop="isDefault">
+    <el-switch v-model="formData.isDefault" />
 </el-form-item>
           </el-form>
     </el-drawer>
@@ -216,6 +224,7 @@ const formData = ref({
             expenseAllowance: 0,
             allowanceType: 0,
             remark: '',
+            isDefault: false,
         })
   const dataSource = ref([])
   const getDataSourceFunc = async()=>{
@@ -415,6 +424,7 @@ const closeDialog = () => {
         expenseAllowance: 0,
         allowanceType: 0,
         remark: '',
+        isDefault: false,
         }
 }
 // 弹窗确定

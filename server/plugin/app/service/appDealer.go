@@ -14,6 +14,9 @@ type ADL struct {}
 // CreateAppDealer 创建经销商管理记录
 // Author [yourname](https://github.com/yourname)
 func (s *ADL) CreateAppDealer(ctx context.Context, ADL *model.AppDealer) (err error) {
+	if ADL.IsDefault != nil && *ADL.IsDefault && ADL.MerchantId != nil {
+		global.GVA_DB.Model(&model.AppDealer{}).Where("merchant_id = ?", ADL.MerchantId).Update("is_default", false)
+	}
 	err = global.GVA_DB.Create(ADL).Error
 	return err
 }
@@ -35,6 +38,9 @@ func (s *ADL) DeleteAppDealerByIds(ctx context.Context, IDs []string) (err error
 // UpdateAppDealer 更新经销商管理记录
 // Author [yourname](https://github.com/yourname)
 func (s *ADL) UpdateAppDealer(ctx context.Context, ADL model.AppDealer) (err error) {
+	if ADL.IsDefault != nil && *ADL.IsDefault && ADL.MerchantId != nil {
+		global.GVA_DB.Model(&model.AppDealer{}).Where("merchant_id = ?", ADL.MerchantId).Update("is_default", false)
+	}
 	err = global.GVA_DB.Model(&model.AppDealer{}).Where("id = ?",ADL.ID).Updates(&ADL).Error
 	return err
 }

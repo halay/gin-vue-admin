@@ -17,7 +17,7 @@ type AgentTransaction struct {
 	AgentLevelID   uint    `json:"agentLevelId" gorm:"comment:触发的代理等级ID;column:agent_level_id;"`
 	AgentLevelName string  `json:"agentLevelName" gorm:"comment:触发的代理等级名称;column:agent_level_name;size:255;"`
 	DividendScope  string  `json:"dividendScope" gorm:"comment:分红范围;column:dividend_scope;size:255;"`
-	
+
 	// 分润明细
 	Rate1   float64 `json:"rate1" gorm:"comment:比例1;column:rate1;"`
 	Amount1 float64 `json:"amount1" gorm:"comment:金额1;column:amount1;"`
@@ -29,9 +29,11 @@ type AgentTransaction struct {
 	Amount4 float64 `json:"amount4" gorm:"comment:金额4;column:amount4;"`
 	Rate5   float64 `json:"rate5" gorm:"comment:比例5;column:rate5;"`
 	Amount5 float64 `json:"amount5" gorm:"comment:金额5;column:amount5;"`
-	
+
 	TotalAmount float64 `json:"totalAmount" gorm:"comment:总分润金额;column:total_amount;"`
 	Description string  `json:"description" gorm:"comment:描述;column:description;size:500;"`
+	Source      string  `json:"source" gorm:"comment:来源;column:source;size:500;"`
+	SourceId    *int64  `json:"SourceId" gorm:"comment:来源id;column:source_id"`
 }
 
 func (AgentTransaction) TableName() string {

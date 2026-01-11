@@ -14,6 +14,7 @@ type AppDealer struct {
 	AllowanceType    *string  `json:"allowanceType" form:"allowanceType" gorm:"default:1;comment:补贴类型(1:比例,2:固定金额);column:allowance_type;" binding:"required"`    //补贴类型
 	MerchantId       *int64   `json:"merchantId" form:"merchantId" gorm:"comment:关联商户;column:merchant_id;"`                                                       //关联商户
 	Remark           *string  `json:"remark" form:"remark" gorm:"comment:备注;column:remark;size:255;"`                                                             //备注
+	IsDefault        *bool    `json:"isDefault" form:"isDefault" gorm:"default:false;comment:是否默认;column:is_default;"`                                            //是否默认
 }
 
 // TableName 经销商管理 AppDealer自定义表名 app_dealers

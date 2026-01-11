@@ -228,6 +228,7 @@ func (s *ORD) CreateOrderByPoints(ctx context.Context, userID int64, sku model.P
 	ord = model.Order{
 		OrderNo:        &orderNo,
 		UserID:         &userID,
+		ProduceID:      sku.ProductID,
 		MerchantID:     &merchantID,
 		TotalAmount:    ptrFloat64(totalAmount),
 		TotalPoints:    &totalPoints,
