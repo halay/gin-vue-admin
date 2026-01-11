@@ -38,6 +38,33 @@ type UserResponse struct {
 	AppDealerName     string  `json:"appDealerName"`
 }
 
+// DashboardResponse APP首页/个人中心数据聚合响应
+type DashboardResponse struct {
+	User       UserSummary       `json:"user"`
+	Commission CommissionSummary `json:"commission"`
+	Points     PointsSummary     `json:"points"`
+}
+
+type UserSummary struct {
+	Nickname            string `json:"nickname"`
+	Avatar              string `json:"avatar"`
+	MembershipLevelName string `json:"membershipLevelName"`
+	AgentLevelName      string `json:"agentLevelName"` // 代理等级或身份名称
+}
+
+type CommissionSummary struct {
+	Total     float64 `json:"total"`     // 总返佣金额
+	Pending   float64 `json:"pending"`   // 待提现金额
+	Withdrawn float64 `json:"withdrawn"` // 已提现金额
+}
+
+type PointsSummary struct {
+	Total    int64 `json:"total"`    // 总获取积分
+	Current  int64 `json:"current"`  // 当前剩余积分 (通常指平台积分或主积分)
+	Consumed int64 `json:"consumed"` // 已消耗积分
+	Pending  int64 `json:"pending"`  // 待入账积分
+}
+
 type PointsAccount struct {
 	MerchantID *int64  `json:"merchantId"`
 	TokenName  *string `json:"tokenName"`

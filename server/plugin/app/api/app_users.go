@@ -415,7 +415,7 @@ func (a *appUsers) Login(c *gin.Context) {
 			balance = bal
 		}
 	}
-	
+
 	var shareholderProfitId int64
 	var shareholderProfitName string
 	if user.ShareholderProfitID != nil {
@@ -425,7 +425,7 @@ func (a *appUsers) Login(c *gin.Context) {
 			shareholderProfitName = *sp.Name
 		}
 	}
-	
+
 	var appDealerId int64
 	var appDealerName string
 	if user.AppDealerID != nil {
@@ -443,10 +443,10 @@ func (a *appUsers) Login(c *gin.Context) {
 		PointsBalance:  balance,
 		PointsAccounts: pointsAccounts,
 		//Merchant:  model.Merchants `json:"merchant"`
-		ShareholderProfitID: shareholderProfitId,
+		ShareholderProfitID:   shareholderProfitId,
 		ShareholderProfitName: shareholderProfitName,
-		AppDealerID:       appDealerId,
-		AppDealerName:     appDealerName,
+		AppDealerID:           appDealerId,
+		AppDealerName:         appDealerName,
 	}, "登录成功", c)
 }
 
@@ -631,7 +631,9 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 			shareholderProfitName = *sp.Name
 		}
 	}
-	
+	resp.ShareholderProfitID = shareholderProfitId
+	resp.ShareholderProfitName = shareholderProfitName
+
 	var appDealerId int64
 	var appDealerName string
 	if user.AppDealerID != nil {
@@ -646,31 +648,34 @@ func (a *appUsers) GetUserInfo(c *gin.Context) {
 			}
 		}
 	}
+	resp.AppDealerID = appDealerId
+	resp.AppDealerName = appDealerName
 
-	response.OkWithDetailed(appResponse.UserResponse{
-		ID:                user.ID,
-		Email:             *user.Email,
-		Nickname:          *user.Nickname,
-		Avatar:            *user.Avatar,
-		Phone:             *user.Phone,
-		Status:            *user.Status,
-		EmailVerified:     *user.EmailVerified,
-		LastLoginTime:     user.LastLoginTime,
-		LastLoginIP:       *user.LastLoginIP,
-		InviteCode:        *user.InviteCode,
-		InviterID:         *user.InviterID,
-		InviteLevel:       *user.InviteLevel,
-		MembershipLevelID: *user.MembershipLevelID,
-		NodeID:            *user.NodeID,
-		MerchantID:        *user.MerchantID,
-		PointsBalance:     resp.PointsBalance,
-		PointsAccounts:    resp.PointsAccounts,
-		Merchant:          resp.Merchant,
-		ShareholderProfitID: shareholderProfitId,
-		ShareholderProfitName: shareholderProfitName,
-		AppDealerID:       appDealerId,
-		AppDealerName:     appDealerName,
-	}, "获取成功", c)
+	response.OkWithDetailed(resp, "获取成功", c)
+}
+
+// GetDashboard 获取APP用户首页/个人中心聚合数据
+// @Tags     AppUser
+// @Summary  获取APP用户首页/个人中心聚合数据
+// @Security ApiKeyAuth
+// @Produce  application/json
+// @Success  200 {object} response.Response{data=response.DashboardResponse,msg=string} "获取成功"
+// @Router   /appUsers/getDashboard [get]
+func (a *appUsers) GetDashboard(c *gin.Context) {
+	userId := appUtils.GetUserID(c)
+	if userId == 0 {
+		response.FailWithMessage("无法从token提取用户标识", c)
+		return
+	}
+
+	dashboard, err := serviceAppUsers.GetDashboard(c.Request.Context(), userId)
+	if err != nil {
+		global.GVA_LOG.Error("获取Dashboard失败!", zap.Error(err))
+		response.FailWithMessage("获取Dashboard失败: "+err.Error(), c)
+		return
+	}
+
+	response.OkWithData(dashboard, c)
 }
 
 func derefStr(p *string) string {
