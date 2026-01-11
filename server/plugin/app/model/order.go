@@ -27,7 +27,8 @@ type Order struct {
 	DeliveryStatus *string  `json:"deliveryStatus" form:"deliveryStatus" gorm:"default:none;comment:未发货/已发货/已签收;column:delivery_status;"`           //发货状态
 	ExpressName    *string  `json:"expressName" form:"expressName" gorm:"comment:快递公司;column:express_name;size:64;"`                                //快递公司
 	ExpressNo      *string  `json:"expressNo" form:"expressNo" gorm:"comment:快递单号;column:express_no;size:64;"`                                      //快递单号
-	Remark         *string  `json:"remark" form:"remark" gorm:"comment:备注;column:remark;size:255;"`                                                 //备注
+	Remark         *string  `json:"remark" form:"remark" gorm:"comment:备注;column:remark;size:255;"`
+	IsProfit       *string  `json:"isProfit" form:"isProfit" gorm:"default:0;comment:是否已经分润;column:is_profit;"` //是否已经分润
 }
 
 // TableName 订单 Order自定义表名 app_orders

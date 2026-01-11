@@ -35,6 +35,7 @@ var (
 	apiSettlement             = api.Api.Settlement
 	apiShareholderProfit      = api.Api.ShareholderProfit
 	apiAppDealer              = api.Api.AppDealer
+	apiAppAgentTransactions   = api.Api.AppAgentTransactions
 )
 
 type router struct {
@@ -70,4 +71,5 @@ type router struct {
 	Settlement             settlement
 	ShareholderProfit      spr
 	AppDealer              ADL
+	AppAgentTransactions   appAgentTransactions
 }

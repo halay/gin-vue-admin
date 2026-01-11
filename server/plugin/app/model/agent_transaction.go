@@ -30,10 +30,11 @@ type AgentTransaction struct {
 	Rate5   float64 `json:"rate5" gorm:"comment:比例5;column:rate5;"`
 	Amount5 float64 `json:"amount5" gorm:"comment:金额5;column:amount5;"`
 
-	TotalAmount float64 `json:"totalAmount" gorm:"comment:总分润金额;column:total_amount;"`
-	Description string  `json:"description" gorm:"comment:描述;column:description;size:500;"`
-	Source      string  `json:"source" gorm:"comment:来源;column:source;size:500;"`
-	SourceId    *int64  `json:"SourceId" gorm:"comment:来源id;column:source_id"`
+	TotalAmount   float64 `json:"totalAmount" gorm:"comment:总分润金额;column:total_amount;"`
+	Description   string  `json:"description" gorm:"comment:描述;column:description;size:500;"`
+	Source        string  `json:"source" gorm:"comment:来源;column:source;size:500;"`
+	SourceId      *int64  `json:"SourceId" gorm:"comment:来源id;column:source_id"`
+	ReflectStatus *string `json:"reflect_status" gorm:"default:none;comment:提现状态;column:reflect_status;size:50;"`
 }
 
 func (AgentTransaction) TableName() string {

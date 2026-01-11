@@ -34,4 +34,5 @@ type service struct {
 	Settlement             settlement
 	ShareholderProfit      spr
 	AppDealer              ADL
+	AppAgentTransactions   appAgentTransactions
 }

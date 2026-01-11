@@ -35,6 +35,7 @@ var (
 	serviceSettlement             = service.Service.Settlement
 	serviceShareholderProfit      = service.Service.ShareholderProfit
 	serviceAppDealer              = service.Service.AppDealer
+	serviceAppAgentTransactions   = service.Service.AppAgentTransactions
 )
 
 type api struct {
@@ -70,4 +71,5 @@ type api struct {
 	Settlement             settlement
 	ShareholderProfit      spr
 	AppDealer              ADL
+	AppAgentTransactions   appAgentTransactions
 }

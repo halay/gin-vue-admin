@@ -43,6 +43,37 @@ func (s *ORD) DeleteOrderByIds(ctx context.Context, IDs []string, merchantID int
 // Author [yourname](https://github.com/yourname)
 func (s *ORD) UpdateOrder(ctx context.Context, ORD model.Order, merchantID int) (err error) {
 	err = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).Where("id = ? AND merchant_id = ?", ORD.ID, merchantID).Updates(&ORD).Error
+	if err == nil {
+		// 触发经销商分润逻辑 (当 delivery_status = delivered 时)
+		//if ORD.DeliveryStatus != nil && *ORD.DeliveryStatus == "delivered" {
+		//todo 这里逻辑要修改
+		if ORD.PayStatus != nil && *ORD.PayStatus == "paid" && *ORD.IsProfit == "0" {
+			// 需要获取完整的 Order 信息（包括 TotalAmount, UserID 等）
+			// 入参 ORD 可能只是部分更新字段，所以需要查一次数据库
+			var fullOrder model.Order
+			if err := global.GVA_DB.WithContext(ctx).First(&fullOrder, ORD.ID).Error; err == nil {
+				// 异步还是同步？建议异步以免阻塞更新
+				go func(o model.Order) {
+					subCtx := context.Background()
+					// 经销商分润
+					if err := Service.AgentTransaction.DistributeDealerCommissions(subCtx, o); err != nil {
+						global.GVA_LOG.Error("DistributeDealerCommissions error", zap.Error(err))
+					}
+					// 股东分润
+					if err := Service.AgentTransaction.DistributeShareholderCommissions(subCtx, o); err != nil {
+						global.GVA_LOG.Error("DistributeShareholderCommissions error", zap.Error(err))
+					}
+					// 更新订单分润状态
+					err = global.GVA_DB.WithContext(subCtx).Model(&model.Order{}).
+						Where("id = ?", o.ID).
+						Update("is_profit", "1").Error
+					if err != nil {
+						global.GVA_LOG.Error("update order profit err", zap.Error(err))
+					}
+				}(fullOrder)
+			}
+		}
+	}
 	return err
 }
 
@@ -460,6 +491,10 @@ func (s *ORD) PayCallbackCard(ctx context.Context, orderNo string, paySuccess bo
 
 			// 触发代理分润逻辑
 			_ = Service.AgentTransaction.ProcessOrderPayment(ctx, ord)
+			// 更新订单分润状态
+			_ = global.GVA_DB.WithContext(ctx).Model(&model.Order{}).
+				Where("id = ?", ord.ID).
+				Update("is_profit", "1").Error
 		}
 	}
 	return err
