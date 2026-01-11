@@ -633,7 +633,7 @@ func (s *AgentTransactionService) DistributeDealerCommissions(ctx context.Contex
 	if dealer.SalesCommission != nil {
 		salesComm = *dealer.SalesCommission
 	}
-	if dealer.CommissionType != nil && *dealer.CommissionType == 2 {
+	if dealer.CommissionType != nil && *dealer.CommissionType == "2" {
 		// 固定金额
 		commissionAmount = salesComm
 	} else {
@@ -646,7 +646,7 @@ func (s *AgentTransactionService) DistributeDealerCommissions(ctx context.Contex
 	if dealer.ExpenseAllowance != nil {
 		expenseAllow = *dealer.ExpenseAllowance
 	}
-	if dealer.AllowanceType != nil && *dealer.AllowanceType == 2 {
+	if dealer.AllowanceType != nil && *dealer.AllowanceType == "2" {
 		// 固定金额
 		allowanceAmount = expenseAllow
 	} else {

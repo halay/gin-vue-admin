@@ -26,24 +26,18 @@
         >
         <el-table-column type="selection" width="55" />
         
-            <el-table-column align="left" label="id字段" prop="id" width="120" />
+            <el-table-column align="left" label="ID" prop="id" width="80" />
 
-            <el-table-column align="left" label="createdAt字段" prop="createdAt" width="180">
-   <template #default="scope">{{ formatDate(scope.row.createdAt) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="updatedAt字段" prop="updatedAt" width="180">
-   <template #default="scope">{{ formatDate(scope.row.updatedAt) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="deletedAt字段" prop="deletedAt" width="180">
-   <template #default="scope">{{ formatDate(scope.row.deletedAt) }}</template>
-</el-table-column>
-            <el-table-column align="left" label="订单号" prop="orderNo" width="120" />
+            <el-table-column align="left" label="订单号" prop="orderNo" width="100" />
 
-            <el-table-column align="left" label="订单ID" prop="orderId" width="120" />
+            <el-table-column align="left" label="订单ID" prop="orderId" width="80" />
 
             <el-table-column align="left" label="订单金额" prop="orderAmount" width="120" />
 
-            <el-table-column align="left" label="分润基数(87%)" prop="baseAmount" width="120" />
+            <el-table-column align="left" label="分润基数" prop="baseAmount" width="120" />
+
+             <el-table-column align="left" label="总分润金额" prop="totalAmount" width="120" />
+            <el-table-column align="left" label="描述" prop="description" width="120" />
 
             <el-table-column align="left" label="商户ID" prop="merchantId" width="120" />
 
@@ -77,9 +71,7 @@
 
             <el-table-column align="left" label="金额5" prop="amount5" width="120" />
 
-            <el-table-column align="left" label="总分润金额" prop="totalAmount" width="120" />
-
-            <el-table-column align="left" label="描述" prop="description" width="120" />
+           
 
             <el-table-column align="left" label="来源id" prop="sourceId" width="120" />
 
@@ -119,15 +111,6 @@
                  <el-descriptions-item label="id字段">
     {{ detailForm.id }}
 </el-descriptions-item>
-                 <el-descriptions-item label="createdAt字段">
-    {{ detailForm.createdAt }}
-</el-descriptions-item>
-                 <el-descriptions-item label="updatedAt字段">
-    {{ detailForm.updatedAt }}
-</el-descriptions-item>
-                 <el-descriptions-item label="deletedAt字段">
-    {{ detailForm.deletedAt }}
-</el-descriptions-item>
                  <el-descriptions-item label="订单号">
     {{ detailForm.orderNo }}
 </el-descriptions-item>
@@ -137,7 +120,7 @@
                  <el-descriptions-item label="订单金额">
     {{ detailForm.orderAmount }}
 </el-descriptions-item>
-                 <el-descriptions-item label="分润基数(87%)">
+                 <el-descriptions-item label="分润基数">
     {{ detailForm.baseAmount }}
 </el-descriptions-item>
                  <el-descriptions-item label="商户ID">
