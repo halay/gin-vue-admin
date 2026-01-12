@@ -84,6 +84,9 @@ func (s *UPL) GetUserPointsLogInfoList(ctx context.Context, info request.UserPoi
 	if info.Remark != nil && *info.Remark != "" {
 		db = db.Where("remark LIKE ?", "%"+*info.Remark+"%")
 	}
+	if info.MerchantID != nil {
+		db = db.Where("merchant_id = ?", *info.MerchantID)
+	}
 	err = db.Count(&total).Error
 	if err != nil {
 		return
