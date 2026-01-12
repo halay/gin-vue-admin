@@ -24,7 +24,7 @@ type plugin struct{}
 func (p *plugin) Register(group *gin.Engine) {
 	ctx := context.Background()
 	initialize.Viper()
-	//initialize.Api(ctx)
+	initialize.Api(ctx)
 	initialize.Gorm(ctx)
 	initialize.Router(group)
 }
