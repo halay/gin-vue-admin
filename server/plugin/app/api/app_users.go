@@ -523,6 +523,37 @@ func (a *appUsers) GetInviteCount(c *gin.Context) {
 	}, c)
 }
 
+// GetSubUsers 获取下级用户列表
+// @Tags AppUser
+// @Summary 获取下级用户列表
+// @Security ApiKeyAuth
+// @Produce application/json
+// @Param type query string true "查询类型: direct(直属), indirect(间接)"
+// @Success 200 {object} response.Response{data=[]model.AppUsers,msg=string} "获取成功"
+// @Router /appUsers/getSubUsers [get]
+func (a *appUsers) GetSubUsers(c *gin.Context) {
+	userID := appUtils.GetUserID(c)
+	if userID == 0 {
+		response.FailWithMessage("无法从token提取用户标识", c)
+		return
+	}
+
+	queryType := c.Query("type")
+	if queryType != "direct" && queryType != "indirect" {
+		response.FailWithMessage("参数错误，type必须为direct或indirect", c)
+		return
+	}
+
+	list, err := serviceAppUsers.GetSubUsers(c.Request.Context(), userID, queryType)
+	if err != nil {
+		global.GVA_LOG.Error("获取失败!", zap.Error(err))
+		response.FailWithMessage("获取失败:"+err.Error(), c)
+		return
+	}
+
+	response.OkWithData(list, c)
+}
+
 // GetUserInfo 通过x-token获取当前用户信息
 // @Tags     AppUser
 // @Summary  获取当前登录用户信息
@@ -667,8 +698,21 @@ func (a *appUsers) GetDashboard(c *gin.Context) {
 		response.FailWithMessage("无法从token提取用户标识", c)
 		return
 	}
-
-	dashboard, err := serviceAppUsers.GetDashboard(c.Request.Context(), userId)
+	mid := c.DefaultQuery("mid", "0")
+	if mid != "" {
+		merchant, err := serviceMerchants.GetMerchants(c.Request.Context(), mid)
+		if err != nil {
+			global.GVA_LOG.Error("获取商户信息失败!", zap.Error(err))
+			response.FailWithMessage("获取商户信息失败: "+err.Error(), c)
+			return
+		}
+		if merchant.ID == 0 {
+			response.FailWithMessage("商户不存在", c)
+			return
+		}
+	}
+	merchantId, _ := strconv.ParseInt(mid, 10, 64)
+	dashboard, err := serviceAppUsers.GetDashboard(c.Request.Context(), userId, merchantId)
 	if err != nil {
 		global.GVA_LOG.Error("获取Dashboard失败!", zap.Error(err))
 		response.FailWithMessage("获取Dashboard失败: "+err.Error(), c)

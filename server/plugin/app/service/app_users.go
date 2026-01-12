@@ -109,6 +109,31 @@ func (s *appUsers) GetInviteCount(ctx context.Context, userID uint) (total int64
 	return total, today, nil
 }
 
+// GetSubUsers 获取下级用户列表
+func (s *appUsers) GetSubUsers(ctx context.Context, userID uint, queryType string) (list []appResponse.SubUserResponse, err error) {
+	db := global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).
+		Select("id, email, created_at, nickname, avatar")
+
+	if queryType == "direct" {
+		// 直属下级
+		db = db.Where("inviter_id = ?", userID)
+	} else if queryType == "indirect" {
+		// 间接下级：排除直属，且 invite_path 包含当前用户ID
+		db = db.Where("inviter_id != ?", userID)
+		idStr := strconv.Itoa(int(userID))
+		// 匹配 invite_path 中包含 /ID/ 或 ID/ 或 /ID 或 只是 ID
+		db = db.Where("invite_path LIKE ? OR invite_path LIKE ? OR invite_path LIKE ?",
+			idStr+"/%",
+			"%/"+idStr,
+			"%/"+idStr+"/%")
+	} else {
+		return nil, errors.New("invalid type parameter")
+	}
+
+	err = db.Find(&list).Error
+	return list, err
+}
+
 // GetAppUsers 根据ID获取appUsers表记录
 // Author [yourname](https://github.com/yourname)
 func (s *appUsers) GetAppUsers(ctx context.Context, ID string) (appUsers model.AppUsers, err error) {
@@ -634,7 +659,7 @@ func (s *appUsers) FormatDescendants(ctx context.Context, uid uint) ([]string, e
 // isInviterUnderMerchant 判断邀请人是否是指定商户任意级别的下级用户：
 // 原理：查询该商户绑定的用户ID集合，检测这些ID是否出现在邀请人的 invite_path 字段中
 // GetDashboard 获取APP用户首页/个人中心聚合数据
-func (s *appUsers) GetDashboard(ctx context.Context, userID uint) (res appResponse.DashboardResponse, err error) {
+func (s *appUsers) GetDashboard(ctx context.Context, userID uint, merchantID int64) (res appResponse.DashboardResponse, err error) {
 	// 1. 获取用户信息
 	var user model.AppUsers
 	if err = global.GVA_DB.WithContext(ctx).First(&user, userID).Error; err != nil {
@@ -649,7 +674,11 @@ func (s *appUsers) GetDashboard(ctx context.Context, userID uint) (res appRespon
 	if user.Avatar != nil {
 		res.User.Avatar = *user.Avatar
 	}
-
+	res.User.Email = ""
+	if user.Email != nil {
+		res.User.Email = *user.Email
+	}
+	res.User.ID = userID
 	// 获取会员等级名称
 	if user.MembershipLevelID != nil {
 		var level model.MembershipLevel
@@ -664,100 +693,117 @@ func (s *appUsers) GetDashboard(ctx context.Context, userID uint) (res appRespon
 	if user.ShareholderProfitID != nil {
 		var sp model.ShareholderProfit
 		if err := global.GVA_DB.WithContext(ctx).Select("name").First(&sp, *user.ShareholderProfitID).Error; err == nil && sp.Name != nil {
-			res.User.AgentLevelName = *sp.Name
+			res.User.ProfitName = *sp.Name
 		}
-	} else if user.AppDealerID != nil {
+	}
+	if user.AppDealerID != nil {
 		var dealer model.AppDealer
 		if err := global.GVA_DB.WithContext(ctx).Select("name").First(&dealer, *user.AppDealerID).Error; err == nil && dealer.Name != nil {
-			res.User.AgentLevelName = *dealer.Name
+			res.User.DealerName = *dealer.Name
 		}
-	} else {
-		// 查询 UserAgentLevel (取最高等级)
-		var ual model.UserAgentLevel
-		if err := global.GVA_DB.WithContext(ctx).Where("user_id = ? AND status = 'active'", userID).Order("id desc").First(&ual).Error; err == nil {
-			res.User.AgentLevelName = ual.AgentLevelName
-		}
+	}
+	var ual model.UserAgentLevel
+	if err := global.GVA_DB.WithContext(ctx).Where("user_id = ? AND status = 'active' AND merchant_id= ?", userID, merchantID).Order("id desc").First(&ual).Error; err == nil {
+		res.User.AgentLevelName = ual.AgentLevelName
 	}
 
 	// 2. 统计返佣数据 (app_agent_transactions)
 	// Total: SUM(total_amount)
 	// Withdrawn: SUM(total_amount) where reflect_status = 'reflected'
 	// Pending: SUM(total_amount) where reflect_status = 'none' (or != reflected)
-	
+
 	// 注意：这里假设 reflect_status 字段存在且有效。
 	// 根据之前的代码，agent_transaction 表有 ReflectStatus 字段，默认 "none"。
-	
+
 	type Result struct {
 		Total     float64
 		Withdrawn float64
 		Pending   float64
 	}
 	var commResult Result
-	
+
 	// 统计总金额
 	global.GVA_DB.WithContext(ctx).Model(&model.AgentTransaction{}).
-		Where("beneficiary_id = ?", userID).
+		Where("beneficiary_id = ? AND merchant_id= ?", userID, merchantID).
 		Select("COALESCE(SUM(total_amount), 0)").
 		Scan(&commResult.Total)
-		
+
 	// 统计已提现 (假设状态为 'reflected')
 	global.GVA_DB.WithContext(ctx).Model(&model.AgentTransaction{}).
-		Where("beneficiary_id = ? AND reflect_status = ?", userID, "reflected").
+		Where("beneficiary_id = ? AND reflect_status = ? AND merchant_id=?", userID, "reflected", merchantID).
 		Select("COALESCE(SUM(total_amount), 0)").
 		Scan(&commResult.Withdrawn)
-		
+
 	// 统计待提现 (假设状态为 'none' 或 'pending')
 	// 简化逻辑：Pending = Total - Withdrawn
 	// 或者直接查询
 	commResult.Pending = commResult.Total - commResult.Withdrawn
-	
+
 	res.Commission.Total = commResult.Total
 	res.Commission.Withdrawn = commResult.Withdrawn
 	res.Commission.Pending = commResult.Pending
-	
+
 	// 3. 统计积分数据
 	// 3.1 获取当前剩余积分 (从 app_user_points_accounts 表，这里取平台积分，即 merchant_id = 0)
 	// 如果需要显示特定商户的，需要前端传参或约定。设计图只有一个 "积分账户(YDD)"，假设是平台积分。
 	var account model.UserPointsAccount
-	if err := global.GVA_DB.WithContext(ctx).Where("user_id = ? AND merchant_id = ?", userID, 0).First(&account).Error; err == nil && account.Balance != nil {
+	if err := global.GVA_DB.WithContext(ctx).Where("user_id = ? AND merchant_id = ?", userID, merchantID).First(&account).Error; err == nil && account.Balance != nil {
 		res.Points.Current = *account.Balance
+		res.Points.Name = *account.TokenName
+		res.Points.Symbol = *account.Symbol
 	}
-	
+
 	// 3.2 统计总获取、已消耗、待入账 (从 app_user_points_logs 表)
 	// Total: SUM(change) where change > 0 AND status = 'success'
 	// Consumed: SUM(change) where change < 0 AND status = 'success' (abs)
 	// Pending: SUM(change) where change > 0 AND status = 'pending' (假设有 pending 状态)
-	
+
 	type PointsStat struct {
-		Income   int64 // 获取
-		Expense  int64 // 消耗
-		Pending  int64 // 待入账
+		Income  int64 // 获取
+		Expense int64 // 消耗
+		Pending int64 // 待入账
 	}
 	var pStat PointsStat
-	
+
 	// 统计总获取 (merchant_id = 0)
 	global.GVA_DB.WithContext(ctx).Model(&model.UserPointsLog{}).
-		Where("user_id = ? AND merchant_id = ? AND `change` > 0 AND status = 'success'", userID, 0).
+		Where("user_id = ? AND merchant_id = ? AND `change` > 0 AND status = 'success'", userID, merchantID).
 		Select("COALESCE(SUM(`change`), 0)").
 		Scan(&pStat.Income)
-		
+
 	// 统计已消耗 (merchant_id = 0)
 	var expense int64
 	global.GVA_DB.WithContext(ctx).Model(&model.UserPointsLog{}).
-		Where("user_id = ? AND merchant_id = ? AND `change` < 0 AND status = 'success'", userID, 0).
+		Where("user_id = ? AND merchant_id = ? AND `change` < 0 AND status = 'success'", userID, merchantID).
 		Select("COALESCE(SUM(`change`), 0)").
 		Scan(&expense)
 	pStat.Expense = -expense // 转为正数
-	
+
 	// 统计待入账
 	global.GVA_DB.WithContext(ctx).Model(&model.UserPointsLog{}).
-		Where("user_id = ? AND merchant_id = ? AND `change` > 0 AND status = 'pending'", userID, 0).
+		Where("user_id = ? AND merchant_id = ? AND `change` > 0 AND status = 'pending'", userID, merchantID).
 		Select("COALESCE(SUM(`change`), 0)").
 		Scan(&pStat.Pending)
-		
+
 	res.Points.Total = pStat.Income
 	res.Points.Consumed = pStat.Expense
 	res.Points.Pending = pStat.Pending
 
+	type InviteStat struct {
+		DirectCount   int64 `json:"directCount"`
+		IndirectCount int64 `json:"indirectCount"`
+	}
+	global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).
+		Where("inviter_id = ?", userID).
+		Count(&res.Invite.DirectCount)
+	//invite_path="1000/1001/1002/1003/1007/1015/1016"
+	idStr := strconv.Itoa(int(userID))
+	global.GVA_DB.WithContext(ctx).Model(&model.AppUsers{}).
+		Where("inviter_id != ?", userID).
+		Where("invite_path LIKE ? OR invite_path LIKE ? OR invite_path LIKE ?",
+			idStr+"/%",
+			"%/"+idStr,
+			"%/"+idStr+"/%").
+		Count(&res.Invite.IndirectCount)
 	return res, nil
 }
