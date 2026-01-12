@@ -11,8 +11,8 @@ const props = defineProps({
   }
 })
 
-// 说明：public 下的资源不应通过 import 引入，直接使用根路径访问
-const darkLogoPath = "/logo-dark.png"; // 如无暗色logo，可留空或与亮色一致
+
+const darkLogoPath = "/logo.png";  // 系统没有暗黑模式logo，如果需要暗黑模式logo请自行修改文件路径。
 const lightLogoPath = "/logo.png";
 
 const appStore = useAppStore();

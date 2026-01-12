@@ -13,7 +13,6 @@ export const config = {
 }
 
 export const viteLogo = (env) => {
-
 }
 
 export default config

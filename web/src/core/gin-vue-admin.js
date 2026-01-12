@@ -9,6 +9,5 @@ import packageInfo from '../../package.json'
 export default {
   install: (app) => {
     register(app)
-    
   }
 }
