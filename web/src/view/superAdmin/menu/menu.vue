@@ -459,7 +459,6 @@
             >
               <el-icon
                 class="cursor-pointer text-blue-500 hover:text-blue-700"
-                @click="toDoc('https://www.gin-vue-admin.com/guide/web/button-auth.html')"
               >
                 <QuestionFilled />
               </el-icon>

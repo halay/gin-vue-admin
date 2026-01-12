@@ -158,7 +158,7 @@
   }
 
   const goDoc = () => {
-    window.open('https://www.gin-vue-admin.com/guide/start-quickly/env.html')
+    window.open('')
   }
 
   const out = ref(false)
@@ -287,7 +287,7 @@
           }
         ).then(() => {
           // 点击确认按钮，打开AI配置文档
-          window.open('https://www.gin-vue-admin.com/guide/server/mcp.html', '_blank')
+          window.open('', '_blank')
           router.push({ name: 'Login' })
         }).catch(() => {
           // 点击取消按钮或关闭弹窗，直接跳转到登录页

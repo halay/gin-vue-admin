@@ -242,10 +242,8 @@
         </p>
         <p class="text-sm text-gray-600">
           后端需要提前
-          <code class="bg-blue-100 px-1 py-0.5 rounded"
-            >import
-            "github.com/flipped-aurora/gin-vue-admin/server/service/system"</code
-          >
+          <code class="bg-blue-100 px-1 py-0.5 rounded">import
+            </code>
         </p>
         <p class="mb-2 text-sm text-gray-600">
           然后调用
