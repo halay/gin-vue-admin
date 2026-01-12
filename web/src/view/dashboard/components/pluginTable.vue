@@ -5,7 +5,6 @@
         <template #default="{ row }">
           <a
             class="text-black dark:text-white decoration-black/20 dark:decoration-white/20 hover:text-active"
-            :href="`https://plugin.gin-vue-admin.com/details/${row.ID}`"
             target="_blank"
           >{{ row.name }}</a>
         </template>
@@ -35,70 +34,44 @@
 
 <script setup>
 
-  // const tableData = [
-  //   {
-  //     ranking: 1,
-  //     title: '全球领先的RWA一站式生态平台',
-  //     click_num: 523,
-  //     hot: 263,
-  //     link: ''
-  //   },
-  //   {
-  //     ranking: 2,
-  //     title:
-  //       "The world's leading one-stop RWA ecological platform",
-  //     click_num: 337,
-  //     hot: 176,
-  //     link: ''
-  //   },
-  //   {
-  //     ranking: 3,
-  //     title:'共享行为价值共同体',
-  //     click_num: 416,
-  //     hot: 223,
-  //     link: ''
-  //   },
-  //   {
-  //     ranking: 4,
-  //     title:
-  //       'Shared behavioral value community',
-  //     click_num: 292,
-  //     hot: 145,
-  //     link: ''
-  //   },
-  //   {
-  //     ranking: 5,
-  //     title: 'DeedMX全球领先的RWA',
-  //     click_num: 173,
-  //     hot: 110,
-  //     link: ''
-  //   }]
-  import { getShopPluginList } from '@/api/plugin/api'
-  import { ref } from 'vue'
-
-  const tableData = ref([])
-  const page = ref(1)
-  const pageSize = ref(5)
-  const total = ref(0)
-
-  const handleCurrentChange = (val) => {
-    page.value = val
-    getTableData()
-  }
-  const handleSizeChange = (val) => {
-    pageSize.value = val
-    getTableData()
-  }
-
-  const getTableData = async() => {
-    const res = await getShopPluginList({ page: page.value, pageSize: pageSize.value ,updatedAt: 1})
-    if (res.code === 0) {
-      tableData.value = res.data.list
-      total.value = res.data.total
-    }
-  }
-
-  getTableData()
+  const tableData = [
+    {
+      ranking: 1,
+      title: '全球领先的RWA一站式生态平台',
+      click_num: 523,
+      hot: 263,
+      link: ''
+    },
+    {
+      ranking: 2,
+      title:
+        "The world's leading one-stop RWA ecological platform",
+      click_num: 337,
+      hot: 176,
+      link: ''
+    },
+    {
+      ranking: 3,
+      title:'共享行为价值共同体',
+      click_num: 416,
+      hot: 223,
+      link: ''
+    },
+    {
+      ranking: 4,
+      title:
+        'Shared behavioral value community',
+      click_num: 292,
+      hot: 145,
+      link: ''
+    },
+    {
+      ranking: 5,
+      title: 'DeedMX全球领先的RWA',
+      click_num: 173,
+      hot: 110,
+      link: ''
+    }]
 </script>
 
 <style scoped lang="scss"></style>

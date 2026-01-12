@@ -22,12 +22,6 @@
           </gva-card>
 
           <div class="grid grid-cols-1 gap-4">
-            <gva-card title="最新插件">
-              <gva-plugin-table />
-            </gva-card>
-          </div>
-
-          <div class="grid grid-cols-1 gap-4">
             <gva-card title="最新更新">
               <gva-table />
             </gva-card>
@@ -44,12 +38,6 @@
           <gva-card title="文档" show-action>
             <gva-wiki />
           </gva-card>
-          <gva-card
-            without-padding
-            custom-class="overflow-hidden"
-          >
-            <gva-banner />
-          </gva-card>
         </div>
       </div>
     </div>
@@ -59,7 +47,6 @@
 <script setup>
   import { computed } from 'vue'
   import {
-    GvaPluginTable,
     GvaTable,
     GvaChart,
     GvaWiki,
