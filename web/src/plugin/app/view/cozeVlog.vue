@@ -83,6 +83,7 @@ const handleGenerate = async () => {
     // 创建任务工作流轮训查询结果
     const taskRes = await pollWorkflowStatus({
       task_id: result.task_Id,
+      api: apiKey,
     });
     videoUrl.value = taskRes
     ElMessage.success('视频生成成功')
@@ -93,6 +94,7 @@ const handleGenerate = async () => {
     isGenerating.value = false
   }
 }
+
 const pollWorkflowStatus = async (params, options = {}) => {
   // 默认参数配置
   const { maxRetries = 40, pollInterval = 20000 } = options;
@@ -105,8 +107,12 @@ const pollWorkflowStatus = async (params, options = {}) => {
       const res = await executeWorkflow(1, params, false);
       // 解析输出数据，添加错误处理
       const data = JSON.parse(res.data || '{}')
-      if (data.video_url && data.video_url.includes('https://')) {
+      if (data.code === 1 && data.video_url) {
         return data.video_url;
+      }
+      if (data.code === 4) {
+        ElMessage.error(data.message || '视频生成失败')
+        return Promise.reject({msg: data.message || '视频生成失败'}); // 抛出错误供外部捕获
       }
       attempts++;
       await new Promise(resolve => setTimeout(resolve, pollInterval));
