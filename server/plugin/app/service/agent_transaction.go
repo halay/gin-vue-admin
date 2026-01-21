@@ -543,32 +543,22 @@ func (s *AgentTransactionService) DistributeDealerCommissions(ctx context.Contex
 	// 由于订单可能有多个商品，我们需要遍历 OrderItems
 
 	baseAmountA := 0.0
-	var items []model.OrderItem
+	var items model.OrderItem
 	if err := global.GVA_DB.WithContext(ctx).Where("order_id = ?", order.ID).Find(&items).Error; err != nil {
 		return err
 	}
-
-	for _, item := range items {
-		// 获取商品税率
-		taxRate := 0.87
-		var prod model.Product
-		if err := global.GVA_DB.WithContext(ctx).Select("tax_rate").First(&prod, item.ProductID).Error; err == nil {
-			if prod.TaxRate != nil {
-				taxRate = *prod.TaxRate
-			}
+	var prod model.Product
+	var taxRate = 0.0
+	if err := global.GVA_DB.WithContext(ctx).Select("tax_rate").First(&prod, order.ProduceID).Error; err == nil {
+		if prod.TaxRate != nil {
+			taxRate = *prod.TaxRate
 		}
-
-		itemTotal := 0.0
-		if item.TotalAmount != nil {
-			itemTotal = *item.TotalAmount
-		}
-
-		// 分润基础金额A += 商品总额 * 税率 (注意税率单位，通常是百分比？需求说 tax_rate，假设是小数或百分比)
-		// 如果 tax_rate 存的是 10 表示 10%，则需要 / 100
-		// 根据之前的代码 logic: baseAmount += itemTotal * (1 - taxRate/100.0) 推测 taxRate 是 0-100 的值
-		// 需求: app_orders.total_amount * app_products.tax_rate
-		// 假设 tax_rate 是百分比，例如 10，则 * 0.1
-		baseAmountA += itemTotal * (taxRate / 100.0)
+	}
+	itemTotal := *order.TotalAmount
+	if taxRate > 0 {
+		baseAmountA = itemTotal * (1 - taxRate/100.0)
+	} else {
+		baseAmountA = itemTotal
 	}
 
 	if baseAmountA <= 0 {
