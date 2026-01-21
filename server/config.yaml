@@ -147,8 +147,8 @@ mysql:
     path: 110.41.59.11
     engine: ""
     log-mode: error
-    max-idle-conns: 10
-    max-open-conns: 100
+    max-idle-conns: 10000
+    max-open-conns: 10000
     singular: false
     log-zap: false
 oracle:
