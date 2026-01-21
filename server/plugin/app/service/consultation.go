@@ -72,6 +72,7 @@ func (s *CN) GetConsultationInfoList(ctx context.Context, info request.Consultat
 		}
 		db = db.Order(OrderStr)
 	}
+	db = db.Order("created_at desc")
 	if limit != 0 {
 		db = db.Limit(limit).Offset(offset)
 	}

@@ -28,6 +28,10 @@
         
             <el-table-column align="left" label="ID" prop="id" width="80" />
 
+       <el-table-column sortable align="left" label="日期" prop="createdAt" width="180">
+            <template #default="scope">{{ formatDate(scope.row.createdAt) }}</template>
+        </el-table-column>
+
             <el-table-column align="left" label="订单号" prop="orderNo" width="100" />
 
             <el-table-column align="left" label="订单ID" prop="orderId" width="80" />

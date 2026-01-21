@@ -16,6 +16,6 @@ type UserPointsLogSearch struct {
 	Reason         *string     `json:"reason" form:"reason"`
 	OrderNo        *string     `json:"orderNo" form:"orderNo"`
 	Remark         *string     `json:"remark" form:"remark"`
-	MerchantID     *int64      `json:"merchantId" form:"merchantId"`
+	MerchantID     *int        `json:"merchantId" form:"merchantId"`
 	request.PageInfo
 }

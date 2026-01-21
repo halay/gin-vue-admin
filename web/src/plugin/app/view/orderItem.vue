@@ -110,6 +110,8 @@
             <template #default="scope">{{ formatDate(scope.row.CreatedAt) }}</template>
         </el-table-column>
         
+        <el-table-column align="left" label="用户邮箱" prop="userEmail" width="180" />
+
             <el-table-column align="left" label="订单" prop="orderId" width="120">
     <template #default="scope">
         <span>{{ filterDataSource(dataSource.orderId,scope.row.orderId) }}</span>

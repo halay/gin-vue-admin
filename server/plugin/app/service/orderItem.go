@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
@@ -52,7 +53,10 @@ func (s *ORDI) GetOrderItemInfoList(ctx context.Context, info request.OrderItemS
 	limit := info.PageSize
 	offset := info.PageSize * (info.Page - 1)
 	// 创建db
-	db := global.GVA_DB.Model(&model.OrderItem{})
+	db := global.GVA_DB.Model(&model.OrderItem{}).
+		Select("app_order_items.*, app_users.email as user_email").
+		Joins("LEFT JOIN app_orders ON app_order_items.order_id = app_orders.id").
+		Joins("LEFT JOIN app_users ON app_orders.user_id = app_users.id")
 	var ORDIs []model.OrderItem
 	// 如果有条件搜索 下方会自动创建搜索语句
 	if len(info.CreatedAtRange) == 2 {
@@ -93,7 +97,7 @@ func (s *ORDI) GetOrderItemInfoList(ctx context.Context, info request.OrderItemS
 		// TODO 数据类型为复杂类型，请根据业务需求自行实现复杂类型的查询业务
 	}
 	if info.MerchantID != nil {
-		db = db.Where("merchant_id = ?", *info.MerchantID)
+		db = db.Where("app_order_items.merchant_id = ?", *info.MerchantID)
 	}
 	err = db.Count(&total).Error
 	if err != nil {

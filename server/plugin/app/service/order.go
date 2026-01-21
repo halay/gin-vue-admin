@@ -63,6 +63,9 @@ func (s *ORD) UpdateOrder(ctx context.Context, ORD model.Order, merchantID int) 
 					if err := Service.AgentTransaction.DistributeShareholderCommissions(subCtx, o); err != nil {
 						global.GVA_LOG.Error("DistributeShareholderCommissions error", zap.Error(err))
 					}
+					if err := processOrderGiftPoints(subCtx, o); err != nil {
+						global.GVA_LOG.Error("processOrderGiftPoints error", zap.Error(err))
+					}
 					// 更新订单分润状态
 					err = global.GVA_DB.WithContext(subCtx).Model(&model.Order{}).
 						Where("id = ?", o.ID).
@@ -407,7 +410,7 @@ func processOrderGiftPoints(ctx context.Context, order model.Order) error {
 				orderNo = *order.OrderNo
 			}
 			relatedID := int64(order.ID)
-			_ = UserPointsAccount.AddLogDetailed(ctx, userID, giftPoints, after, "购买赠送", orderNo, fmt.Sprintf("购买商品[%s]赠送", *item.ProductName), "gift", "success", &relatedID, &merchantID, nil, nil, nil, nil, nil)
+			_ = UserPointsAccount.AddLogDetailed(ctx, userID, giftPoints, after, "buy_gift", orderNo, fmt.Sprintf("购买商品[%s]赠送", *item.ProductName), "gift", "success", &relatedID, &merchantID, nil, nil, nil, nil, nil)
 		}
 	}
 	return nil

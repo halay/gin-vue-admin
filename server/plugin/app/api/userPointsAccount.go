@@ -1,14 +1,15 @@
 package api
 
 import (
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/utils"
-
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
+	appUtils "github.com/flipped-aurora/gin-vue-admin/server/utils"
 )
 
 var UserPointsAccount = new(UPA)
@@ -158,6 +159,9 @@ func (a *UPA) GetUserPointsAccountList(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
+	userID := appUtils.GetUserID(c)
+	mid, _ := serviceMerchantAdmin.GetMerchantIDByUserID(ctx, userID)
+	pageInfo.MerchantID = mid
 	list, total, err := serviceUserPointsAccount.GetUserPointsAccountList(ctx, pageInfo)
 	if err != nil {
 		global.GVA_LOG.Error("获取失败!", zap.Error(err))

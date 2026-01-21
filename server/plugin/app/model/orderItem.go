@@ -20,6 +20,7 @@ type OrderItem struct {
 	TotalPoints *int64         `json:"totalPoints" form:"totalPoints" gorm:"comment:积分小计;column:total_points;"`                              //小计积分
 	CoverImage  string         `json:"coverImage" form:"coverImage" gorm:"comment:图片快照;column:cover_image;"`                                 //图片
 	MerchantID  *int64         `json:"merchantId" form:"merchantId" gorm:"comment:商户ID;column:merchant_id;"`                                 //商户
+	UserEmail   string         `json:"userEmail" form:"userEmail" gorm:"->"`                                                                   //用户邮箱
 }
 
 // TableName 订单明细 OrderItem自定义表名 app_order_items

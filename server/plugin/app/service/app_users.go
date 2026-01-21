@@ -187,6 +187,7 @@ func (s *appUsers) GetAppUsersInfoList(ctx context.Context, info request.AppUser
 	if info.MerchantID != nil {
 		db = db.Where("merchant_id = ?", *info.MerchantID)
 	}
+	db = db.Order("created_at desc")
 	err = db.Count(&total).Error
 	if err != nil {
 		return
