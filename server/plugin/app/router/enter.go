@@ -36,6 +36,7 @@ var (
 	apiShareholderProfit      = api.Api.ShareholderProfit
 	apiAppDealer              = api.Api.AppDealer
 	apiAppAgentTransactions   = api.Api.AppAgentTransactions
+	apiExtAiTask              = api.Api.ExtAiTask
 )
 
 type router struct {
@@ -72,4 +73,5 @@ type router struct {
 	ShareholderProfit      spr
 	AppDealer              ADL
 	AppAgentTransactions   appAgentTransactions
+	ExtAiTask              extAiTask
 }

@@ -36,6 +36,7 @@ var (
 	serviceShareholderProfit      = service.Service.ShareholderProfit
 	serviceAppDealer              = service.Service.AppDealer
 	serviceAppAgentTransactions   = service.Service.AppAgentTransactions
+	serviceExtAiTask              = service.Service.ExtAiTask
 )
 
 type api struct {
@@ -72,4 +73,5 @@ type api struct {
 	ShareholderProfit      spr
 	AppDealer              ADL
 	AppAgentTransactions   appAgentTransactions
+	ExtAiTask              extAiTask
 }

@@ -35,4 +35,5 @@ type service struct {
 	ShareholderProfit      spr
 	AppDealer              ADL
 	AppAgentTransactions   appAgentTransactions
+	ExtAiTask              extAiTask
 }

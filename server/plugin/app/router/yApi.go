@@ -19,6 +19,13 @@ func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("getMerchantsMarketList", apiYApi.GetMerchantsMarketList) // 商户行情列表
 		group.GET("getXCgKLine", apiYApi.GetXCgKLine)                       // XCgK线
 		group.GET("getXCgKOhlc", apiYApi.GetXCgCoinsOHLC)                   // XCg Coins OHLC
-		group.POST("getBLCTYImages", apiYApi.GetBLCTYImages)                // GetBLCTYImages
+
+		privateGroup := private.Group("yApi")
+		privateGroup.POST("getBLCTYImages", apiYApi.GetBLCTYImages)          // GetBLCTYImages
+		privateGroup.GET("getBLCTYImageResult", apiYApi.GetBLCTYImageResult) // 获取图片生成结果
+		privateGroup.PUT("deleteBLCTYImage", apiYApi.DeleteBLCTYImageResult) // 删除已经生成的图片
+		privateGroup.POST("uploadCozeFile", apiYApi.UploadCozeFile)          //上传文件到Coze
+		privateGroup.POST("executeCozeTask", apiYApi.ExecuteCozeTask)        //执行Coze任务
+
 	}
 }

@@ -45,4 +45,5 @@ func Router(engine *gin.Engine) {
 	router.Router.ShareholderProfit.Init(public, private)
 	router.Router.AppDealer.Init(public, private)
 	router.Router.AppAgentTransactions.Init(public, private)
+	router.Router.ExtAiTask.Init(public, private)
 }

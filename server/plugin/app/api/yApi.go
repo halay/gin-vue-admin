@@ -1,26 +1,29 @@
 package api
 
 import (
-	"bytes"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
-	"io/ioutil"
+	"maps"
+	"mime/multipart"
 	"net/http"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
+	retResponse "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/service"
+	exampleService "github.com/flipped-aurora/gin-vue-admin/server/service"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils"
 )
 
 var YApi = new(yApi)
@@ -388,114 +391,145 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 	reqs.ImageSize = "4K"
 	reqs.Prompt = reqs.Prompt + " 所有内容用中文显示"
 	// 处理上传的文件
-	file, _, err := c.Request.FormFile("file")
-	if err == nil {
-		defer file.Close()
-		// 读取文件内容
-		fileBytes, err := io.ReadAll(file)
-		if err != nil {
-			response.FailWithMessage("读取文件失败: "+err.Error(), c)
-			return
-		}
-		// 转Base64
-		imgBase64 := base64.StdEncoding.EncodeToString(fileBytes)
-		reqs.Image = []string{imgBase64}
+	_, header, err := c.Request.FormFile("file")
+
+	taskModel := &model.ExtAiTask{
+		TaskId: xid.New().String(),
+		UserId: int64(utils.GetUserID(c)),
+		Status: "running",
+		Type:   "image",
 	}
-	var apiURL = plugin.Config.BltcyApiUrl + "/v1/images/generations"
-	var apiKey = plugin.Config.BltcyApiKey
-	client := &http.Client{}
-	type blctyResp struct {
-		Data []struct {
-			URL     string `json:"url"`
-			B64Json string `json:"b64_json"`
-		} `json:"data"`
+
+	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(c.Request.Context(), utils.GetUserID(c))
+
+	var merchantID *uint
+	if errMid == nil && mid != nil {
+		m := uint(*mid)
+		merchantID = &m
 	}
-	payload, _ := json.Marshal(reqs)
-	//uploadSvc := service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
-	uploaded := make([]string, 0, 4)
-	target := 4
-	maxAttempts := 10
-	attempts := 0
-	imgBaseUrl := plugin.Config.HrefUrl
-	for attempts < maxAttempts && len(uploaded) < target {
-		attempts++
-		req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payload))
-		if err != nil {
-			continue
-		}
-		req.Header.Add("Authorization", "Bearer "+apiKey)
-		req.Header.Add("Content-Type", "application/json")
-		res, err := client.Do(req)
-		if err != nil {
-			continue
-		}
-		b, err := io.ReadAll(res.Body)
-		res.Body.Close()
-		if err != nil {
-			continue
-		}
-		var obj blctyResp
-		if err := json.Unmarshal(b, &obj); err != nil || len(obj.Data) == 0 {
-			continue
-		}
-		//raw := strings.TrimSpace(strings.Trim(obj.Data[0].B64Json, "`\" "))
-		raw := obj.Data[0].B64Json
-		var payloadB64 string
-		ext := "jpg"
-		if strings.HasPrefix(raw, "data:") {
-			parts := strings.SplitN(raw, ",", 2)
-			if len(parts) < 2 {
-				continue
-			}
-			h := parts[0]
-			payloadB64 = parts[1]
-			if strings.HasPrefix(h, "data:image/") {
-				t := strings.TrimPrefix(h, "data:image/")
-				if i := strings.Index(t, ";"); i >= 0 {
-					t = t[:i]
-				}
-				switch strings.ToLower(t) {
-				case "jpeg", "jpg":
-					ext = "jpg"
-				case "png":
-					ext = "png"
-				case "webp":
-					ext = "webp"
-				case "gif":
-					ext = "gif"
-				}
-			}
-		} else {
-			payloadB64 = raw
-		}
-		imgBytes, err := base64.StdEncoding.DecodeString(payloadB64)
-		if err != nil || len(imgBytes) == 0 {
-			continue
-		}
-		filename := fmt.Sprintf("blcty_%d.%s", time.Now().UnixNano(), ext)
-		/*var buf bytes.Buffer
-		writer := multipart.NewWriter(&buf)
-		part, _ := writer.CreateFormFile("file", filename)
-		if _, err := part.Write(imgBytes); err != nil {
-			continue
-		}
-		writer.Close()
-		upReq := &http.Request{Header: make(http.Header), Body: io.NopCloser(&buf)}
-		upReq.Header.Set("Content-Type", writer.FormDataContentType())
-		_ = upReq.ParseMultipartForm(int64(len(imgBytes)) + 1024)
-		_, header, err := upReq.FormFile("file")
-		if err != nil {
-			continue
-		}
-		fileRec, err := uploadSvc.UploadFile(header, "0", 0)
-		if err != nil {
-			continue
-		}*/
-		filePath := filepath.Join(global.GVA_CONFIG.Local.Path, filename)
-		if err := ioutil.WriteFile(filePath, imgBytes, 0644); err != nil {
-			fmt.Println(err)
-		}
-		uploaded = append(uploaded, imgBaseUrl+filePath)
+	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(taskModel.UserId), merchantID)
+	if err != nil {
+		response.FailWithMessage("读取文件失败: "+err.Error(), c)
+		return
 	}
-	response.OkWithData(gin.H{"urls": uploaded}, c)
+
+	reqs.Image = []string{fi.Url}
+
+	var buf []byte
+	if buf, err = json.Marshal(reqs); err == nil {
+		taskModel.Options = string(buf)
+	}
+
+	if err = service.ExtAiTask.CreateExtAiTask(c.Request.Context(), taskModel); err != nil {
+		response.FailWithMessage("创建任务失败: "+err.Error(), c)
+		return
+	}
+	go service.ExtAiTask.ExecuteImageTask(taskModel.TaskId)
+	response.OkWithData(gin.H{
+		"status": "queued",
+		"id":     taskModel.ID,
+	}, c)
+}
+
+func (y *yApi) GetBLCTYImageResult(c *gin.Context) {
+	var req request.GetBLCTYImagesRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	modelValue, err := service.ExtAiTask.GetExtAiTask(c.Request.Context(), strconv.Itoa(req.ID))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	results := make([]*retResponse.ImgResult, 0)
+	json.Unmarshal([]byte(modelValue.Result), &results)
+	response.OkWithData(gin.H{
+		"status": modelValue.Status,
+		"images": results,
+	}, c)
+}
+
+func (y *yApi) DeleteBLCTYImageResult(c *gin.Context) {
+	var req request.DeleteBLCTYImagesRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err := service.ExtAiTask.DeleteImageResult(c.Request.Context(), req.ID, req.Indexs)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{
+		"indexes": req.Indexs,
+	}, c)
+}
+
+func (y *yApi) UploadCozeFile(c *gin.Context) {
+	var (
+		err    error
+		fp     multipart.File
+		header *multipart.FileHeader
+	)
+	if fp, header, err = c.Request.FormFile("file"); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(c.Request.Context(), utils.GetUserID(c))
+	var merchantID *uint
+	if errMid == nil && mid != nil {
+		m := uint(*mid)
+		merchantID = &m
+	}
+	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(utils.GetUserID(c)), merchantID)
+	if err != nil {
+		response.FailWithMessage("上传失败", c)
+		return
+	}
+	var uploadResult request.CoreUploadData
+	if uploadResult, err = service.ExtAiTask.UploadCozeFile(c.Request.Context(), header, fp); err != nil {
+		return
+	}
+	response.OkWithData(gin.H{
+		"upload": fi,
+		"data":   uploadResult,
+	}, c)
+}
+
+func (r *yApi) ExecuteCozeTask(c *gin.Context) {
+	var (
+		payload request.CozeTaskRequest
+	)
+	if err := c.ShouldBind(&payload); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	taskModel := &model.ExtAiTask{
+		TaskId: xid.New().String(),
+		UserId: int64(utils.GetUserID(c)),
+		Status: "running",
+		Type:   payload.Type,
+	}
+	req := &request.CozeWorkflowRequest{}
+	req.WorkflowId = payload.WorkflowId
+	req.Parameters = make(map[string]string)
+	maps.Copy(req.Parameters, payload.Parameters)
+	if buf, err := json.Marshal(req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	} else {
+		taskModel.Options = string(buf)
+	}
+	if err := service.ExtAiTask.CreateExtAiTask(c, taskModel); err != nil {
+		global.GVA_LOG.Error("创建任务失败!", zap.Error(err))
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	go service.ExtAiTask.ExecuteCozeTask(taskModel.TaskId)
+	response.OkWithData(gin.H{
+		"status": "queued",
+		"id":     taskModel.ID,
+	}, c)
+
 }
