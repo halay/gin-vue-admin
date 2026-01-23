@@ -533,3 +533,22 @@ func (r *yApi) ExecuteCozeTask(c *gin.Context) {
 	}, c)
 
 }
+
+func (r *yApi) GetCozeTaskResult(c *gin.Context) {
+	var req request.GetBLCTYImagesRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	modelValue, err := service.ExtAiTask.GetExtAiTask(c.Request.Context(), strconv.Itoa(req.ID))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	results := &retResponse.CozeResult{}
+	json.Unmarshal([]byte(modelValue.Result), results)
+	response.OkWithData(gin.H{
+		"status": modelValue.Status,
+		"data":   results,
+	}, c)
+}

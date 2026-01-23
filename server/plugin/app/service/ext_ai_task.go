@@ -250,6 +250,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 	defer func() {
 		if !isCompleted {
 			if err != nil {
+				result.State = "failed"
 				modelValue.Status = "failed"
 			} else {
 				modelValue.Status = "canceled"
@@ -288,6 +289,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		return
 	}
 	executeID = wkResult.ExecuteId
+	result.Execute.ID = executeID
 	var str string
 	if err = wkResult.Decode(&str); err == nil {
 		tk := cozeTaskOutput{}
@@ -296,6 +298,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 			return
 		}
 		cozeTaskId = tk.TaskId
+		result.Execute.Output = str
 	} else {
 		global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("output", string(wkResult.Data)), zap.Error(err))
 		return
@@ -303,6 +306,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 	// global.GVA_LOG.Info("执行口子工作流成功!", zap.String("taskId", taskId), zap.String("executeID", executeID), zap.String("payload", modelValue.Options), zap.Error(err))
 	// cozeTaskId, err = s.waitCozeWorflowOutput(ctx, payload.WorkflowId, executeID)
 	result.Execute.Duration = time.Since(tm)
+	result.Execute.ID = cozeTaskId
 	if err != nil {
 		global.GVA_LOG.Error("获取扣子工作流输出失败!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.Error(err))
 		result.Execute.Error = err.Error()
@@ -312,6 +316,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		global.GVA_LOG.Info("获取扣子工作流任务信息成功!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.Error(err))
 	}
 	result.State = "tasking"
+
 	uri, err = s.waitCozeTaskResult(ctx, payload.WorkflowId, cozeTaskId)
 	result.Task.Duration = time.Since(tm)
 	if err != nil {
