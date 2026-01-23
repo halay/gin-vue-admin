@@ -1,0 +1,66 @@
+[
+  {
+    "name": "元大劉氏· 非遺、健康",
+    "id": 1001,
+    "logo": "https://rwa.deedmx.com/api/uploads/file/751ccfc4ad88a79249975ebad2ad0235_20251122105457.png",
+    "desc": "以傳承和弘揚中醫國粹為己任, 不斷深化技術創新,提升服務質量,拓展產業佈局.",
+    "goods": [
+      {
+        "name": "清肺散结颗粒",
+        "id": 2001,
+        "price": 11300,
+        "skuCode": "SK17668046780894",
+        "desc": "清肺散结颗粒，舒适透气",
+        "image": "https://rwa.deedmx.com/api/uploads/file/f70a13ed45124d1a32b470091bece644_20251210074202.png"
+      }
+    ]
+  },
+  {
+    "name": "檸檬幣· 消費品和食品",
+    "id": 1002,
+    "logo": "https://rwa.deedmx.com/api/uploads/file/4c72aee091b22138f3be76f25d217ab1_20251122105000.png",
+    "desc": "激活檸檬全產業鏈健康價值,構建全球化健康生活生態",
+    "goods": [
+      {
+        "name": "檬小泰 天然可食用柠檬精油单方柠檬油水果清甜香气精油15ml*2",
+        "id": 2003,
+        "price": 189.9,
+        "skuCode": "SK17669027072048",
+        "desc": "天然可食用柠檬精油，水果清甜香气，续航30小时",
+        "image": "https://rwa.deedmx.com/api/uploads/file/11a63a1b9d0d51cf684380ab5c15c983_20251228140943.png"
+      },
+      {
+        "name": "鲜柠檬分子果胶冻干粉固体饮料",
+        "id": 2004,
+        "price": 368,
+        "skuCode": "SK17669094328889",
+        "desc": "鲜柠檬分子果胶冻干粉固体饮料",
+        "image": "https://rwa.deedmx.com/api/uploads/file/11a63a1b9d0d51cf684380ab5c15c983_20251228155508.png"
+      }
+    ]
+  },
+  {
+    "name": "未来酱酒·未来酱",
+    "id": 1003,
+    "logo": "https://rwa.deedmx.com/api/uploads/file/96d6f2e7e1f705ab5e59c84a6dc009b2_20251226204117.jpg",
+    "desc": "让百万精英喝上一瓶好酒",
+    "goods": [
+      {
+        "name": "未来酱5789红金53度坤沙酱香型白酒纯粮酒高度白酒礼盒装500ml*2",
+        "id": 2005,
+        "price": 2798,
+        "skuCode": "SK17668460469032",
+        "desc": "未来酱5789红金53度坤沙酱香型白酒纯粮酒高度白酒500ml",
+        "image": "https://rwa.deedmx.com/api/uploads/file/06c98dcc684721bca3edfda939b7970e_20251227221009.jpg"
+      },
+      {
+        "name": "未来酱5789黑金版53度坤沙酱香型白酒纯粮高度白酒单瓶装500ml*1",
+        "id": 2006,
+        "price": 1399,
+        "skuCode": "SK17668478681527",
+        "desc": "未来酱5789黑金版53度坤沙酱香型白酒纯粮高度白酒500ml",
+        "image": "https://rwa.deedmx.com/api/uploads/file/b56f978b04541a3bb75da7d70bd29bf7_20251227230131.jpg"
+      }
+    ]
+  }
+]

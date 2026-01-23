@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -20,7 +21,9 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
+	appResponse "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
+	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/service"
 )
 
 var YApi = new(yApi)
@@ -498,4 +501,64 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		uploaded = append(uploaded, imgBaseUrl+filePath)
 	}
 	response.OkWithData(gin.H{"urls": uploaded}, c)
+}
+
+func (y *yApi) GetShopGoods(c *gin.Context) {
+	path := "shop.json"
+	fileData, err := os.ReadFile(path)
+	if err != nil {
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		return
+	}
+	// 解析JSON数据
+	var shops []appResponse.ShopResponse
+	if err := json.Unmarshal(fileData, &shops); err != nil {
+		response.FailWithMessage("解析JSON数据失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(shops, c)
+	return
+}
+func (y *yApi) CreateOrder(c *gin.Context) {
+	var body struct {
+		SkuCode        string  `json:"skuCode"`
+		Quantity       int64   `json:"quantity"`
+		Price          float64 `json:"price"`
+		ConsigneeName  string  `json:"consigneeName"`
+		ConsigneePhone string  `json:"consigneePhone"`
+		Address        string  `json:"address"`
+		Phone          string  `json:"phone"`
+		Email          string  `json:"email"`
+		PayMethod      string  `json:"payMethod"`
+		Remark         string  `json:"remark"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if body.Quantity <= 0 {
+		body.Quantity = 1
+	}
+	if body.PayMethod == "" {
+		body.PayMethod = "wechat"
+	}
+	amountCents := int64(body.Price * 100)
+	orderNo := fmt.Sprintf("P%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)
+	custID, err := service.WebStripe.EnsureCustomer("web_"+body.Email, 888)
+	if err != nil {
+		response.FailWithMessage("创建支付意图失败"+err.Error(), c)
+		return
+	}
+	// 创建支付意图，标记为商品订单
+	piID, clientSecret, err := service.WebStripe.CreatePaymentIntent(amountCents, "cny", body.PayMethod, custID, map[string]string{
+		"order_no": orderNo,
+		"email":    body.Email,
+		"pay_type": "web_order",
+	})
+	if err != nil {
+		response.FailWithMessage("创建支付意图失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"orderNo": orderNo, "item": body, "paymentIntentId": piID, "clientSecret": clientSecret}, c)
+	return
 }

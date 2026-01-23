@@ -20,5 +20,7 @@ func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("getXCgKLine", apiYApi.GetXCgKLine)                       // XCgK线
 		group.GET("getXCgKOhlc", apiYApi.GetXCgCoinsOHLC)                   // XCg Coins OHLC
 		group.POST("getBLCTYImages", apiYApi.GetBLCTYImages)                // GetBLCTYImages
+		group.GET("getShopGoods", apiYApi.GetShopGoods)                     // GetShopGoods
+		group.POST("createOrder", apiYApi.CreateOrder)                      // CreateOrder
 	}
 }
