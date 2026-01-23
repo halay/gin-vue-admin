@@ -73,6 +73,10 @@ func (s *UPA) GetUserPointsAccountList(ctx context.Context, info request.UserPoi
 	if info.Balance != nil {
 		db = db.Where("balance >= ?", *info.Balance)
 	}
+	if info.MerchantID != nil {
+		db = db.Where("merchant_id = ?", *info.MerchantID)
+	}
+	db = db.Order("created_at desc")
 	err = db.Count(&total).Error
 	if err != nil {
 		return

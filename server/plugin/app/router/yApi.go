@@ -19,6 +19,8 @@ func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		group.GET("getMerchantsMarketList", apiYApi.GetMerchantsMarketList) // 商户行情列表
 		group.GET("getXCgKLine", apiYApi.GetXCgKLine)                       // XCgK线
 		group.GET("getXCgKOhlc", apiYApi.GetXCgCoinsOHLC)                   // XCg Coins OHLC
+		group.GET("getShopGoods", apiYApi.GetShopGoods)                     // GetShopGoods
+		group.POST("createOrder", apiYApi.CreateOrder)                      // CreateOrder
 
 		privateGroup := private.Group("yApi")
 		privateGroup.POST("getBLCTYImages", apiYApi.GetBLCTYImages)          // GetBLCTYImages

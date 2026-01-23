@@ -148,7 +148,7 @@ mysql:
     engine: ""
     log-mode: error
     max-idle-conns: 10000
-    max-open-conns: 10000
+    max-open-conns: 100000
     singular: false
     log-zap: false
 oracle:

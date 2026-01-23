@@ -2,10 +2,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"maps"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,6 +21,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/model/common/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
+	appResponse "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/response"
 	retResponse "github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/service"
@@ -378,6 +381,192 @@ func (y *yApi) GetXCgCoinsOHLC(c *gin.Context) {
 	}
 	response.OkWithData(json.RawMessage(body), c)
 }
+
+// func (y *yApi) GetBLCTYImages(c *gin.Context) {
+// 	var reqs request.BLCTYImagesRequest
+// 	reqs.ResponseFormat = "b64_json"
+// 	reqs.Model = "nano-banana-2"
+// 	// 尝试从multipart form中绑定普通字段
+// 	if err := c.ShouldBind(&reqs); err != nil {
+// 		response.FailWithMessage(err.Error(), c)
+// 		return
+// 	}
+// 	reqs.Model = "nano-banana-2"
+// 	reqs.ImageSize = "4K"
+// 	reqs.Prompt = reqs.Prompt + " 所有内容用中文显示"
+// 	// 处理上传的文件
+// 	file, _, err := c.Request.FormFile("file")
+// 	if err == nil {
+// 		defer file.Close()
+// 		// 读取文件内容
+// 		fileBytes, err := io.ReadAll(file)
+// 		if err != nil {
+// 			response.FailWithMessage("读取文件失败: "+err.Error(), c)
+// 			return
+// 		}
+// 		// 转Base64
+// 		imgBase64 := base64.StdEncoding.EncodeToString(fileBytes)
+// 		reqs.Image = []string{imgBase64}
+// 	}
+// 	var apiURL = plugin.Config.BltcyApiUrl + "/v1/images/generations"
+// 	var apiKey = plugin.Config.BltcyApiKey
+// 	client := &http.Client{}
+// 	type blctyResp struct {
+// 		Data []struct {
+// 			URL     string `json:"url"`
+// 			B64Json string `json:"b64_json"`
+// 		} `json:"data"`
+// 	}
+// 	payload, _ := json.Marshal(reqs)
+// 	//uploadSvc := service.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService
+// 	uploaded := make([]string, 0, 4)
+// 	target := 4
+// 	maxAttempts := 10
+// 	attempts := 0
+// 	imgBaseUrl := plugin.Config.HrefUrl
+// 	for attempts < maxAttempts && len(uploaded) < target {
+// 		attempts++
+// 		req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payload))
+// 		if err != nil {
+// 			continue
+// 		}
+// 		req.Header.Add("Authorization", "Bearer "+apiKey)
+// 		req.Header.Add("Content-Type", "application/json")
+// 		res, err := client.Do(req)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		b, err := io.ReadAll(res.Body)
+// 		res.Body.Close()
+// 		if err != nil {
+// 			continue
+// 		}
+// 		var obj blctyResp
+// 		if err := json.Unmarshal(b, &obj); err != nil || len(obj.Data) == 0 {
+// 			continue
+// 		}
+// 		//raw := strings.TrimSpace(strings.Trim(obj.Data[0].B64Json, "`\" "))
+// 		raw := obj.Data[0].B64Json
+// 		var payloadB64 string
+// 		ext := "jpg"
+// 		if strings.HasPrefix(raw, "data:") {
+// 			parts := strings.SplitN(raw, ",", 2)
+// 			if len(parts) < 2 {
+// 				continue
+// 			}
+// 			h := parts[0]
+// 			payloadB64 = parts[1]
+// 			if strings.HasPrefix(h, "data:image/") {
+// 				t := strings.TrimPrefix(h, "data:image/")
+// 				if i := strings.Index(t, ";"); i >= 0 {
+// 					t = t[:i]
+// 				}
+// 				switch strings.ToLower(t) {
+// 				case "jpeg", "jpg":
+// 					ext = "jpg"
+// 				case "png":
+// 					ext = "png"
+// 				case "webp":
+// 					ext = "webp"
+// 				case "gif":
+// 					ext = "gif"
+// 				}
+// 			}
+// 		} else {
+// 			payloadB64 = raw
+// 		}
+// 		imgBytes, err := base64.StdEncoding.DecodeString(payloadB64)
+// 		if err != nil || len(imgBytes) == 0 {
+// 			continue
+// 		}
+// 		filename := fmt.Sprintf("blcty_%d.%s", time.Now().UnixNano(), ext)
+// 		/*var buf bytes.Buffer
+// 		writer := multipart.NewWriter(&buf)
+// 		part, _ := writer.CreateFormFile("file", filename)
+// 		if _, err := part.Write(imgBytes); err != nil {
+// 			continue
+// 		}
+// 		writer.Close()
+// 		upReq := &http.Request{Header: make(http.Header), Body: io.NopCloser(&buf)}
+// 		upReq.Header.Set("Content-Type", writer.FormDataContentType())
+// 		_ = upReq.ParseMultipartForm(int64(len(imgBytes)) + 1024)
+// 		_, header, err := upReq.FormFile("file")
+// 		if err != nil {
+// 			continue
+// 		}
+// 		fileRec, err := uploadSvc.UploadFile(header, "0", 0)
+// 		if err != nil {
+// 			continue
+// 		}*/
+// 		filePath := filepath.Join(global.GVA_CONFIG.Local.Path, filename)
+// 		if err := ioutil.WriteFile(filePath, imgBytes, 0644); err != nil {
+// 			fmt.Println(err)
+// 		}
+// 		uploaded = append(uploaded, imgBaseUrl+filePath)
+// 	}
+// 	response.OkWithData(gin.H{"urls": uploaded}, c)
+// }
+
+func (y *yApi) GetShopGoods(c *gin.Context) {
+	path := "shop.json"
+	fileData, err := os.ReadFile(path)
+	if err != nil {
+		response.FailWithMessage("获取失败"+err.Error(), c)
+		return
+	}
+	// 解析JSON数据
+	var shops []appResponse.ShopResponse
+	if err := json.Unmarshal(fileData, &shops); err != nil {
+		response.FailWithMessage("解析JSON数据失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(shops, c)
+	return
+}
+func (y *yApi) CreateOrder(c *gin.Context) {
+	var body struct {
+		SkuCode        string  `json:"skuCode"`
+		Quantity       int64   `json:"quantity"`
+		Price          float64 `json:"price"`
+		ConsigneeName  string  `json:"consigneeName"`
+		ConsigneePhone string  `json:"consigneePhone"`
+		Address        string  `json:"address"`
+		Phone          string  `json:"phone"`
+		Email          string  `json:"email"`
+		PayMethod      string  `json:"payMethod"`
+		Remark         string  `json:"remark"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if body.Quantity <= 0 {
+		body.Quantity = 1
+	}
+	if body.PayMethod == "" {
+		body.PayMethod = "wechat"
+	}
+	amountCents := int64(body.Price * 100)
+	orderNo := fmt.Sprintf("P%v%04d", time.Now().Unix(), time.Now().Nanosecond()%10000)
+	custID, err := service.WebStripe.EnsureCustomer("web_"+body.Email, 888)
+	if err != nil {
+		response.FailWithMessage("创建支付意图失败"+err.Error(), c)
+		return
+	}
+	// 创建支付意图，标记为商品订单
+	piID, clientSecret, err := service.WebStripe.CreatePaymentIntent(amountCents, "cny", body.PayMethod, custID, map[string]string{
+		"order_no": orderNo,
+		"email":    body.Email,
+		"pay_type": "web_order",
+	})
+	if err != nil {
+		response.FailWithMessage("创建支付意图失败"+err.Error(), c)
+		return
+	}
+	response.OkWithData(gin.H{"orderNo": orderNo, "item": body, "paymentIntentId": piID, "clientSecret": clientSecret}, c)
+	return
+}
+
 func (y *yApi) GetBLCTYImages(c *gin.Context) {
 	var reqs request.BLCTYImagesRequest
 	reqs.ResponseFormat = "b64_json"
