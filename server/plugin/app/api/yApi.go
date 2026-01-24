@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"maps"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -700,11 +699,7 @@ func (r *yApi) ExecuteCozeTask(c *gin.Context) {
 		Status: "running",
 		Type:   payload.Type,
 	}
-	req := &request.CozeWorkflowRequest{}
-	req.WorkflowId = payload.WorkflowId
-	req.Parameters = make(map[string]string)
-	maps.Copy(req.Parameters, payload.Parameters)
-	if buf, err := json.Marshal(req); err != nil {
+	if buf, err := json.Marshal(payload); err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	} else {

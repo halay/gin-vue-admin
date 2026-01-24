@@ -63,10 +63,14 @@ type CozeResult struct {
 	ExecuteId string          `json:"execute_id"`
 }
 
-type CozeTaskRequest struct {
+type CozeWorkflow struct {
 	WorkflowId string            `json:"workflow_id"` //工作流id
-	Type       string            `json:"type"`        //类型
 	Parameters map[string]string `json:"parameters"`  //参数
+}
+
+type CozeTaskRequest struct {
+	Type      string         `json:"type"`      //类型
+	Workflows []CozeWorkflow `json:"workflows"` //工作流
 }
 
 type CozeWorkflowRequest struct {

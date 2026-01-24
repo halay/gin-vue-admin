@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -246,13 +247,16 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		ctx         context.Context
 	)
 	ctx = context.Background()
-	payload := &request.CozeWorkflowRequest{}
+	taskRequest := &request.CozeTaskRequest{}
 	modelValue := &model.ExtAiTask{}
 	defer func() {
 		if !isCompleted {
 			if err != nil {
 				result.State = "failed"
 				modelValue.Status = "failed"
+				if result.Error == "" {
+					result.Error = err.Error()
+				}
 			} else {
 				modelValue.Status = "canceled"
 			}
@@ -273,65 +277,99 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		modelValue.Description = "任务参数解码失败"
 		return
 	}
-	if err = json.Unmarshal([]byte(modelValue.Options), payload); err != nil {
+	if err = json.Unmarshal([]byte(modelValue.Options), taskRequest); err != nil {
 		global.GVA_LOG.Error("任务参数解码失败!", zap.String("taskId", taskId), zap.Error(err))
 		modelValue.Description = "任务参数解码失败"
 		return
 	}
-	global.GVA_LOG.Info("开始执行扣子工作流!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId))
+
+	//step 1
 	var wkResult *request.CozeResult
 	result.State = "executing"
+	payload := &request.CozeWorkflowRequest{
+		WorkflowId: taskRequest.Workflows[0].WorkflowId,
+		Parameters: make(map[string]string),
+	}
+	maps.Copy(payload.Parameters, taskRequest.Workflows[0].Parameters)
 	if plugin.Config.CozeApiToken != "" {
 		payload.Parameters["api_token"] = plugin.Config.CozeApiToken
 	}
+	global.GVA_LOG.Info("开始执行扣子工作流!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId))
 	if wkResult, err = s.executeCozeWorkflow(payload); err != nil {
-		global.GVA_LOG.Error("执行任务失败!", zap.String("taskId", taskId), zap.Error(err))
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       payload.WorkflowId,
+			Error:    err.Error(),
+			Duration: time.Since(tm).String(),
+		})
+		global.GVA_LOG.Error("执行任务失败!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.Error(err))
 		modelValue.Description = err.Error()
 		return
 	}
 	executeID = wkResult.ExecuteId
-	result.Execute.ID = executeID
 	var str string
-	if err = wkResult.Decode(&str); err == nil {
-		tk := cozeTaskOutput{}
-		if err = json.Unmarshal([]byte(str), &tk); err != nil {
-			global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("output", string(wkResult.Data)), zap.Error(err))
-			return
-		}
-		cozeTaskId = tk.TaskId
-		result.Execute.Output = str
-	} else {
-		global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("output", string(wkResult.Data)), zap.Error(err))
+	if err = wkResult.Decode(&str); err != nil {
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       payload.WorkflowId,
+			Error:    err.Error(),
+			Output:   string(wkResult.Data),
+			Duration: time.Since(tm).String(),
+		})
+		global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("output", string(wkResult.Data)), zap.Error(err))
 		return
 	}
-	// global.GVA_LOG.Info("执行口子工作流成功!", zap.String("taskId", taskId), zap.String("executeID", executeID), zap.String("payload", modelValue.Options), zap.Error(err))
-	// cozeTaskId, err = s.waitCozeWorflowOutput(ctx, payload.WorkflowId, executeID)
-	result.Execute.Duration = time.Since(tm)
-	result.Execute.ID = cozeTaskId
-	if err != nil {
-		global.GVA_LOG.Error("获取扣子工作流输出失败!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.Error(err))
-		result.Execute.Error = err.Error()
-		modelValue.Description = err.Error()
+	tk := cozeTaskOutput{}
+	if err = json.Unmarshal([]byte(str), &tk); err != nil {
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       payload.WorkflowId,
+			Error:    err.Error(),
+			Output:   str,
+			Duration: time.Since(tm).String(),
+		})
+		global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("output", string(wkResult.Data)), zap.Error(err))
 		return
-	} else {
-		global.GVA_LOG.Info("获取扣子工作流任务信息成功!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.Error(err))
 	}
-	result.State = "tasking"
+	cozeTaskId = tk.TaskId
+	result.Results = append(result.Results, response.CozeExecute{
+		ID:       payload.WorkflowId,
+		Output:   str,
+		Duration: time.Since(tm).String(),
+	})
+	global.GVA_LOG.Info("获取扣子工作流任务信息成功!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId))
 
-	uri, err = s.waitCozeTaskResult(ctx, payload.WorkflowId, cozeTaskId)
-	result.Task.Duration = time.Since(tm)
+	//step 2 generate video
+	result.State = "generate"
+	generatePayload := &request.CozeWorkflowRequest{
+		WorkflowId: taskRequest.Workflows[1].WorkflowId,
+		Parameters: make(map[string]string),
+	}
+	maps.Copy(generatePayload.Parameters, taskRequest.Workflows[1].Parameters)
+	if plugin.Config.CozeApiToken != "" {
+		generatePayload.Parameters["api"] = plugin.Config.CozeApiToken
+	}
+	generatePayload.Parameters["task_id"] = cozeTaskId
+	global.GVA_LOG.Info("开始执行扣子生成视频工作流!", zap.String("taskId", taskId), zap.String("workflow", generatePayload.WorkflowId))
+	uri, err = s.waitCozeVideoGenerateResult(ctx, generatePayload)
 	if err != nil {
 		global.GVA_LOG.Error("执行扣子任务失败!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.Error(err))
 		modelValue.Description = err.Error()
-		result.Task.Error = err.Error()
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       generatePayload.WorkflowId,
+			Error:    err.Error(),
+			Duration: time.Since(tm).String(),
+		})
 		return
 	} else {
-		global.GVA_LOG.Error("执行扣子任务成功!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.String("uri", uri), zap.Error(err))
+		global.GVA_LOG.Info("执行扣子生成视频成功!", zap.String("taskId", taskId), zap.String("WorkflowId", generatePayload.WorkflowId), zap.String("uri", uri))
 		modelValue.Description = "执行成功"
-		modelValue.Status = "success"
+		modelValue.Status = "completed"
 		modelValue.CompleteAt = time.Now().Unix()
-		result.State = "completed"
+		result.State = "success"
 		result.Url = uri
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       generatePayload.WorkflowId,
+			Duration: time.Since(tm).String(),
+			Output:   uri,
+		})
 		if buf, err = json.Marshal(result); err == nil {
 			modelValue.Result = string(buf)
 		}
@@ -551,18 +589,18 @@ func (s *extAiTask) waitCozeWorflowOutput(ctx context.Context, workflowId, execu
 	}
 }
 
-func (s *extAiTask) waitCozeTaskResult(ctx context.Context, workflowId, taskID string) (uri string, err error) {
+func (s *extAiTask) waitCozeVideoGenerateResult(ctx context.Context, payload *request.CozeWorkflowRequest) (uri string, err error) {
 	var (
 		errcount int
 	)
-	payload := &request.CozeWorkflowRequest{
-		WorkflowId: workflowId,
-		IsAsync:    false,
-		Parameters: map[string]string{
-			"task_id": taskID,
-		},
-	}
-	ticker := time.NewTicker(time.Second * 5)
+	// payload := &request.CozeWorkflowRequest{
+	// 	WorkflowId: workflowId,
+	// 	IsAsync:    false,
+	// 	Parameters: map[string]string{
+	// 		"task_id": taskID,
+	// 	},
+	// }
+	ticker := time.NewTicker(time.Second * 50)
 	defer ticker.Stop()
 	for {
 		select {
