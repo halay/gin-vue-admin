@@ -229,6 +229,7 @@ func (s *extAiTask) ExecuteImageTask(taskId string) {
 	wg.Wait()
 	modelValue.Status = "completed"
 	modelValue.Description = "成功"
+	modelValue.CompleteAt = time.Now().Unix()
 	global.GVA_DB.Save(modelValue)
 	global.GVA_LOG.Info("任务执行成功!", zap.String("taskId", taskId))
 	isCompleted = true
@@ -328,6 +329,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		global.GVA_LOG.Error("执行扣子任务成功!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.String("uri", uri), zap.Error(err))
 		modelValue.Description = "执行成功"
 		modelValue.Status = "success"
+		modelValue.CompleteAt = time.Now().Unix()
 		result.State = "completed"
 		result.Url = uri
 		if buf, err = json.Marshal(result); err == nil {
