@@ -5,6 +5,14 @@ aliyun-oss:
     bucket-name: yourBucketName
     bucket-url: yourBucketUrl
     base-path: yourBasePath
+byte-tos:
+    endpoint: tos-cn-hongkong.bytepluses.com
+    region: hk
+    access-key-id: AKAPOGMzNTNkYWYwNDZiNDk4OGFlMWU0Y2NmYjEzNmUzODE
+    access-key-secret: TlRjeFpETmxNemRpT1RsbE5HUTVORGxtTkdNME4yUXhObU5sWkdZNFlUVQ==
+    bucket-name: deedmx-file
+    bucket-url: https://deedmx-file.tos-cn-hongkong.bytepluses.com
+    base-path: file
 autocode:
     web: web/src
     root: /Users/halay/code/gin-vue-admin
@@ -223,7 +231,7 @@ sqlite:
     log-zap: false
 system:
     db-type: mysql
-    oss-type: local
+    oss-type: byte-tos
     router-prefix: ""
     addr: 8888
     iplimit-count: 15000

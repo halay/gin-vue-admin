@@ -33,6 +33,8 @@ func NewOss() OSS {
 		return &AwsS3{}
 	case "cloudflare-r2":
 		return &CloudflareR2{}
+	case "byte-tos":
+		return &ByteTOS{}
 	case "minio":
 		minioClient, err := GetMinio(global.GVA_CONFIG.Minio.Endpoint, global.GVA_CONFIG.Minio.AccessKeyId, global.GVA_CONFIG.Minio.AccessKeySecret, global.GVA_CONFIG.Minio.BucketName, global.GVA_CONFIG.Minio.UseSSL)
 		if err != nil {
