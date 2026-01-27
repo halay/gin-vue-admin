@@ -1,31 +1,25 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue'
-import { UploadFilled, MagicStick, PictureFilled, Shop, StarFilled, VideoCameraFilled, Download, Refresh, SwitchFilled, CaretRight, Delete } from '@element-plus/icons-vue'
+import { ref, computed } from 'vue'
+import { UploadFilled, MagicStick, PictureFilled, Shop, StarFilled, VideoCameraFilled, Download, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { executeWorkflow, uploadImage, checkExecuteStatus, apiKey } from '@/plugin/app/api/cozeVlog'
+import { defineCozeWorkflowStore } from '@/pinia/modules/cozeWorkflow'
+const useVlogWorkflowStore = defineCozeWorkflowStore('vlog');
 
-// 创建ref数组存储所有上传组件引用
-const uploadRefs = ref([])
-
-const isGenerating = ref(false)
-const downLoading = ref(false)
-// 店铺名称
-const shopName = ref('')
-
-// 上传图片列表
-const imageList = ref([])
-// 图片上传中状态
-const imgUploading = ref([])
-
-// 视频URL
-const videoUrl = ref('')
-
+const imageList = computed(() => useVlogWorkflowStore.imageList)
+const isGenerating = computed(() => useVlogWorkflowStore.isGenerating)
 const isGenerateDisabled = computed(() => {
-  const imgCount = imageList.value.filter(item => item).length
+  const imgCount = imageList.value.filter(item => item.id).length
   return shopName.value.trim() === '' || imgCount !== 4 || isGenerating.value
 })
 
-const beforeUpload = (file, index) => {
+const videoUrl = computed(() => useVlogWorkflowStore.videoUrl)
+
+// 创建ref数组存储所有上传组件引用
+const uploadRefs = ref([])
+// 店铺名称
+const shopName = ref(useVlogWorkflowStore.text || '')
+
+const beforeUpload = (file) => {
   // 限制图片大小最大512M
   const maxSize = 512 * 1024 * 1024
   if (file.size > maxSize) {
@@ -36,211 +30,30 @@ const beforeUpload = (file, index) => {
 }
 // 上传图片
 const handleUpload = (file, index) => {
-  imgUploading.value[index] = true
-  uploadImage(file).then(res => {
-    if (res.code !== 0) {
-      // 上传失败，清除文件
-      uploadRefs.value[index]?.clearFiles()
-      imgUploading.value[index] = false
-      ElMessage.error(res.msg || '上传失败')
-      return
-    }
-    const id = res.data.id
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (res) => {
-      imageList.value[index] = {
-        id,
-        url: reader.result
-      }
-      imgUploading.value[index] = false
-    }
-  }).catch(err => {
-    ElMessage.error(err.msg || '图片上传错误')
-    imgUploading.value[index] = false
-    uploadRefs.value[index]?.clearFiles()
-  })
+  useVlogWorkflowStore.uploadImages(index, { file })
 }
 
 // 生成视频
 const handleGenerate = async () => {
-  isGenerating.value = true
-  try {
-    // 创建工作流
-    const res = await executeWorkflow(0, {
-      api_token: apiKey,
-      img_1: JSON.stringify({ file_id: imageList.value[0].id }),
-      img_2: JSON.stringify({ file_id: imageList.value[1].id }),
-      img_3: JSON.stringify({ file_id: imageList.value[2].id }),
-      img_4: JSON.stringify({ file_id: imageList.value[3].id }),
-      text: shopName.value,
-    });
-    // console.log('工作流结果:', res);
-    const executeId = res.execute_id
-    // 轮询查询工作流创建结果
-    const result = await pollVideoStatus(0, executeId)
-    console.log('工作流结果:', result, result.task_Id);
-    // 创建任务工作流轮训查询结果
-    const taskRes = await pollWorkflowStatus({
-      task_id: result.task_Id,
-      api: apiKey,
-    });
-    videoUrl.value = taskRes
-    ElMessage.success('视频生成成功')
-    isGenerating.value = false
-  } catch (error) {
-    console.error(error)
-    ElMessage.error(error.msg || error || '视频生成错误')
-    isGenerating.value = false
+  if (isGenerateDisabled.value) {
+    ElMessage.error('请检查店铺名称和图片是否上传完成')
+    return
   }
+  useVlogWorkflowStore.text = shopName.value
+  useVlogWorkflowStore.createTask({
+    img_1: JSON.stringify({ file_id: imageList.value[0].id }),
+    img_2: JSON.stringify({ file_id: imageList.value[1].id }),
+    img_3: JSON.stringify({ file_id: imageList.value[2].id }),
+    img_4: JSON.stringify({ file_id: imageList.value[3].id }),
+    text: shopName.value,
+  })
 }
 
-const pollWorkflowStatus = async (params, options = {}) => {
-  // 默认参数配置
-  const { maxRetries = 40, pollInterval = 20000 } = options;
-  
-  let attempts = 0;
-
-  while (attempts < maxRetries && isGenerating.value) {
-    try {
-      // 调用API检查执行状态
-      const res = await executeWorkflow(1, params, false);
-      // 解析输出数据，添加错误处理
-      const data = JSON.parse(res.data || '{}')
-      if (data.code === 1 && data.video_url) {
-        return data.video_url;
-      }
-      if (data.code === 4) {
-        ElMessage.error(data.message || '视频生成失败')
-        return Promise.reject({msg: data.message || '视频生成失败'}); // 抛出错误供外部捕获
-      }
-      attempts++;
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-    } catch (error) {
-      console.error('轮询出错:', error.message || error);
-      return Promise.reject({msg: error.message || error}); // 抛出错误供外部捕获
-    }
-  }
-  // 轮询超时
-  return Promise.reject({msg: '查询超时，请稍后在作品列表中查看'});
-};
-// 轮训工作流结果
-const pollVideoStatus = async (wId, executeId, options = {}) => {
-  // 默认参数配置
-  const { maxRetries = 30, pollInterval = 10000 } = options;
-  const TIMEOUT_ERROR = '轮询超时，请稍后在作品列表中查看';
-  const PROCESSING_LOG = '生成中... 第 %d 次轮询';
-  
-  let attempts = 0;
-
-  while (attempts < maxRetries && isGenerating.value) {
-    try {
-      // 调用API检查执行状态
-      const res = await checkExecuteStatus(wId, executeId);
-      
-      // 验证API返回数据结构
-      if (!res.data || !Array.isArray(res.data) || res.data.length === 0) {
-        return Promise.reject({msg: '无效的API返回数据'});
-      }
-      
-      const { execute_status, output, error_message } = res.data[0];
-      attempts++;
-
-      // 处理失败状态
-      if (execute_status === 'Fail') {
-        return Promise.reject({msg: '视频生成失败'});
-      }
-
-      // 处理成功状态
-      if (execute_status === 'Success') {
-        console.log('任务工作流成功:', execute_status);
-        console.log('任务工作流结果:', output);
-        
-        try {
-          // 解析输出数据，添加错误处理
-          const outputData = JSON.parse(output);
-          const outputContent = JSON.parse(outputData.Output);
-          // 轮询成功，返回结果
-          return outputContent;
-        } catch (parseError) {
-          return Promise.reject({msg: `数据解析错误: ${parseError.message}`});
-        }
-      }
-
-      // 处理进行中状态
-      console.log(PROCESSING_LOG, attempts);
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-
-    } catch (error) {
-      console.error('轮询出错:', error.message || error);
-      return Promise.reject({msg: error.message || error}); // 抛出错误供外部捕获
-    }
-  }
-  // 轮询超时
-  return Promise.reject({msg: TIMEOUT_ERROR});
-};
-
-
-
-// 重新生成视频
-const handleRefresh = () => {
-  isGenerating.value = false
-  videoUrl.value = ''
+const handleReset = () => {
+  useVlogWorkflowStore.onResetCreate()
   handleGenerate()
 }
 
-// 历史视频列表
-const historyList = ref([])
-const tabList = ref(false)
-
-// 播放视频
-const handlePlay = (item) => {
-  console.log(item)
-}
-// 下载视频
-const handleDownload = async () => {
-  if (!videoUrl.value) {
-    ElMessage.error('视频URL为空')
-    return
-  }
-  ElMessage.primary('视频下载中，请稍后...')
-  downLoading.value = true;
-  try {
-    const response = await fetch(videoUrl.value);
-    if (!response.ok) {
-       ElMessage.error('网络响应错误')
-       return
-    }
-    // 将响应转换为二进制数据流 (Blob)
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    
-    // 创建虚拟链接并触发点击
-    const a = document.createElement('a');
-    a.href = url;
-    const suffix = url.slice(url.lastIndexOf('.'))
-    a.download = 'video_' + new Date().getTime() + suffix;
-    document.body.appendChild(a);
-    a.click();
-    
-    // 释放内存
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  } catch (error) {
-    console.error('下载失败:', error);
-    ElMessage.error('下载失败，请检查网络或跨域设置')
-  } finally {
-    downLoading.value = false;
-  }
-}
-// 删除视频
-const handleDelete = (item) => {
-  console.log(item)
-}
-// 组件卸载前清除接口轮训
-onBeforeUnmount(() => {
-  isGenerating.value = false
-})
 </script>
 
 <template>
@@ -262,6 +75,7 @@ onBeforeUnmount(() => {
             v-model="shopName"
             placeholder="请输入店铺完整名称..."
             size="large"
+            :disabled="isGenerating"
           />
         </div>
         <div class="mb-8">
@@ -280,11 +94,14 @@ onBeforeUnmount(() => {
                   :min-scale="0.2"
                   show-progress
                 />
-                <div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full" @click="imageList[index] = null">删除</div>
+                <div
+                  v-if="!isGenerating"
+                  class="absolute top-2 right-2 bg-red-500 text-white text-xs px-1 rounded-full" @click="useVlogWorkflowStore.deleteImage(index)"
+                >删除</div>
               </div>
               <el-upload
                 v-else
-                v-loading="imgUploading[index]"
+                v-loading="imageList[index].status === 'loading'"
                 :ref="el => uploadRefs[index] = el"
                 class="uploader-box h-[186px]"
                 :show-file-list="false"
@@ -312,13 +129,13 @@ onBeforeUnmount(() => {
             size="large"
             :disabled="isGenerateDisabled"
             :loading="isGenerating"
-            class="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-base font-medium"
+            class="w-full py-6 bg-blue-600 !hover:bg-blue-700 text-white rounded-xl text-base font-medium"
             @click="handleGenerate"
           >
             <el-icon v-if="!isGenerating" class="mr-2"><MagicStick /></el-icon>
             开始生成5秒短视频
           </el-button>
-          <p class="text-xs text-gray-400 text-center">生成过程约需 10-20 秒，请耐心等待</p>
+          <p class="text-xs text-gray-400 text-center">生成过程约需5分钟左右，请耐心等待</p>
         </div>
       </div>
 
@@ -332,7 +149,13 @@ onBeforeUnmount(() => {
                 <el-icon class="text-gray-500 text-2xl"><VideoCameraFilled /></el-icon>
               </div>
               <h3 class="text-white font-medium mb-2">等待生成预览</h3>
-              <p class="text-gray-500 text-sm">在左侧输入店铺名称并上传图片，生成的视频将在此处播放</p>
+              <p v-if="!isGenerating" class="text-gray-500 text-sm">在左侧输入店铺名称并上传图片，生成的视频将在此处播放</p>
+              <p v-else class="text-gray-500 text-sm">视频正在生成中，可处理其它工作，完成后将在当前显示</p>
+              <div v-if="useVlogWorkflowStore.taskStatus === 'failed' && useVlogWorkflowStore.taskId" class="mt-2xl">
+                <a class="text-red-500 text-sm mt-2 cursor-pointer border-b border-red-500" @click="useVlogWorkflowStore.retryTask(9)">
+                  视频生成失败，点击此处重新生成
+                </a>
+              </div>
             </div>
             <video
               v-else
@@ -369,7 +192,7 @@ onBeforeUnmount(() => {
             round
             class="flex items-center gap-1 bg-white"
             :disabled="!videoUrl"
-            @click="handleRefresh"
+            @click="handleReset()"
           >
             <el-icon class="mr-2"><Refresh /></el-icon>
             重新生成
@@ -378,7 +201,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <!-- 历史记录 -->
-    <div class="max-w-6xl mx-auto mt-20" v-if="tabList">
+    <!-- <div class="max-w-6xl mx-auto mt-20" v-if="tabList">
       <div class="flex justify-between items-center border-b border-gray-200 border-b-solid mb-5">
         <div class="flex items-center gap-2">
           <div class="w-1 h-6 bg-blue-500 rounded"></div>
@@ -413,23 +236,17 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
   </div>
 </template>
 
 <style scoped>
- :deep(.el-button) {
-  --el-button-bg-color: var(--primary-color);
- }
 :deep(.el-input__wrapper) {
   --el-input-border-radius: 0.75rem;
 }
 :deep(.el-input--large) {
   --el-input-inner-height: 48px;
-}
-:deep(.el-button) {
-  --el-button-bg-color: var(--primary-color);
 }
 
 .uploader-box :deep(.el-upload),

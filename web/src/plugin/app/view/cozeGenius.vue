@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, useTemplateRef } from 'vue'
-import { Upload, Download, Folder } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import {
-    getBLCTYImages
-} from '@/plugin/app/api/cozeGenius'
+import { ref, computed, useTemplateRef, nextTick } from 'vue'
+import { Upload, Download, Picture, Delete } from '@element-plus/icons-vue'
+import { useCozeGeniusStore } from '@/pinia/modules/cozeGenius'
+
+const useCozeGenius = useCozeGeniusStore()
+
 const posterGeniusElement = useTemplateRef('posterGeniusRef')
 
 // 状态管理
@@ -12,11 +12,6 @@ const outputRatio = ref('9:16')
 const promptText = ref('')
 const imgFile = ref(null);
 const rawImgFile = ref(null); // 新增：保存原始文件对象
-const imgBase64 = ref('')
-const isReading = ref(false)
-const isGenerating = ref(false)
-
-const outcome = ref([])
 
 // 输出比例选项
 const ratioOptions = [
@@ -30,6 +25,11 @@ const ratioOptions = [
   { label: '21:9', value: '21:9' }
 ]
 
+// 判断生成按钮是否可用
+const isGenerateDisabled = computed(() => {
+  return useCozeGenius.isGenerating || !rawImgFile.value
+})
+
 // 上传文件处理
 const handleUpload = (file) => {
   const fileData = file.raw
@@ -37,7 +37,6 @@ const handleUpload = (file) => {
   if (imgFile.value) {
     URL.revokeObjectURL(imgFile.value)
   }
-  isReading.value = false // 不需要读取base64了，直接使用file
   imgFile.value = URL.createObjectURL(fileData)
   rawImgFile.value = fileData // 保存原始文件
   
@@ -45,85 +44,33 @@ const handleUpload = (file) => {
   return false // 阻止自动上传
 }
 
-// 判断生成按钮是否可用
-const isGenerateDisabled = computed(() => {
-  return isGenerating.value || isReading.value
-  // return !isUploaded.value || !promptText.value.trim() || isGenerating.value
-})
-
-// 生成海报处理
-const handleGenerate = () => {
-  if (isGenerateDisabled.value) return
-  isGenerating.value = true
-  outcome.value = []
-  posterGeniusElement.value?.scrollIntoView({ behavior: 'smooth' })
-  const formData = new FormData()
-  formData.append('model', 'nano-banana-2')
-  formData.append('prompt', promptText.value || `根据我上传的图片，帮我生成一张${outputRatio.value}商品类型的宣传海报，这个海报要符合商品图的风格，商品图要非常完美的融入到海报中，海报整体设计要高级，专业，光影，材质，氛围感要完全体现在海报中，适合在各类电商平台进行宣传，能吸引用户点击查看`)
-  
-  if (outputRatio.value) {
-    formData.append('aspect_ratio', outputRatio.value)
-  }
-  
-  if (rawImgFile.value) {
-    formData.append('file', rawImgFile.value)
-  }
-
-  getBLCTYImage(formData)
-//   request(params).then(response => {
-//     // 检查响应结构并提取图片URL
-//     isGenerating.value = false
-//     outcome.value = response.urls
-//     ElMessage.success('智能海报生成成功')
-//   }).catch(err => {
-//     console.log('API请求错误:', err)
-//     isGenerating.value = false
-//     ElMessage.error('智能海报生成失败')
-//   })
-}
-// 删除行
-const getBLCTYImage = async (row) => {
-    const res = await getBLCTYImages(row)
-    if (res.code === 0) {
-        isGenerating.value = false
-        outcome.value = res.data.urls
-        ElMessage.success('智能海报生成成功')
-    }else{
-        ElMessage.error('智能海报生成失败')
-    }
-}
-// 下载图片处理
-const handleDownload = (url) => {
-  const suffix = url.slice(url.lastIndexOf('.'))
-  const filename = Date.now() + suffix;
-  ElMessage.primary('图片下载中，请稍后...')
-  fetch(url)
-    .then((response) => response.blob())
-    .then((blob) => {
-      const blobUrl = URL.createObjectURL(new Blob([blob]))
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      URL.revokeObjectURL(blobUrl)
-      link.remove()
-      ElMessage.success('图片下载成功')
-    })
-}
-// 保存图片处理
-const handleSave = (url) => {
-  handleDownload(url)
-}
-
+// 删除上传图片
 const handleRemoveImage = () => {
   if (imgFile.value) {
     URL.revokeObjectURL(imgFile.value)
   }
   imgFile.value = null
   rawImgFile.value = null
-  imgBase64.value = ''
 }
+
+
+
+// 生成海报处理
+const handleGenerate = () => {
+  if (isGenerateDisabled.value) return
+  const prompt = promptText.value || `根据我上传的图片，帮我生成一张${outputRatio.value}商品类型的宣传海报，这个海报要符合商品图的风格，商品图要非常完美的融入到海报中，海报整体设计要高级，专业，光影，材质，氛围感要完全体现在海报中，适合在各类电商平台进行宣传，能吸引用户点击查看`
+  const params = {
+    model: 'nano-banana-2',
+    prompt,
+    aspect_ratio: outputRatio.value,
+    file: rawImgFile.value
+  }
+  useCozeGenius.createPosterTask(params);
+  nextTick(() => {
+    posterGeniusElement.value?.scrollIntoView({ behavior: 'smooth' })
+  })
+}
+
 </script>
 
 <template>
@@ -133,14 +80,14 @@ const handleRemoveImage = () => {
         <h1 class="text-3xl font-bold mb-2">AI智能海报系统</h1>
         <p class="text-gray-400">输入产品风格关键词，让AI自动为您布置场景</p>
       </div>
-      <div class="p-10 rounded-10 shadow-sm  bg-[var(--bg-color)] border-1 border-solid border-gray-100">
+      <div class="p-10 rounded-10 shadow-sm  bg-white border-1 border-solid border-gray-100">
         <div class="flex items-center justify-center mb-10">
           <el-upload
             v-if="!imgFile"
             class="upload-box w-1/2 !opacity-100"
             drag
             accept="image/*"
-            :disabled="isGenerating"
+            :disabled="useCozeGenius.isGenerating"
             :show-file-list="false"
             :auto-upload="false"
             :on-change="handleUpload"
@@ -174,7 +121,7 @@ const handleRemoveImage = () => {
         ></el-input>
         <el-divider class="my-4xl" content-position="center">输出比例</el-divider>
         <div class="flex items-center justify-center">
-          <el-radio-group v-model="outputRatio" :disabled="isGenerating" class="ratio-group flex items-center justify-center gap-3">
+          <el-radio-group v-model="outputRatio" :disabled="useCozeGenius.isGenerating" class="ratio-group flex items-center justify-center gap-3">
             <el-radio-button
               v-for="option in ratioOptions"
               :key="option.value"
@@ -191,56 +138,84 @@ const handleRemoveImage = () => {
             type="primary"
             size="large"
             :disabled="isGenerateDisabled"
-            :loading="isGenerating"
+            :loading="useCozeGenius.isGenerating"
             @click="handleGenerate"
             class="w-1/2 py-6 rounded-xl text-base font-medium"
           >
-            <span v-if="isGenerating" class="ml-2">正在生成智能海报，请稍候...</span>
+            <span v-if="useCozeGenius.isGenerating" class="ml-2">正在生成智能海报，请稍候...</span>
             <span v-else>生成智能海报</span>
           </el-button>
         </div>
       </div>
     </div>
-    <div ref="posterGeniusRef" class="poster-genius mb-6xl max-w-4xl min-h-[200px] bg-[#FDFDFE] mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100 flex items-center justify-center">
-      <p v-if="!outcome.length" class="text-center text-sm text-gray-400">
-        {{isGenerating ? '正在生成智能海报，请稍候...' : '等待生成任务'}}
-      </p>
-      <div v-else class="w-full grid grid-cols-4 gap-4">
+    <div
+      ref="posterGeniusRef"
+      class="poster-genius mb-6xl max-w-4xl min-h-[200px] bg-white mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100"
+      v-if="useCozeGenius.imageList.length"
+    >
+      <p class="text-gray-400 mb-2">{{ useCozeGenius.taskTime }}</p>
+      <p class="text-gray-600 mb-2">做一个海报，内容：{{ useCozeGenius.promptContent }}</p>
+      <div class="w-full grid grid-cols-4 gap-4">
         <div
           class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
-          v-for="(item, index) in outcome" :key="item">
+          v-for="(item, index) in useCozeGenius.imageList" :key="item"
+          v-loading="item.status === 'loading'"
+          element-loading-text="努力生成中，马上就好"
+        >
           <el-image
-            :src="item"
+            v-if="item.url"
+            :src="item.url"
             :zoom-rate="1.2"
             :max-scale="7"
             :min-scale="0.2"
-            :preview-src-list="outcome"
+            :preview-src-list="useCozeGenius.imageList.map(item => item.url)"
             show-progress
             :initial-index="index"
             fit="cover"
             class="w-full h-full"
           />
-          <div class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2">
+          <div
+            v-if="item.status === 'error'"
+            class="relative h-full flex flex-col items-center justify-center gap-3"
+          >
+            <div
+              class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-br-4"
+            >生成失败</div>
+            <el-icon class="text-3xl"><Picture/></el-icon>
+            <p class="text-center text-sm text-black-500 m0">居然失败了，再试一下吧！</p>
+            <el-tooltip
+              :content="item.error"
+            >
+              <a class="cursor-pointer text-sm text-red-500">失败原因</a>
+            </el-tooltip>
+          </div>
+          <div
+            v-if="item.status === 'success'"
+            class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2"
+          >
             <el-button
               type="default"
               size="small"
               round
-              class="flex items-center gap-1 bg-white"
-              @click="handleDownload(item)"
+              class="flex items-center gap-1 !bg-white"
+              @click="useCozeGenius.saveImage(item)"
             >
               <el-icon class="mr-2"><Download /></el-icon>
               下载
             </el-button>
-            <!-- <el-button
-              type="default"
-              size="small"
-              round
-              class="flex items-center gap-1 bg-white"
-              @click="handleSave(item)"
-            >
-              <el-icon class="mr-2"><Folder /></el-icon>
-              保存
-            </el-button> -->
+            <el-popconfirm title="确定要删除吗？" @confirm="useCozeGenius.deleteImage(item)">
+              <template #reference>
+                <el-button
+                  type="default"
+                  size="small"
+                  round
+                  class="flex items-center gap-1 !bg-white"
+                >
+                  <el-icon class="mr-2"><Delete /></el-icon>
+                  删除
+                </el-button>
+              </template>
+            </el-popconfirm>
           </div>
         </div>
       </div>
