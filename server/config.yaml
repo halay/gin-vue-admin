@@ -7,7 +7,7 @@ aliyun-oss:
     base-path: yourBasePath
 byte-tos:
     endpoint: tos-cn-hongkong.bytepluses.com
-    region: hk
+    region: cn-hongkong
     access-key-id: AKAPOGMzNTNkYWYwNDZiNDk4OGFlMWU0Y2NmYjEzNmUzODE
     access-key-secret: TlRjeFpETmxNemRpT1RsbE5HUTVORGxtTkdNME4yUXhObU5sWkdZNFlUVQ==
     bucket-name: deedmx-file
