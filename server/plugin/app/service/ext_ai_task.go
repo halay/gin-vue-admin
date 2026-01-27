@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -72,6 +73,7 @@ type (
 
 	cozeTaskOutput struct {
 		TaskId string `json:"task_Id"`
+		Output string `json:"output"`
 	}
 
 	cozeTaskResult struct {
@@ -81,7 +83,7 @@ type (
 	}
 )
 
-func (s *extAiTask) generateImage(index int, taskId string, payload *request.BLCTYImagesRequest) (filename string, err error) {
+func (s *extAiTask) generateImage(ctx context.Context, index int, taskId string, payload *request.BLCTYImagesRequest) (filename string, err error) {
 	var (
 		buf []byte
 		req *http.Request
@@ -92,7 +94,7 @@ func (s *extAiTask) generateImage(index int, taskId string, payload *request.BLC
 	}
 	global.GVA_LOG.Info("开始生成海报!", zap.String("taskId", taskId), zap.Int("index", index))
 	apiURL := plugin.Config.BltcyApiUrl + "/v1/images/generations"
-	if req, err = http.NewRequest("POST", apiURL, bytes.NewReader(buf)); err != nil {
+	if req, err = http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(buf)); err != nil {
 		global.GVA_LOG.Error("创建请求失败!", zap.String("taskId", taskId), zap.Int("index", index), zap.Error(err))
 		return
 	}
@@ -149,6 +151,12 @@ func (s *extAiTask) generateImage(index int, taskId string, payload *request.BLC
 		return
 	}
 	filename = filepath.Join(global.GVA_CONFIG.Local.Path, fmt.Sprintf("blcty_%s_%d.%s", taskId, time.Now().UnixNano(), ext))
+	dirname := path.Dir(filename)
+	if _, err = os.Stat(dirname); err != nil {
+		if err = os.MkdirAll(dirname, 0755); err != nil {
+			return
+		}
+	}
 	if err = os.WriteFile(filename, buf, 0644); err != nil {
 		global.GVA_LOG.Error("写入图片数据到文件失败!", zap.String("taskId", taskId), zap.Int("index", index), zap.Error(err))
 	} else {
@@ -210,10 +218,14 @@ func (s *extAiTask) ExecuteImageTask(taskId string) {
 			result := &response.ImgResult{
 				Index: idx,
 			}
-			filename, err = s.generateImage(idx, taskId, payload)
+			filename, err = s.generateImage(global.Context(), idx, taskId, payload)
 			result.Duration = time.Since(stm)
 			if err == nil {
-				result.Url = imgBaseUrl + filename
+				if !strings.HasPrefix(filename, "http") {
+					result.Url = imgBaseUrl + filename
+				} else {
+					result.Url = filename
+				}
 			} else {
 				result.Error = err.Error()
 			}
@@ -229,7 +241,7 @@ func (s *extAiTask) ExecuteImageTask(taskId string) {
 	}
 	wg.Wait()
 	modelValue.Status = "completed"
-	modelValue.Description = "成功"
+	modelValue.Description = "执行成功"
 	modelValue.CompleteAt = time.Now().Unix()
 	global.GVA_DB.Save(modelValue)
 	global.GVA_LOG.Info("任务执行成功!", zap.String("taskId", taskId))
@@ -246,7 +258,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		result      *response.CozeResult
 		ctx         context.Context
 	)
-	ctx = context.Background()
+	ctx = global.Context()
 	taskRequest := &request.CozeTaskRequest{}
 	modelValue := &model.ExtAiTask{}
 	defer func() {
@@ -277,6 +289,8 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		modelValue.Description = "任务参数解码失败"
 		return
 	}
+	modelValue.Status = "running"
+	global.GVA_DB.Save(modelValue)
 	if err = json.Unmarshal([]byte(modelValue.Options), taskRequest); err != nil {
 		global.GVA_LOG.Error("任务参数解码失败!", zap.String("taskId", taskId), zap.Error(err))
 		modelValue.Description = "任务参数解码失败"
@@ -295,7 +309,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		payload.Parameters["api_token"] = plugin.Config.CozeApiToken
 	}
 	global.GVA_LOG.Info("开始执行扣子工作流!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId))
-	if wkResult, err = s.executeCozeWorkflow(payload); err != nil {
+	if wkResult, err = s.executeCozeWorkflow(ctx, taskId, payload); err != nil {
 		result.Results = append(result.Results, response.CozeExecute{
 			ID:       payload.WorkflowId,
 			Error:    err.Error(),
@@ -317,6 +331,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		global.GVA_LOG.Error("解析扣子任务结果失败!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("output", string(wkResult.Data)), zap.Error(err))
 		return
 	}
+	global.GVA_LOG.Info("获取扣子任务返回数据!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("executeID", executeID), zap.String("output", string(wkResult.Data)))
 	tk := cozeTaskOutput{}
 	if err = json.Unmarshal([]byte(str), &tk); err != nil {
 		result.Results = append(result.Results, response.CozeExecute{
@@ -329,6 +344,19 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 		return
 	}
 	cozeTaskId = tk.TaskId
+	if cozeTaskId == "" && tk.Output != "" {
+		cozeTaskId = tk.Output
+	}
+	if cozeTaskId == "" {
+		result.Results = append(result.Results, response.CozeExecute{
+			ID:       payload.WorkflowId,
+			Error:    "获取任务ID失败",
+			Output:   str,
+			Duration: time.Since(tm).String(),
+		})
+		global.GVA_LOG.Error("获取扣子任务ID失败!", zap.String("taskId", taskId), zap.String("workflow", payload.WorkflowId), zap.String("output", string(wkResult.Data)))
+		return
+	}
 	result.Results = append(result.Results, response.CozeExecute{
 		ID:       payload.WorkflowId,
 		Output:   str,
@@ -348,7 +376,7 @@ func (s *extAiTask) ExecuteCozeTask(taskId string) (err error) {
 	}
 	generatePayload.Parameters["task_id"] = cozeTaskId
 	global.GVA_LOG.Info("开始执行扣子生成视频工作流!", zap.String("taskId", taskId), zap.String("workflow", generatePayload.WorkflowId))
-	uri, err = s.waitCozeVideoGenerateResult(ctx, generatePayload)
+	uri, err = s.waitCozeVideoGenerateResult(ctx, taskId, generatePayload)
 	if err != nil {
 		global.GVA_LOG.Error("执行扣子任务失败!", zap.String("taskId", taskId), zap.String("WorkflowId", payload.WorkflowId), zap.String("executeID", executeID), zap.String("cozeTaskID", cozeTaskId), zap.Error(err))
 		modelValue.Description = err.Error()
@@ -450,11 +478,12 @@ func (s *extAiTask) UploadCozeFile(ctx context.Context, header *multipart.FileHe
 	}
 }
 
-func (s *extAiTask) executeCozeWorkflow(payload *request.CozeWorkflowRequest) (result *request.CozeResult, err error) {
+func (s *extAiTask) executeCozeWorkflow(ctx context.Context, taskid string, payload *request.CozeWorkflowRequest) (result *request.CozeResult, err error) {
 	var (
-		buf []byte
-		req *http.Request
-		res *http.Response
+		buf  []byte
+		rbuf []byte
+		req  *http.Request
+		res  *http.Response
 	)
 	if payload.Parameters == nil {
 		payload.Parameters = make(map[string]string)
@@ -462,7 +491,7 @@ func (s *extAiTask) executeCozeWorkflow(payload *request.CozeWorkflowRequest) (r
 	if buf, err = json.Marshal(payload); err != nil {
 		return
 	}
-	if req, err = http.NewRequest(http.MethodPost, "https://api.coze.cn/v1/workflow/run", bytes.NewReader(buf)); err != nil {
+	if req, err = http.NewRequestWithContext(ctx, http.MethodPost, "https://api.coze.cn/v1/workflow/run", bytes.NewReader(buf)); err != nil {
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -475,8 +504,12 @@ func (s *extAiTask) executeCozeWorkflow(payload *request.CozeWorkflowRequest) (r
 		err = fmt.Errorf("unexpected status code: %d", res.StatusCode)
 		return
 	}
+	if rbuf, err = io.ReadAll(res.Body); err != nil {
+		return
+	}
+	global.GVA_LOG.Info("执行coze任务!", zap.String("taskId", taskid), zap.String("request", string(buf)), zap.String("response", string(rbuf)))
 	result = &request.CozeResult{}
-	if err = json.NewDecoder(res.Body).Decode(result); err != nil {
+	if err = json.Unmarshal(rbuf, result); err != nil {
 		return
 	}
 	if result.Code != 0 {
@@ -517,14 +550,15 @@ func (s *extAiTask) getCozeWorkflowHistories(ctx context.Context, workflowId, ex
 	return
 }
 
-func (s *extAiTask) getCozeWorkflowTaskResult(ctx context.Context, payload *request.CozeWorkflowRequest) (uri string, err error) {
+func (s *extAiTask) getCozeWorkflowTaskResult(ctx context.Context, taskId string, payload *request.CozeWorkflowRequest) (uri string, err error) {
 	var (
 		result *request.CozeResult
 	)
 	if plugin.Config.CozeApiToken != "" {
 		payload.Parameters["api"] = plugin.Config.CozeApiToken
 	}
-	if result, err = s.executeCozeWorkflow(payload); err != nil {
+	if result, err = s.executeCozeWorkflow(ctx, taskId, payload); err != nil {
+		global.GVA_LOG.Info("执行coze任务失败", zap.String("WorkflowId", payload.WorkflowId), zap.Error(err))
 		return
 	}
 	var str string
@@ -534,6 +568,9 @@ func (s *extAiTask) getCozeWorkflowTaskResult(ctx context.Context, payload *requ
 	videoResult := &cozeTaskResult{}
 	if err = json.Unmarshal([]byte(str), videoResult); err != nil {
 		return
+	}
+	if videoResult.Code == 4 {
+		return "", errors.New(videoResult.Message)
 	}
 	if videoResult.Code == 1 {
 		return videoResult.VideoURL, nil
@@ -589,7 +626,7 @@ func (s *extAiTask) waitCozeWorflowOutput(ctx context.Context, workflowId, execu
 	}
 }
 
-func (s *extAiTask) waitCozeVideoGenerateResult(ctx context.Context, payload *request.CozeWorkflowRequest) (uri string, err error) {
+func (s *extAiTask) waitCozeVideoGenerateResult(ctx context.Context, taskId string, payload *request.CozeWorkflowRequest) (uri string, err error) {
 	var (
 		errcount int
 	)
@@ -608,7 +645,7 @@ func (s *extAiTask) waitCozeVideoGenerateResult(ctx context.Context, payload *re
 			err = context.Cause(ctx)
 			return
 		case <-ticker.C:
-			if uri, err = s.getCozeWorkflowTaskResult(ctx, payload); err == nil {
+			if uri, err = s.getCozeWorkflowTaskResult(ctx, taskId, payload); err == nil {
 				return
 			} else {
 				if !errors.Is(err, io.ErrNoProgress) {

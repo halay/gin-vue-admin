@@ -736,3 +736,25 @@ func (r *yApi) GetCozeTaskResult(c *gin.Context) {
 		"data":   results,
 	}, c)
 }
+
+func (r *yApi) ReExecuteCozeTask(c *gin.Context) {
+	var req request.GetBLCTYImagesRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	modelValue, err := service.ExtAiTask.GetExtAiTask(c.Request.Context(), strconv.Itoa(req.ID))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	if modelValue.Status == "running" {
+		response.FailWithMessage("任务正在执行中", c)
+		return
+	}
+	go service.ExtAiTask.ExecuteCozeTask(modelValue.TaskId)
+	response.OkWithData(gin.H{
+		"status": "executing",
+		"id":     modelValue.ID,
+	}, c)
+}

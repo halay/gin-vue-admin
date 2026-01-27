@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/flipped-aurora/gin-vue-admin/server/global"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -46,6 +47,7 @@ func initServer(address string, router *gin.Engine, readTimeout, writeTimeout ti
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	zap.L().Info("关闭WEB服务...")
+	global.Shutdown()
 
 	// 设置5秒的超时时间
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

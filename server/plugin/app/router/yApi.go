@@ -29,6 +29,7 @@ func (r *yApi) Init(public *gin.RouterGroup, private *gin.RouterGroup) {
 		privateGroup.POST("uploadCozeFile", apiYApi.UploadCozeFile)          //上传文件到Coze
 		privateGroup.POST("executeCozeTask", apiYApi.ExecuteCozeTask)        //执行Coze任务
 		privateGroup.POST("getCozeTaskResult", apiYApi.GetCozeTaskResult)    //获取执行coze的任务
+		privateGroup.POST("reExecuteCozeTask", apiYApi.ReExecuteCozeTask)    //获取执行coze的任务
 
 	}
 }
