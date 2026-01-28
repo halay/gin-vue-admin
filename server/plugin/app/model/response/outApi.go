@@ -1,13 +1,12 @@
 package response
 
-import "time"
-
 type (
 	ImgResult struct {
-		Index    int           `json:"index"`
-		Url      string        `json:"url"`
-		Duration time.Duration `json:"duration"`
-		Error    string        `json:"error,omitempty"`
+		Index    int    `json:"index"`
+		Url      string `json:"url"`
+		Object   string `json:"object"`
+		Duration string `json:"duration"`
+		Error    string `json:"error,omitempty"`
 	}
 
 	CozeExecute struct {

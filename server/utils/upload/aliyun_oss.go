@@ -1,8 +1,11 @@
 package upload
 
 import (
+	"context"
 	"errors"
+	"io"
 	"mime/multipart"
+	"path"
 	"time"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -11,6 +14,27 @@ import (
 )
 
 type AliyunOSS struct{}
+
+func (*AliyunOSS) PutFile(ctx context.Context, filename string, reader io.Reader) (string, string, error) {
+	bucket, err := NewBucket()
+	if err != nil {
+		global.GVA_LOG.Error("function AliyunOSS.NewBucket() Failed", zap.Any("err", err.Error()))
+		return "", "", errors.New("function AliyunOSS.NewBucket() Failed, err:" + err.Error())
+	}
+	basename := path.Base(filename)
+	// 上传阿里云路径 文件名格式 自己可以改 建议保证唯一性
+	// yunFileTmpPath := filepath.Join("uploads", time.Now().Format("2006-01-02")) + "/" + file.Filename
+	yunFileTmpPath := global.GVA_CONFIG.AliyunOSS.BasePath + "/" + "uploads" + "/" + time.Now().Format("2006-01-02") + "/" + basename
+
+	// 上传文件流。
+	err = bucket.PutObject(yunFileTmpPath, reader)
+	if err != nil {
+		global.GVA_LOG.Error("function formUploader.Put() Failed", zap.Any("err", err.Error()))
+		return "", "", errors.New("function formUploader.Put() Failed, err:" + err.Error())
+	}
+
+	return global.GVA_CONFIG.AliyunOSS.BucketUrl + "/" + yunFileTmpPath, yunFileTmpPath, nil
+}
 
 func (*AliyunOSS) UploadFile(file *multipart.FileHeader) (string, string, error) {
 	bucket, err := NewBucket()

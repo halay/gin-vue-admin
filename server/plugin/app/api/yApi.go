@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -569,6 +570,7 @@ func (y *yApi) CreateOrder(c *gin.Context) {
 func (y *yApi) GetBLCTYImages(c *gin.Context) {
 	var reqs request.BLCTYImagesRequest
 	reqs.ResponseFormat = "b64_json"
+	// reqs.ResponseFormat = "url"
 	reqs.Model = "nano-banana-2"
 	// 尝试从multipart form中绑定普通字段
 	if err := c.ShouldBind(&reqs); err != nil {
@@ -587,15 +589,8 @@ func (y *yApi) GetBLCTYImages(c *gin.Context) {
 		Status: "running",
 		Type:   "image",
 	}
-
-	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(c.Request.Context(), utils.GetUserID(c))
-
-	var merchantID *uint
-	if errMid == nil && mid != nil {
-		m := uint(*mid)
-		merchantID = &m
-	}
-	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(taskModel.UserId), merchantID)
+	merchantID := uint(0)
+	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(utils.GetUserID(c)), &merchantID)
 	if err != nil {
 		response.FailWithMessage("读取文件失败: "+err.Error(), c)
 		return
@@ -664,19 +659,16 @@ func (y *yApi) UploadCozeFile(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	mid, errMid := service.MerchantAdmin.GetMerchantIDByUserID(c.Request.Context(), utils.GetUserID(c))
-	var merchantID *uint
-	if errMid == nil && mid != nil {
-		m := uint(*mid)
-		merchantID = &m
-	}
-	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(utils.GetUserID(c)), merchantID)
-	if err != nil {
-		response.FailWithMessage("上传失败", c)
-		return
-	}
 	var uploadResult request.CoreUploadData
 	if uploadResult, err = service.ExtAiTask.UploadCozeFile(c.Request.Context(), header, fp); err != nil {
+		return
+	}
+	ext := path.Ext(header.Filename)
+	header.Filename = "coze-" + uploadResult.Id + ext
+	mid := uint(0)
+	fi, err := exampleService.ServiceGroupApp.ExampleServiceGroup.FileUploadAndDownloadService.UploadFile(header, "0", 0, uint(utils.GetUserID(c)), &mid)
+	if err != nil {
+		response.FailWithMessage("上传失败", c)
 		return
 	}
 	response.OkWithData(gin.H{
@@ -718,25 +710,6 @@ func (r *yApi) ExecuteCozeTask(c *gin.Context) {
 
 }
 
-func (r *yApi) GetCozeTaskResult(c *gin.Context) {
-	var req request.GetBLCTYImagesRequest
-	if err := c.ShouldBind(&req); err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	modelValue, err := service.ExtAiTask.GetExtAiTask(c.Request.Context(), strconv.Itoa(req.ID))
-	if err != nil {
-		response.FailWithMessage(err.Error(), c)
-		return
-	}
-	results := &retResponse.CozeResult{}
-	json.Unmarshal([]byte(modelValue.Result), results)
-	response.OkWithData(gin.H{
-		"status": modelValue.Status,
-		"data":   results,
-	}, c)
-}
-
 func (r *yApi) ReExecuteCozeTask(c *gin.Context) {
 	var req request.GetBLCTYImagesRequest
 	if err := c.ShouldBind(&req); err != nil {
@@ -756,5 +729,24 @@ func (r *yApi) ReExecuteCozeTask(c *gin.Context) {
 	response.OkWithData(gin.H{
 		"status": "executing",
 		"id":     modelValue.ID,
+	}, c)
+}
+
+func (r *yApi) GetCozeTaskResult(c *gin.Context) {
+	var req request.GetBLCTYImagesRequest
+	if err := c.ShouldBind(&req); err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	modelValue, err := service.ExtAiTask.GetExtAiTask(c.Request.Context(), strconv.Itoa(req.ID))
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	results := &retResponse.CozeResult{}
+	json.Unmarshal([]byte(modelValue.Result), results)
+	response.OkWithData(gin.H{
+		"status": modelValue.Status,
+		"data":   results,
 	}, c)
 }

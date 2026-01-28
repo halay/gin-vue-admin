@@ -3,7 +3,9 @@ package upload
 import (
 	"context"
 	"errors"
+	"io"
 	"mime/multipart"
+	"path"
 	"time"
 
 	"github.com/volcengine/ve-tos-golang-sdk/v2/tos"
@@ -13,6 +15,34 @@ import (
 )
 
 type ByteTOS struct{}
+
+func (*ByteTOS) PutFile(ctx context.Context, filename string, reader io.Reader) (string, string, error) {
+	client, err := NewByteBucket()
+	if err != nil {
+		global.GVA_LOG.Error("function ByteTOS.NewClient() Failed", zap.Any("err", err.Error()))
+		return "", "", errors.New("function ByteTOS.NewClient() Failed, err:" + err.Error())
+	}
+	basename := path.Base(filename)
+	// 读取本地文件。
+	// 上传阿里云路径 文件名格式 自己可以改 建议保证唯一性
+	// yunFileTmpPath := filepath.Join("uploads", time.Now().Format("2006-01-02")) + "/" + file.Filename
+	yunFileTmpPath := global.GVA_CONFIG.ByteTos.BasePath + "/" + "uploads" + "/" + time.Now().Format("2006-01-02") + "/" + basename
+
+	// 上传文件流。
+	output, err := client.PutObjectV2(ctx, &tos.PutObjectV2Input{
+		PutObjectBasicInput: tos.PutObjectBasicInput{
+			Bucket: global.GVA_CONFIG.ByteTos.BucketName,
+			Key:    yunFileTmpPath,
+		},
+		Content: reader,
+	})
+	if err != nil {
+		global.GVA_LOG.Error("function formUploader.Put() Failed", zap.Any("err", err.Error()))
+		return "", "", errors.New("function formUploader.Put() Failed, err:" + err.Error())
+	}
+	global.GVA_LOG.Info("file.UploadTos success", zap.Any("RequestID", output.RequestID))
+	return global.GVA_CONFIG.ByteTos.BucketUrl + "/" + yunFileTmpPath, yunFileTmpPath, nil
+}
 
 func (*ByteTOS) UploadFile(file *multipart.FileHeader) (string, string, error) {
 	client, err := NewByteBucket()

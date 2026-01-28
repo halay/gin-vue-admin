@@ -6,6 +6,8 @@ import (
 
 type ExtAiTaskSearch struct {
 	request.PageInfo
+	UserId string `json:"userId" form:"userId"`
+	Type   string `json:"type" form:"type"`
 }
 
 type ExtAiImage struct {

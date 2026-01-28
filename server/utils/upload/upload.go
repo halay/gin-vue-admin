@@ -1,6 +1,8 @@
 package upload
 
 import (
+	"context"
+	"io"
 	"mime/multipart"
 
 	"github.com/flipped-aurora/gin-vue-admin/server/global"
@@ -12,6 +14,10 @@ import (
 type OSS interface {
 	UploadFile(file *multipart.FileHeader) (string, string, error)
 	DeleteFile(key string) error
+}
+
+type Uploader interface {
+	PutFile(ctx context.Context, filename string, reader io.Reader) (string, string, error)
 }
 
 // NewOss OSS的实例化方法

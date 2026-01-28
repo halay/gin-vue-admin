@@ -25,6 +25,7 @@ import (
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/request"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/model/response"
 	"github.com/flipped-aurora/gin-vue-admin/server/plugin/app/plugin"
+	"github.com/flipped-aurora/gin-vue-admin/server/utils/upload"
 	"go.uber.org/zap"
 )
 
@@ -83,7 +84,7 @@ type (
 	}
 )
 
-func (s *extAiTask) generateImage(ctx context.Context, index int, taskId string, payload *request.BLCTYImagesRequest) (filename string, err error) {
+func (s *extAiTask) generateImage(ctx context.Context, index int, taskId string, payload *request.BLCTYImagesRequest) (filename string, object string, err error) {
 	var (
 		buf []byte
 		req *http.Request
@@ -150,17 +151,28 @@ func (s *extAiTask) generateImage(ctx context.Context, index int, taskId string,
 		global.GVA_LOG.Warn("解析渲染海报数据错误", zap.Int("index", index), zap.String("taskId", taskId))
 		return
 	}
-	filename = filepath.Join(global.GVA_CONFIG.Local.Path, fmt.Sprintf("blcty_%s_%d.%s", taskId, time.Now().UnixNano(), ext))
-	dirname := path.Dir(filename)
-	if _, err = os.Stat(dirname); err != nil {
-		if err = os.MkdirAll(dirname, 0755); err != nil {
-			return
+	remoteFs := upload.NewOss()
+	if uploader, ok := remoteFs.(upload.Uploader); ok {
+		var uri, key string
+		if uri, key, err = uploader.PutFile(ctx, fmt.Sprintf("blcty_%s_%d.%s", taskId, time.Now().UnixNano(), ext), bytes.NewReader(buf)); err != nil {
+			global.GVA_LOG.Error("写入图片到oss失败!", zap.String("taskId", taskId), zap.Int("index", index), zap.Error(err))
+		} else {
+			global.GVA_LOG.Info("写入图片到oss成功!", zap.String("taskId", taskId), zap.Int("index", index), zap.String("key", key), zap.String("uri", uri), zap.Error(err))
 		}
-	}
-	if err = os.WriteFile(filename, buf, 0644); err != nil {
-		global.GVA_LOG.Error("写入图片数据到文件失败!", zap.String("taskId", taskId), zap.Int("index", index), zap.Error(err))
+		return uri, key, nil
 	} else {
-		global.GVA_LOG.Info("图片生成成功!", zap.String("taskId", taskId), zap.Int("index", index), zap.String("filename", filename))
+		filename = filepath.Join(global.GVA_CONFIG.Local.Path, fmt.Sprintf("blcty_%s_%d.%s", taskId, time.Now().UnixNano(), ext))
+		dirname := path.Dir(filename)
+		if _, err = os.Stat(dirname); err != nil {
+			if err = os.MkdirAll(dirname, 0755); err != nil {
+				return
+			}
+		}
+		if err = os.WriteFile(filename, buf, 0644); err != nil {
+			global.GVA_LOG.Error("写入图片数据到文件失败!", zap.String("taskId", taskId), zap.Int("index", index), zap.Error(err))
+		} else {
+			global.GVA_LOG.Info("图片生成成功!", zap.String("taskId", taskId), zap.Int("index", index), zap.String("filename", filename))
+		}
 	}
 	return
 }
@@ -171,6 +183,7 @@ func (s *extAiTask) ExecuteImageTask(taskId string) {
 		buf         []byte
 		mutex       sync.Mutex
 		filename    string
+		objectName  string
 		isCompleted bool
 		payload     *request.BLCTYImagesRequest
 		results     []*response.ImgResult
@@ -218,14 +231,15 @@ func (s *extAiTask) ExecuteImageTask(taskId string) {
 			result := &response.ImgResult{
 				Index: idx,
 			}
-			filename, err = s.generateImage(global.Context(), idx, taskId, payload)
-			result.Duration = time.Since(stm)
+			filename, objectName, err = s.generateImage(global.Context(), idx, taskId, payload)
+			result.Duration = time.Since(stm).String()
 			if err == nil {
 				if !strings.HasPrefix(filename, "http") {
 					result.Url = imgBaseUrl + filename
 				} else {
 					result.Url = filename
 				}
+				result.Object = objectName
 			} else {
 				result.Error = err.Error()
 			}
@@ -419,10 +433,19 @@ func (s *extAiTask) DeleteImageResult(ctx context.Context, id int, indexs []int)
 	imgBaseUrl := plugin.Config.HrefUrl
 	for i := 0; i < len(results); i++ {
 		if slices.Contains(indexs, results[i].Index) {
-			if results[i].Url != "" {
+			if results[i].Object != "" {
+				if err = upload.NewOss().DeleteFile(results[i].Object); err == nil {
+					results[i].Url = ""
+					results[i].Error = "已删除"
+				} else {
+					results[i].Error = "删除失败:" + err.Error()
+				}
+			} else if results[i].Url != "" {
 				if err = os.Remove(strings.TrimPrefix(results[i].Url, imgBaseUrl)); err == nil {
 					results[i].Url = ""
 					results[i].Error = "已删除"
+				} else {
+					results[i].Error = "删除失败:" + err.Error()
 				}
 			}
 		}
@@ -701,6 +724,12 @@ func (s *extAiTask) GetExtAiTaskInfoList(ctx context.Context, info request.ExtAi
 	offset := info.PageSize * (info.Page - 1)
 	// 创建db
 	db := global.GVA_DB.Model(&model.ExtAiTask{})
+	if info.Type != "" {
+		db = db.Where("type = ?", info.Type)
+	}
+	if info.UserId != "" {
+		db = db.Where("user_id = ?", info.UserId)
+	}
 	var extAiTasks []model.ExtAiTask
 	// 如果有条件搜索 下方会自动创建搜索语句
 
