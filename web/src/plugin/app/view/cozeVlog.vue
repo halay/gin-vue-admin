@@ -54,6 +54,11 @@ const handleReset = () => {
   handleGenerate()
 }
 
+// 获取任务历史记录
+if (useVlogWorkflowStore.list.length === 0) {
+  useVlogWorkflowStore.getHistory()
+}
+
 </script>
 
 <template>
@@ -150,7 +155,7 @@ const handleReset = () => {
               </div>
               <h3 class="text-white font-medium mb-2">等待生成预览</h3>
               <p v-if="!isGenerating" class="text-gray-500 text-sm">在左侧输入店铺名称并上传图片，生成的视频将在此处播放</p>
-              <p v-else class="text-gray-500 text-sm">视频正在生成中，可处理其它工作，完成后将在当前显示</p>
+              <p v-else class="text-gray-500 text-sm">视频正在生成中，可处理其它工作，完成后将在下方显示</p>
               <div v-if="useVlogWorkflowStore.taskStatus === 'failed' && useVlogWorkflowStore.taskId" class="mt-2xl">
                 <a class="text-red-500 text-sm mt-2 cursor-pointer border-b border-red-500" @click="useVlogWorkflowStore.retryTask(9)">
                   视频生成失败，点击此处重新生成
@@ -201,42 +206,69 @@ const handleReset = () => {
       </div>
     </div>
     <!-- 历史记录 -->
-    <!-- <div class="max-w-6xl mx-auto mt-20" v-if="tabList">
-      <div class="flex justify-between items-center border-b border-gray-200 border-b-solid mb-5">
-        <div class="flex items-center gap-2">
-          <div class="w-1 h-6 bg-blue-500 rounded"></div>
-          <h2 class="text-lg font-semibold">历史生成记录</h2>
-          <span class="text-sm text-black bg-gray-200 px-2 rounded-full">12条</span>
+    <div class="max-w-6xl mx-auto mt-20">
+      <div class="flex justify-between items-center border-b border-gray-200 border-b-solid mb-5 pb-2">
+        <div class="">
+          <h2 class="text-lg font-semibold m-0">我的作品库</h2>
+          <p class="my-1 text-sm text-gray-500">管理您生成的所有商户宣传视频</p>
         </div>
-        <el-icon class="text-gray-500 text-xl cursor-pointer" @click="tabList = !tabList"><SwitchFilled /></el-icon>
+        <span class="text-gray-500 text-[12px] flex items-center cursor-pointer" @click="useVlogWorkflowStore.sortHistory">
+          按时间{{ useVlogWorkflowStore.sort === 'desc' ? '倒序' : '正序' }}排序
+          <el-icon class="text-gray-500 cursor-pointer ml-1"><ArrowDown /></el-icon>
+        </span>
       </div>
-      <div class="grid grid-cols-5 gap-3">
+      <div class="grid grid-cols-2 gap-5">
         <div
-          v-for="(item, index) in historyList"
+          v-for="(item, index) in useVlogWorkflowStore.list"
           :key="index"
-          class="rounded-lg shadow-md overflow-hidden relative min-h-[280px]">
-          <el-image
-            :src="item"
-            class="w-full h-[186px]"
-            fit="cover"
-          />
-          <div class="absolute bottom-0 left-0 right-0 top-0 p-3 text-white bg-[linear-gradient(180deg,rgba(0,0,0,0)30%,rgba(0,0,0,0.2)100%)] text-white flex flex-col justify-end">
-            <h4 class="text-sm mt-0 mb-1">{{ '遇见咖啡' }}</h4>
-            <div class="flex justify-between items-center text-[12px]">
-              <span>10月24日 14:20</span>
-              <span>5s</span>
+          class="rounded-lg shadow-md overflow-hidden relative"
+        >
+          <div
+            class="relative w-full h-[320px] bg-black/50 rounded-lg"
+            v-loading="item.status === 'running'"
+            element-loading-text="努力生成中，马上就好"
+          >
+            <video
+              v-if="item.result"
+              class="w-full h-full"
+              :src="item.result"
+              controls
+            ></video>
+            <div v-if="item.status === 'failed'" class="w-full h-full flex flex-col items-center justify-center">
+              <div class="text-white/50 text-4xl">
+                <el-icon><WarningFilled /></el-icon>
+              </div>
+              <p class="text-white/80 text-sm mt-3 px-3">{{ item.error }}</p>
+              <a class="text-white/80 text-sm cursor-pointer mt-6" @click="useVlogWorkflowStore.retryTask()">
+                点击此处重新生成
+              </a>
             </div>
           </div>
-          <div class="absolute top-0 right-0 left-0 bottom-0 flex flex-col justify-center items-center opacity-0 hover:opacity-100 hover:transition-all">
-            <el-icon class="w-12 h-12 text-2xl rounded-full bg-gray-100 opacity-80 flex items-center justify-center text-[#2953B2] shadow cursor-pointer" @click="handlePlay(item)"><CaretRight /></el-icon>
-            <div class="flex items-center justify-center gap-8 mt-4">
-              <el-icon class="w-8 h-8 rounded-full bg-[rgba(0,0,0,0.1)] text-white shadow text-4 flex items-center justify-center cursor-pointer" @click="handleDownload(item)"><Download /></el-icon>
-              <el-icon class="w-8 h-8 rounded-full bg-[rgba(0,0,0,0.1)] text-white shadow text-4 flex items-center justify-center cursor-pointer" @click="handleDelete(item)"><Delete /></el-icon>
+          <div class=" p-3 bg-white text-black flex flex-col justify-end">
+            <h4 class="text-sm mt-0 mb-1">{{ item.text }}</h4>
+            <div class="flex justify-between items-center text-[12px]">
+              <span>{{ item.task_time }}</span>
+              <span>{{ item.status === 'running' ? '生成中' : '已完成' }}</span>
             </div>
           </div>
         </div>
       </div>
-    </div> -->
+      <div class="mt-2xl mb-6xl text-center">
+        <el-button
+          v-if="useVlogWorkflowStore.more"
+          type="primary"
+          text
+          @click="useVlogWorkflowStore.getHistory"
+          :loading="useVlogWorkflowStore.loading"
+        >
+          {{!useVlogWorkflowStore.loading ? '点击加载更多' : '加载中...'}}
+        </el-button>
+        <div v-else>
+          <el-empty v-if="useVlogWorkflowStore.list.length === 0" description="暂无历史记录" />
+          <span v-else>没有更多了</span>
+        </div>
+      </div>
+    </div>
   </div>
   </div>
 </template>

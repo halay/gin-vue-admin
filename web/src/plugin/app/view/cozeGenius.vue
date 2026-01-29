@@ -152,94 +152,105 @@ if (!useCozeGenius.list?.length) {
         </div>
       </div>
     </div>
-    <div
-      ref="posterGeniusRef"
-      class="poster-genius mb-2xl max-w-4xl min-h-[200px] bg-white mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100"
-      v-for="(item, index) in useCozeGenius.list" :key="item.id"
-    >
-      <p class="text-gray-400 mb-2">{{ item.task_time }}</p>
-      <p class="text-gray-600 mb-2">做一个海报，内容：{{ item.text }}</p>
-      <div class="w-full grid grid-cols-4 gap-4">
-        <div
-          class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
-          v-for="(img, i) in item.result" :key="img.index"
-          v-loading="img.status === 'loading'"
-          element-loading-text="努力生成中，马上就好"
-        >
-          <el-image
-            v-if="img.url"
-            :src="img.url"
-            :zoom-rate="1.2"
-            :max-scale="7"
-            :min-scale="0.2"
-            :preview-src-list="item.result.map(i => i.url)"
-            show-progress
-            :initial-index="i"
-            fit="cover"
-            class="w-full h-full"
-            lazy
-          >
-          <template #placeholder>
-            <div class="w-full h-full flex items-center justify-center">图片加载中...</div>
-          </template>
-          </el-image>
+    <div ref="posterGeniusRef" class="max-w-4xl min-h-[200px] mx-auto">
+      <div class="flex justify-between items-center border-b border-gray-200 border-b-solid mb-5 pb-2">
+        <div class="">
+          <h2 class="text-lg font-semibold m-0">我的作品库</h2>
+          <p class="my-1 text-sm text-gray-500">管理您生成的所有智能海报</p>
+        </div>
+        <span class="text-gray-500 text-[12px] flex items-center cursor-pointer" @click="useCozeGenius.sortHistory">
+          按时间{{ useCozeGenius.sort === 'desc' ? '倒序' : '正序' }}排序
+          <el-icon class="text-gray-500  ml-1"><ArrowDown /></el-icon>
+        </span>
+      </div>
+      <div
+        class="poster-genius mb-2xl w-full min-h-[200px] bg-white p-xl rounded-5 border-2 border-dashed border-gray-100"
+        v-for="(item, index) in useCozeGenius.list" :key="item.id"
+      >
+        <p class="text-gray-400 mb-2">{{ item.task_time }}</p>
+        <p class="text-gray-600 mb-2">做一个海报，内容：{{ item.text }}</p>
+        <div class="w-full grid grid-cols-4 gap-4">
           <div
-            v-if="img.status === 'error'"
-            class="relative h-full flex flex-col items-center justify-center gap-3"
+            class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
+            v-for="(img, i) in item.result" :key="img.index"
+            v-loading="img.status === 'loading'"
+            element-loading-text="努力生成中，马上就好"
           >
+            <el-image
+              v-if="img.url"
+              :src="img.url"
+              :zoom-rate="1.2"
+              :max-scale="7"
+              :min-scale="0.2"
+              :preview-src-list="item.result.map(i => i.url)"
+              show-progress
+              :initial-index="i"
+              fit="cover"
+              class="w-full h-full"
+              lazy
+            >
+            <template #placeholder>
+              <div class="w-full h-full flex items-center justify-center">图片加载中...</div>
+            </template>
+            </el-image>
             <div
-              class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-br-4"
-            >生成失败</div>
-            <el-icon class="!text-2xl"><Picture/></el-icon>
-            <p class="text-center text-sm text-black-500 m0">居然失败了，再试一下吧！</p>
-            <el-tooltip
-              :content="img.error"
+              v-if="img.status === 'error'"
+              class="relative h-full flex flex-col items-center justify-center gap-3"
             >
-              <a class="cursor-pointer text-sm text-red-500">失败原因</a>
-            </el-tooltip>
-          </div>
-          <div
-            v-if="img.status === 'success'"
-            class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2"
-          >
-            <el-button
-              type="default"
-              size="small"
-              round
-              class="flex items-center gap-1 !bg-white"
-              @click="useCozeGenius.saveImage(img.url)"
+              <div
+                class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-br-4"
+              >生成失败</div>
+              <el-icon class="!text-2xl"><Picture/></el-icon>
+              <p class="text-center text-sm text-black-500 m0">居然失败了，再试一下吧！</p>
+              <el-tooltip
+                :content="img.error"
+              >
+                <a class="cursor-pointer text-sm text-red-500">失败原因</a>
+              </el-tooltip>
+            </div>
+            <div
+              v-if="img.status === 'success'"
+              class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2"
             >
-              <el-icon class="mr-2"><Download /></el-icon>
-              下载
-            </el-button>
-            <el-popconfirm title="确定要删除吗？" @confirm="useCozeGenius.deleteImage(item.id, index, img.index, i)">
-              <template #reference>
-                <el-button
-                  type="default"
-                  size="small"
-                  round
-                  class="flex items-center gap-1 !bg-white"
-                >
-                  <el-icon class="mr-2"><Delete /></el-icon>
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+              <el-button
+                type="default"
+                size="small"
+                round
+                class="flex items-center gap-1 !bg-white"
+                @click="useCozeGenius.saveImage(img.url)"
+              >
+                <el-icon class="mr-2"><Download /></el-icon>
+                下载
+              </el-button>
+              <el-popconfirm title="确定要删除吗？" @confirm="useCozeGenius.deleteImage(item.id, index, img.index, i)">
+                <template #reference>
+                  <el-button
+                    type="default"
+                    size="small"
+                    round
+                    class="flex items-center gap-1 !bg-white"
+                  >
+                    <el-icon class="mr-2"><Delete /></el-icon>
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="mt-2xl mb-6xl text-center">
-      <el-button
-        v-if="useCozeGenius.more"
-        type="primary"
-        text
-        @click="useCozeGenius.getHistory"
-        :loading="useCozeGenius.loading"
-      >
-        点击加载更多
-      </el-button>
-      <span v-else>没有更多了</span>
+      <div class="mt-2xl mb-6xl text-center">
+        <el-button
+          v-if="useCozeGenius.more"
+          type="primary"
+          text
+          @click="useCozeGenius.getHistory"
+          :loading="useCozeGenius.loading"
+        >
+          {{!useCozeGenius.loading ? '点击加载更多' : '加载中...'}}
+        </el-button>
+        <span v-else>没有更多了</span>
+      </div>
     </div>
   </div>
 </template>

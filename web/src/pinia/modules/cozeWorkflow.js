@@ -2,6 +2,7 @@ import service from '@/utils/request'
 import { ElMessage, ElNotification } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useDateFormat } from '@vueuse/core'
 
 // 上传图片资源接口
 const uploadCozeFile = (body) => {
@@ -48,6 +49,16 @@ const retryCozeWorkflow = (id) => {
   })
 }
 
+// 获取图片生成历史记录
+const getHistoryList = (params) => {
+  return service({
+    url: '/extAiTask/getExtAiTaskList',
+    method: 'get',
+    params,
+    donNotShowLoading: true
+  })
+}
+
 export const defineCozeWorkflowStore = (storeId) => {
 
   // 工作流 ID 配置
@@ -65,7 +76,7 @@ export const defineCozeWorkflowStore = (storeId) => {
     vlog: '7579514432432472127',
     suApiKey: '2af09cae-106a-49db-9361-00b7b0b20ca8',
   }
-  
+
   return defineStore(`coze-${storeId}`, () => {
     const isGenerating = ref(false) // 是否正在生成中
     const taskId = ref(0) // 生成任务 ID
@@ -96,6 +107,13 @@ export const defineCozeWorkflowStore = (storeId) => {
     const videoUrl = ref('') // 视频 URL
     const text = ref('') // 提示内容
 
+    const list = ref([]) // 历史记录列表
+    const loading = ref(false)
+    const page = ref(1)
+    const more = ref(true)
+    const pageSize = ref(10)
+    const sort = ref('desc'); // 排序方式: 升序: asc, 降序： desc
+
     // 删除图片
     const deleteImage = (index) => {
       imageList.value[index] = {
@@ -104,7 +122,6 @@ export const defineCozeWorkflowStore = (storeId) => {
         status: '',
       }
     }
-
     // 上传图片
     const uploadImages = async (index, params) => {
       imageList.value[index].status = 'loading'
@@ -157,6 +174,14 @@ export const defineCozeWorkflowStore = (storeId) => {
           throw new Error(data.msg)
         }
         taskId.value = data.id;
+        const taskData = {
+          id: data.id,
+          status: 'loading',
+          text: params.product,
+          task_time: useDateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+          result: ''
+        }
+        list.value.unshift(taskData)
         // 开启轮询
         pollTaskStatus(data.id);
         return taskId;
@@ -169,14 +194,30 @@ export const defineCozeWorkflowStore = (storeId) => {
 
     // 轮询逻辑 (递归 setTimeout)
     const pollTaskStatus = async (taskId) => {
-      isGenerating.value = true;
       try {
         const { data } = await getCozeWorkflowResult(taskId);
         const { status, data: cozeData } = data;
-        console.log(status, cozeData)
-        taskStatus.value = status
-        if (status === 'completed') {
+        if (!cozeData && status) {
+          return;
+        }
+        const oldIndex = list.value.findIndex((i) => i.id === taskId)
+        const oldData = oldIndex !== -1 ? list.value[oldIndex] : {}
+        if (oldIndex === -1) {
+          ElMessage.error(`获取结果失败，任务不存在: ${taskId}`)
+          return;
+        }
+        const newData = {
+          ...oldData,
+          status,
+          result: cozeData.url || '',
+          error: cozeData.error || ''
+        };
+        list.value[oldIndex] = newData
+        if (taskId.value === taskId) {
+          taskStatus.value = status
           videoUrl.value = cozeData.url
+        }
+        if (status === 'completed' || cozeData.url) {
           isGenerating.value = false
           ElNotification({
             title: consig.tip[storeId],
@@ -188,7 +229,7 @@ export const defineCozeWorkflowStore = (storeId) => {
           isGenerating.value = false
           ElNotification({
             title: consig.tip[storeId],
-            message: `视频生成失败，${cozeData.error || '请重试'}` ,
+            message: `视频生成失败，${cozeData.error || '请重试'}`,
             type: 'error',
             duration: 5000
           });
@@ -232,6 +273,71 @@ export const defineCozeWorkflowStore = (storeId) => {
       videoUrl.value = ''
     }
 
+    // 获取历史记录
+    const getHistory = async () => {
+      loading.value = true
+      const params = {
+        type: consig.type[storeId],
+        page: page.value,
+        pageSize: pageSize.value
+      }
+      if (sort.value === 'desc') {
+        params.sort = '-CreatedAt'
+      }
+      try {
+        const { code, data, msg } = await getHistoryList(params)
+        if (code !== 0) {
+          ElMessage.error(msg)
+          throw new Error(msg)
+        }
+        const newList = data?.list?.map((item) => {
+          const options = JSON.parse(item.options || '{}');
+          const result = JSON.parse(item.result || '{}');
+          const status = item.status;
+          let error = '';
+          if (status === 'running' && !result.url) {
+            pollTaskStatus(item.ID)
+          } else if (status === 'failed') {
+            error = item.description || ''
+          }
+          return {
+            id: item.ID,
+            status,
+            task_time: useDateFormat(new Date(item.CreatedAt), 'MM-DD HH:mm:ss'),
+            text: options?.workflows[0]?.parameters?.product || '',
+            result: result.url || '',
+            error
+          }
+        }) || [];
+        if (page.value === 1) {
+          list.value = [...newList]
+        } else {
+          list.value = [...list.value, ...newList]
+        }
+        more.value = list.value.length < data.total
+        page.value++
+      } catch (error) {
+        console.log(error)
+        ElMessage.error(error.msg || error || '获取历史记录失败')
+      } finally {
+        loading.value = false
+      }
+    }
+    // 排序
+  const sortHistory = () => {
+    if (loading.value) {
+      return
+    }
+    if (sort.value === 'asc') {
+      sort.value = 'desc'
+    } else {
+      sort.value = 'asc'
+    }
+    // 刷新历史记录
+    page.value = 1
+    getHistory()
+  }
+
     return {
       isGenerating,
       taskId,
@@ -244,7 +350,13 @@ export const defineCozeWorkflowStore = (storeId) => {
       uploadImages,
       createTask,
       retryTask,
-      onResetCreate
+      onResetCreate,
+      getHistory,
+      list,
+      loading,
+      more,
+      sort,
+      sortHistory
     }
   })()
 }

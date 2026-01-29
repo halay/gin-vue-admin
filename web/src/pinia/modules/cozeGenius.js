@@ -71,6 +71,7 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
   const page = ref(1)
   const more = ref(true)
   const pageSize = ref(10)
+  const sort = ref('desc'); // 排序方式: 升序: asc, 降序： desc
 
   // 发起生成请求的 Action
   const createPosterTask = async (params) => {
@@ -194,12 +195,16 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
   // 获取历史记录
   const getHistory = async () => {
     loading.value = true
+    const params = {
+      type: 'image',
+      page: page.value,
+      pageSize: pageSize.value
+    }
+    if (sort.value === 'desc') {
+      params.sort = '-created_at'
+    }
     try {
-      const { code, data, msg } = await getBLCTYImageHistory({
-        type: 'image',
-        page: page.value,
-        pageSize: pageSize.value
-      })
+      const { code, data, msg } = await getBLCTYImageHistory(params)
       if (code !== 0) {
         ElMessage.error(msg)
         throw new Error(msg)
@@ -249,15 +254,31 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
       loading.value = false
     }
   }
+  // 排序
+  const sortHistory = () => {
+    if (loading.value) {
+      return
+    }
+    if (sort.value === 'asc') {
+      sort.value = 'desc'
+    } else {
+      sort.value = 'asc'
+    }
+    // 刷新历史记录
+    page.value = 1
+    getHistory()
+  }
 
   return {
     isGenerating,
     list,
     loading,
     more,
+    sort,
     createPosterTask,
     deleteImage,
     saveImage,
-    getHistory
+    getHistory,
+    sortHistory
   }
 })
