@@ -282,7 +282,7 @@ export const defineCozeWorkflowStore = (storeId) => {
         pageSize: pageSize.value
       }
       if (sort.value === 'desc') {
-        params.sort = '-CreatedAt'
+        params.sort = '-created_at'
       }
       try {
         const { code, data, msg } = await getHistoryList(params)

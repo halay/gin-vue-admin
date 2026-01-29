@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { UploadFilled, MagicStick, PictureFilled, Shop, StarFilled, VideoCameraFilled, Download, Refresh } from '@element-plus/icons-vue'
+import { UploadFilled, MagicStick, PictureFilled, Shop, StarFilled, VideoCameraFilled, Download, Refresh, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { defineCozeWorkflowStore } from '@/pinia/modules/cozeWorkflow'
 const useVlogWorkflowStore = defineCozeWorkflowStore('vlog');
