@@ -1,6 +1,8 @@
 /web/node_modules
 /web/dist
+/web/dist.zip
 go-build-prod.sh
+deploy.sh
 .DS_Store
 
 # local env files

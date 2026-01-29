@@ -282,7 +282,7 @@ import { getMembershipLevelPublic } from '@/plugin/app/api/membershipLevel'
 import { getMerchantsList } from '@/plugin/app/api/merchants'
 import { getNodeList } from '@/plugin/app/api/node'
 import { getShareholderProfitList } from '@/plugin/app/api/shareholder'
-import { getAppDealerList } from '@/plugin/app/api/appdealer'
+import { getAppDealerList } from '@/plugin/app/api/appDealer'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, reactive } from 'vue'
 // 引入按钮权限标识
