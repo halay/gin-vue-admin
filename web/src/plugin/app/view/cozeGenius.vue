@@ -53,8 +53,6 @@ const handleRemoveImage = () => {
   rawImgFile.value = null
 }
 
-
-
 // 生成海报处理
 const handleGenerate = () => {
   if (isGenerateDisabled.value) return
@@ -70,6 +68,12 @@ const handleGenerate = () => {
     posterGeniusElement.value?.scrollIntoView({ behavior: 'smooth' })
   })
 }
+
+// 获取任务历史记录
+if (!useCozeGenius.list?.length) {
+  useCozeGenius.getHistory()
+}
+
 
 </script>
 
@@ -150,47 +154,52 @@ const handleGenerate = () => {
     </div>
     <div
       ref="posterGeniusRef"
-      class="poster-genius mb-6xl max-w-4xl min-h-[200px] bg-white mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100"
-      v-if="useCozeGenius.imageList.length"
+      class="poster-genius mb-2xl max-w-4xl min-h-[200px] bg-white mx-auto p-xl rounded-5 border-2 border-dashed border-gray-100"
+      v-for="(item, index) in useCozeGenius.list" :key="item.id"
     >
-      <p class="text-gray-400 mb-2">{{ useCozeGenius.taskTime }}</p>
-      <p class="text-gray-600 mb-2">做一个海报，内容：{{ useCozeGenius.promptContent }}</p>
+      <p class="text-gray-400 mb-2">{{ item.task_time }}</p>
+      <p class="text-gray-600 mb-2">做一个海报，内容：{{ item.text }}</p>
       <div class="w-full grid grid-cols-4 gap-4">
         <div
           class="h-[280px] rounded-4 border-1 border-solid border-gray-100 overflow-hidden relative"
-          v-for="(item, index) in useCozeGenius.imageList" :key="item"
-          v-loading="item.status === 'loading'"
+          v-for="(img, i) in item.result" :key="img.index"
+          v-loading="img.status === 'loading'"
           element-loading-text="努力生成中，马上就好"
         >
           <el-image
-            v-if="item.url"
-            :src="item.url"
+            v-if="img.url"
+            :src="img.url"
             :zoom-rate="1.2"
             :max-scale="7"
             :min-scale="0.2"
-            :preview-src-list="useCozeGenius.imageList.map(item => item.url)"
+            :preview-src-list="item.result.map(i => i.url)"
             show-progress
-            :initial-index="index"
+            :initial-index="i"
             fit="cover"
             class="w-full h-full"
-          />
+            lazy
+          >
+          <template #placeholder>
+            <div class="w-full h-full flex items-center justify-center">图片加载中...</div>
+          </template>
+          </el-image>
           <div
-            v-if="item.status === 'error'"
+            v-if="img.status === 'error'"
             class="relative h-full flex flex-col items-center justify-center gap-3"
           >
             <div
               class="absolute top-0 left-0 bg-red-500 text-white text-xs px-2 py-1 rounded-br-4"
             >生成失败</div>
-            <el-icon class="text-3xl"><Picture/></el-icon>
+            <el-icon class="!text-2xl"><Picture/></el-icon>
             <p class="text-center text-sm text-black-500 m0">居然失败了，再试一下吧！</p>
             <el-tooltip
-              :content="item.error"
+              :content="img.error"
             >
               <a class="cursor-pointer text-sm text-red-500">失败原因</a>
             </el-tooltip>
           </div>
           <div
-            v-if="item.status === 'success'"
+            v-if="img.status === 'success'"
             class="flex justify-center gap-2 absolute bottom-2 left-1/2 transform -translate-x-1/2"
           >
             <el-button
@@ -198,12 +207,12 @@ const handleGenerate = () => {
               size="small"
               round
               class="flex items-center gap-1 !bg-white"
-              @click="useCozeGenius.saveImage(item)"
+              @click="useCozeGenius.saveImage(img.url)"
             >
               <el-icon class="mr-2"><Download /></el-icon>
               下载
             </el-button>
-            <el-popconfirm title="确定要删除吗？" @confirm="useCozeGenius.deleteImage(item)">
+            <el-popconfirm title="确定要删除吗？" @confirm="useCozeGenius.deleteImage(item.id, index, img.index, i)">
               <template #reference>
                 <el-button
                   type="default"
@@ -219,6 +228,18 @@ const handleGenerate = () => {
           </div>
         </div>
       </div>
+    </div>
+    <div class="mt-2xl mb-6xl text-center">
+      <el-button
+        v-if="useCozeGenius.more"
+        type="primary"
+        text
+        @click="useCozeGenius.getHistory"
+        :loading="useCozeGenius.loading"
+      >
+        点击加载更多
+      </el-button>
+      <span v-else>没有更多了</span>
     </div>
   </div>
 </template>

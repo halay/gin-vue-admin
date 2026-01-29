@@ -40,8 +40,15 @@ const deleteBLCTYImage = (id, indexes) => {
     params: {
       id,
       indexes
-    },
-    // 不显示 loading 动画
+    }
+  })
+}
+// 获取图片生成历史记录
+const getBLCTYImageHistory = (params) => {
+  return service({
+    url: '/extAiTask/getExtAiTaskList',
+    method: 'get',
+    params,
     donNotShowLoading: true
   })
 }
@@ -59,59 +66,78 @@ const initImages = () => {
 export const useCozeGeniusStore = defineStore('cozeGenius', () => {
 
   const isGenerating = ref(false) // 是否正在生成中
-  const taskId = ref(0) // 图片生成任务 ID
-  const imageList = ref([]) // 图片列表
-  const promptContent = ref('') // 提示内容
-  const taskTime = ref('') // 任务创建时间
+  const list = ref([]) // 历史记录列表
+  const loading = ref(false)
+  const page = ref(1)
+  const more = ref(true)
+  const pageSize = ref(10)
 
   // 发起生成请求的 Action
   const createPosterTask = async (params) => {
     isGenerating.value = true;
     try {
-      imageList.value = initImages()
-      promptContent.value = params.prompt
-      taskTime.value = useDateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss')
       const { code, data } = await createBLCTYImages(params);
       if (code !== 0) {
         ElMessage.error(data.msg)
         throw new Error(data.msg)
       }
-      taskId.value = data.id;
+      const taskData = {
+        id: data.id,
+        status: 'loading',
+        text: params.prompt,
+        task_time: useDateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+        result: initImages()
+      }
+      list.value.unshift(taskData)
       // 开启轮询
       pollTaskStatus(data.id);
-      return taskId.value;
+      ElMessage.success('智能海报生成中，生成结果将在历史记录中展示')
+      return taskData;
     } catch (error) {
       ElMessage.error('智能海报生成失败')
-      imageList.value = []
       throw error;
     } finally {
-      isGenerating.value = false;
-      
+      isGenerating.value = false
     }
   };
 
   // 轮询逻辑 (递归 setTimeout)
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   const pollTaskStatus = async (taskId) => {
     try {
       const { data } = await getBLCTYImageResult(taskId);
       const { status, images } = data;
+
+      const oldIndex = list.value.findIndex((i) => i.id === taskId)
+      const oldData = oldIndex !== -1 ? list.value[oldIndex] : {}
+      if (oldIndex === -1) {
+        ElMessage.error(`获取结果失败，任务不存在: ${taskId}`)
+        return;
+      }
       // 更新图片列表状态
+      const imagesList = oldData.result;
       if (images?.length) {
-        imageList.value = imageList.value.map((item, index) => {
-          const data = item;
-          const img = images[index] || {};
-          let status = img?.url ? 'success' : 'loading';
-          if (img.error) {
+        const result = imagesList.map((item, i) => {
+          const imgData = images[i] || item;
+          let status = imgData.url ? 'success' : 'loading'
+          if (imgData.error) {
             status = 'error'
           }
-          data.status = status;
-          data.url = img?.url || '';
-          data.index = img?.index;
-          data.error = img?.error || '';
-          return item
+          const data = {
+            url: imgData.url,
+            index: imgData.index,
+            status,
+            error: imgData?.error
+          };
+          return data
         })
+        const newData = {
+          ...oldData,
+          status,
+          result
+        };
+        list.value[oldIndex] = newData
       }
-
       if (status === 'completed' && images?.length === 4) {
         ElNotification({
           title: 'AI海报生成完成',
@@ -121,26 +147,26 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
         });
       } else {
         // 未完成：3秒后继续下一次轮询
-        setTimeout(() => pollTaskStatus(taskId), 15000);
+        await delay(15000);
+        pollTaskStatus(taskId);
       }
     } catch (error) {
       console.error('获取结果失败，5秒后重试:', error);
       // 遇到网络报错不中断，延长间隔继续重试
-      setTimeout(() => pollTaskStatus(taskId), 5000);
+      await delay(5000);
+      pollTaskStatus(taskId);
     }
   };
 
   // 删除图片
-  const deleteImage = (item) => {
-    deleteBLCTYImage(taskId.value, item.index).then(() => {
-      imageList.value = imageList.value.map((i) => {
-        if (i.index === item.index) {
-          i.status = 'error'
-          i.error = '图片已删除'
-          i.url = ''
-        }
-        return i
-      })
+  const deleteImage = (taskId, index, imgIndex, imgIndexInResult) => {
+    deleteBLCTYImage(taskId, imgIndex).then(() => {
+      list.value[index].result[imgIndexInResult] = {
+        ...list.value[index].result[imgIndexInResult],
+        status: 'error',
+        error: '图片已删除',
+        url: ''
+      }
       ElMessage.success('图片删除成功')
     })
   }
@@ -165,14 +191,73 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
       })
   }
 
+  // 获取历史记录
+  const getHistory = async () => {
+    loading.value = true
+    try {
+      const { code, data, msg } = await getBLCTYImageHistory({
+        type: 'image',
+        page: page.value,
+        pageSize: pageSize.value
+      })
+      if (code !== 0) {
+        ElMessage.error(msg)
+        throw new Error(msg)
+      }
+      const newList = data?.list?.map((item) => {
+        const options = JSON.parse(item.options || '{}');
+        const result = JSON.parse(item.result || '[]');
+        const status = item.status;
+        let imgUrlNum = 0;
+        const resultList = result.map((i) => {
+          let imgStatus = i?.url ? 'success' : 'loading'
+          if (i?.error) {
+            imgStatus = 'error'
+          }
+          if (i?.url) {
+            imgUrlNum++
+          }
+          return {
+            index: i?.index,
+            url: i?.url || '',
+            status: imgStatus,
+            error: i?.error || '',
+          }
+        })
+        if (status === 'running' && imgUrlNum < 4) {
+          pollTaskStatus(item.Id)
+        }
+        return {
+          id: item.Id,
+          status,
+          task_time: useDateFormat(new Date(item.CreatedAt), 'YYYY-MM-DD HH:mm:ss'),
+          text: options.prompt || '',
+          result: resultList,
+        }
+      }) || [];
+      if (page.value === 1) {
+        list.value = [...newList]
+      } else {
+        list.value = [...list.value, ...newList]
+      }
+      more.value = list.value.length < data.total
+      page.value++
+    } catch (error) {
+      console.log(error)
+      ElMessage.error(error.msg || error || '获取历史记录失败')
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     isGenerating,
-    imageList,
-    promptContent,
-    taskTime,
+    list,
+    loading,
+    more,
     createPosterTask,
-    pollTaskStatus,
     deleteImage,
-    saveImage
+    saveImage,
+    getHistory
   }
 })
