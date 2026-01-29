@@ -661,6 +661,7 @@ func (y *yApi) UploadCozeFile(c *gin.Context) {
 	}
 	var uploadResult request.CoreUploadData
 	if uploadResult, err = service.ExtAiTask.UploadCozeFile(c.Request.Context(), header, fp); err != nil {
+		response.FailWithMessage(err.Error(), c)
 		return
 	}
 	ext := path.Ext(header.Filename)

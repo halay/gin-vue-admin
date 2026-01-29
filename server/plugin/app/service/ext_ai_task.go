@@ -730,6 +730,13 @@ func (s *extAiTask) GetExtAiTaskInfoList(ctx context.Context, info request.ExtAi
 	if info.UserId != "" {
 		db = db.Where("user_id = ?", info.UserId)
 	}
+	if info.Sort != "" {
+		if strings.HasPrefix(info.Sort, "-") {
+			db = db.Order(info.Sort[1:] + " desc")
+		} else {
+			db = db.Order(info.Sort)
+		}
+	}
 	var extAiTasks []model.ExtAiTask
 	// 如果有条件搜索 下方会自动创建搜索语句
 

@@ -8,6 +8,7 @@ type ExtAiTaskSearch struct {
 	request.PageInfo
 	UserId string `json:"userId" form:"userId"`
 	Type   string `json:"type" form:"type"`
+	Sort   string `json:"sort" form:"sort"`
 }
 
 type ExtAiImage struct {
