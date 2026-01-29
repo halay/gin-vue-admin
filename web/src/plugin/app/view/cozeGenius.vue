@@ -177,8 +177,8 @@ if (!useCozeGenius.list?.length) {
             element-loading-text="努力生成中，马上就好"
           >
             <el-image
-              v-if="img.url"
-              :src="img.url"
+              v-if="img.url && img.status !== 'error'"
+              :src="`${img.url}?x-tos-process=image/slim,zlevel_8`"
               :zoom-rate="1.2"
               :max-scale="7"
               :min-scale="0.2"

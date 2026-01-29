@@ -92,7 +92,7 @@ if (useVlogWorkflowStore.list.length === 0) {
             <template v-for="(item, index) in ['封面', '细节', '环境', '特色']" :key="index">
               <div v-if="imageList[index]?.id" class="uploader-box-img !h-[186px]">
                 <img
-                  :src="imageList[index].url"
+                  :src="`${imageList[index].url}?x-tos-process=image/slim,zlevel_8`"
                   class="w-full h-full object-cover"
                   :zoom-rate="1.2"
                   :max-scale="7"
@@ -110,7 +110,7 @@ if (useVlogWorkflowStore.list.length === 0) {
                 :ref="el => uploadRefs[index] = el"
                 class="uploader-box h-[186px]"
                 :show-file-list="false"
-                accept="image/*"
+                accept="image/jpeg,image/png"
                 :http-request="(options) => handleUpload(options.file, index)"
                 :before-upload="(file) => beforeUpload(file, index)"
                 :limit="1"
