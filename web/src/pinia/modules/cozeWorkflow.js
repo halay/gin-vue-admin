@@ -177,7 +177,7 @@ export const defineCozeWorkflowStore = (storeId) => {
         const taskData = {
           id: data.id,
           status: 'loading',
-          text: params.product,
+          text: params.product || params.text || '',
           task_time: useDateFormat(new Date(), 'YYYY-MM-DD HH:mm:ss'),
           result: ''
         }
@@ -299,11 +299,12 @@ export const defineCozeWorkflowStore = (storeId) => {
           } else if (status === 'failed') {
             error = item.description || ''
           }
+          const text = options?.workflows[0]?.parameters?.product || options?.workflows[0]?.parameters?.text || ''
           return {
             id: item.ID,
             status,
             task_time: useDateFormat(new Date(item.CreatedAt), 'MM-DD HH:mm:ss'),
-            text: options?.workflows[0]?.parameters?.product || '',
+            text,
             result: result.url || '',
             error
           }
