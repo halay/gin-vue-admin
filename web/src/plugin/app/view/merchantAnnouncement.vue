@@ -165,7 +165,7 @@ import {
   updateMerchantAnnouncement,
   findMerchantAnnouncement,
   getMerchantAnnouncementList
-} from '@/plugin/app/api/merchantannouncement'
+} from '@/plugin/app/api/merchantAnnouncement'
 // 富文本组件
 import RichEdit from '@/components/richtext/rich-edit.vue'
 import RichView from '@/components/richtext/rich-view.vue'
