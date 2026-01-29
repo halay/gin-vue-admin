@@ -193,11 +193,11 @@ if (usePriductWorkflowStore.list.length === 0) {
               <h3 class="text-white font-medium mb-2">等待生成宣传片</h3>
               <p v-if="!isGenerating" class="text-gray-500 text-sm">AI将自动识别商品特征，为您匹配最佳的运镜模板与背景音乐</p>
               <p v-else class="text-gray-500 text-sm">视频正在生成中，可处理其它工作，完成后将在下方显示</p>
-              <div v-if="usePriductWorkflowStore.taskStatus === 'failed' && usePriductWorkflowStore.taskId" class="mt-2xl">
-                <a class="text-red-500 text-sm mt-2 cursor-pointer border-red-500" @click="usePriductWorkflowStore.retryTask()">
+              <!-- <div v-if="usePriductWorkflowStore.taskStatus === 'failed' && usePriductWorkflowStore.taskId" class="mt-2xl">
+                <a class="text-red-500 text-sm mt-2 cursor-pointer border-red-500" @click="usePriductWorkflowStore.retryTask(usePriductWorkflowStore.taskId)">
                   视频生成失败，点击此处重新生成
                 </a>
-              </div>
+              </div> -->
             </div>
             <video
               v-else
@@ -275,9 +275,9 @@ if (usePriductWorkflowStore.list.length === 0) {
                 <el-icon><WarningFilled /></el-icon>
               </div>
               <p class="text-white/80 text-sm mt-3 px-3">{{ item.error }}</p>
-              <a class="text-white/80 text-sm cursor-pointer mt-6" @click="usePriductWorkflowStore.retryTask()">
+              <!-- <a class="text-white/80 text-sm cursor-pointer mt-6" @click="usePriductWorkflowStore.retryTask(item.id)">
                 点击此处重新生成
-              </a>
+              </a> -->
             </div>
           </div>
           <div class=" p-3 bg-white text-black flex flex-col justify-end">

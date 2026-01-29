@@ -250,15 +250,14 @@ export const defineCozeWorkflowStore = (storeId) => {
       isGenerating.value = true;
       taskStatus.value = ''
       try {
-        const taskId = id || taskId.value
-        const { code, data, msg } = await retryCozeWorkflow(taskId);
+        const { code, data, msg } = await retryCozeWorkflow(id);
         if (code !== 0) {
           ElMessage.error(msg || data.msg)
           throw new Error(msg || data.msg)
         }
         ElMessage.success('任务已重新执行')
         // 开启轮询
-        setTimeout(() => pollTaskStatus(taskId), 10000);
+        setTimeout(() => pollTaskStatus(id), 10000);
       } catch (error) {
         ElMessage.error(error.msg || error || '任务重新执行失败')
         throw error
