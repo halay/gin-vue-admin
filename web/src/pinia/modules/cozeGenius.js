@@ -230,10 +230,10 @@ export const useCozeGeniusStore = defineStore('cozeGenius', () => {
           }
         })
         if (status === 'running' && imgUrlNum < 4) {
-          pollTaskStatus(item.Id)
+          pollTaskStatus(item.ID)
         }
         return {
-          id: item.Id,
+          id: item.ID,
           status,
           task_time: useDateFormat(new Date(item.CreatedAt), 'YYYY-MM-DD HH:mm:ss'),
           text: options.prompt || '',
